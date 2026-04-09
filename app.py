@@ -162,7 +162,7 @@ html, body, [class*="css"] {
 
 .rh-dash-num {
     font-family: 'Bebas Neue', sans-serif !important;
-    font-size: 3rem !important;
+    font-size: 1.1rem !important;
     letter-spacing: 3px;
     color: var(--ouro);
     margin-bottom: 4px;
@@ -709,7 +709,7 @@ with col_esq:
     st.markdown("""
     <div>
       <div class="rh-dash-card" style="border-radius:12px 12px 0 0">
-        <div class="rh-dash-num" style="font-size:1.05rem!important">Dashboard 01</div>
+        <div class="rh-dash-num" style="font-size:1.1rem!important">Dashboard 01</div>
         <div class="rh-dash-title">Acesso ao Canvas (AVA)</div>
         <div class="rh-dash-desc">
           Relatório <b>Rehagro - Canvas</b> → página <b>Acesso ao Canvas-Ok</b><br><br>
@@ -722,7 +722,7 @@ with col_esq:
         </div>
       </div>
       <div class="rh-dash-card">
-        <div class="rh-dash-num" style="font-size:1.05rem!important">Dashboard 02</div>
+        <div class="rh-dash-num" style="font-size:1.1rem!important">Dashboard 02</div>
         <div class="rh-dash-title">NPS Médio por Aluno</div>
         <div class="rh-dash-desc">
           Relatório <b>Rehagro Educação - Avaliação de Aula</b> → página <b>Avaliações de aula/aluno</b><br><br>
@@ -736,7 +736,7 @@ with col_esq:
         </div>
       </div>
       <div class="rh-dash-card">
-        <div class="rh-dash-num" style="font-size:1.05rem!important">Dashboard 03</div>
+        <div class="rh-dash-num" style="font-size:1.1rem!important">Dashboard 03</div>
         <div class="rh-dash-title">Frequência nas Aulas ao Vivo</div>
         <div class="rh-dash-desc">
           Relatório <b>Rehagro Alunado</b> → página <b>Análise de Frequência e Faltas</b><br><br>
@@ -748,7 +748,7 @@ with col_esq:
       </div>
       <div class="rh-dash-card" style="border-radius:0 0 12px 12px">
         <div class="rh-opt-badge">Opcional</div>
-        <div class="rh-dash-num" style="font-size:1.05rem!important">Dashboard 04</div>
+        <div class="rh-dash-num" style="font-size:1.1rem!important">Dashboard 04</div>
         <div class="rh-dash-title">Comentários das Aulas</div>
         <div class="rh-dash-desc">
           Mesma página do Dashboard 02 → <b>Tabela de Comentários</b> → Excel
