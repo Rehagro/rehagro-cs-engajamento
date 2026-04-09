@@ -8,13 +8,10 @@ from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-# SendGrid
 try:
     from sendgrid import SendGridAPIClient
-    from sendgrid.helpers.mail import (
-        Mail, Attachment, FileContent, FileName,
-        FileType, Disposition
-    )
+    from sendgrid.helpers.mail import (Mail, Attachment, FileContent,
+                                        FileName, FileType, Disposition, Cc)
     SENDGRID_OK = True
 except ImportError:
     SENDGRID_OK = False
@@ -25,75 +22,263 @@ st.set_page_config(
     layout="wide",
 )
 
+# ── Identidade Visual Rehagro ──────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
-html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
-.stApp { background: #f7f5f0; }
-.hero {
-    background: linear-gradient(135deg, #1B4D2E 0%, #2E7D32 60%, #388E3C 100%);
-    border-radius: 16px; padding: 40px 48px; margin-bottom: 32px;
-    position: relative; overflow: hidden;
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  --verde:    #1B4D2E;
+  --verde2:   #2E7D32;
+  --verde3:   #4CAF50;
+  --dourado:  #C8A951;
+  --dourado2: #F0D080;
+  --creme:    #F9F6EF;
+  --cinza:    #F2EFE8;
+  --texto:    #1a1a1a;
+  --sub:      #6B6B5E;
 }
-.hero::before {
-    content: ''; position: absolute; top: -60px; right: -60px;
-    width: 220px; height: 220px; border-radius: 50%;
-    background: rgba(249,168,37,0.15);
+
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+    background: var(--creme) !important;
 }
-.hero-title {
-    font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800;
-    color: #ffffff; margin: 0 0 6px 0; letter-spacing: -0.5px;
+.stApp { background: var(--creme) !important; }
+
+/* Esconde o menu padrão do streamlit */
+#MainMenu, footer { visibility: hidden; }
+
+/* ── HERO ── */
+.rh-hero {
+    background: var(--verde);
+    border-radius: 0 0 32px 32px;
+    padding: 36px 48px 40px;
+    margin: -1rem -1rem 2rem -1rem;
+    position: relative;
+    overflow: hidden;
 }
-.hero-sub { font-size: 1rem; color: rgba(255,255,255,0.75); margin: 0; font-weight: 300; }
-.hero-badge {
-    display: inline-block; background: #F9A825; color: #1B4D2E;
-    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.7rem;
-    letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 12px;
-    border-radius: 20px; margin-bottom: 12px;
+.rh-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
-.step-card {
-    background: #ffffff; border-radius: 12px; padding: 20px 24px;
-    border-left: 4px solid #2E7D32; margin-bottom: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+.rh-hero::after {
+    content: '';
+    position: absolute;
+    right: -80px; top: -80px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,169,81,0.2) 0%, transparent 70%);
 }
-.step-num { font-family: 'Syne', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #2E7D32; margin-bottom: 4px; }
-.step-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; }
-.step-desc { font-size: 0.85rem; color: #666; line-height: 1.6; }
-.filter-tag { display: inline-block; background: #E8F5E9; color: #2E7D32; font-size: 0.75rem; font-weight: 500; padding: 2px 8px; border-radius: 4px; margin: 2px 2px 2px 0; }
-.filter-note { font-size: 0.78rem; color: #888; font-style: italic; margin-top: 6px; }
-.metric-row { display: flex; gap: 12px; margin-bottom: 24px; }
-.metric-card { flex: 1; background: #ffffff; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-.metric-num { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 4px; }
-.metric-label { font-size: 0.78rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; }
-.section-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: #1B4D2E; margin: 24px 0 12px 0; padding-bottom: 6px; border-bottom: 2px solid #E8F5E9; }
-.divider { height: 1px; background: linear-gradient(90deg, #2E7D32, transparent); margin: 24px 0; opacity: 0.3; }
-[data-testid="stFileUploader"] { background: #ffffff; border-radius: 12px; padding: 8px; border: 1px solid #e0e0e0; }
+.rh-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+.rh-logo-leaf {
+    display: inline-block;
+    width: 28px; height: 28px;
+    background: var(--dourado);
+    border-radius: 50% 0 50% 0;
+    transform: rotate(-15deg);
+}
+.rh-badge {
+    display: inline-block;
+    background: rgba(200,169,81,0.25);
+    border: 1px solid rgba(200,169,81,0.5);
+    color: var(--dourado2);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 12px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+}
+.rh-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0 0 8px 0;
+    line-height: 1.1;
+}
+.rh-sub {
+    color: rgba(255,255,255,0.65);
+    font-size: 0.95rem;
+    font-weight: 300;
+    margin: 0;
+}
+
+/* ── CARDS ── */
+.rh-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 22px 26px;
+    border: 1px solid rgba(27,77,46,0.08);
+    margin-bottom: 14px;
+    box-shadow: 0 2px 12px rgba(27,77,46,0.06);
+    position: relative;
+    overflow: hidden;
+}
+.rh-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--dourado), var(--verde2));
+    border-radius: 4px 0 0 4px;
+}
+.rh-step-num {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--dourado);
+    margin-bottom: 4px;
+}
+.rh-step-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--verde);
+    margin-bottom: 10px;
+}
+.rh-step-desc {
+    font-size: 0.82rem;
+    color: var(--sub);
+    line-height: 1.65;
+}
+.rh-tag {
+    display: inline-block;
+    background: #EEF7F0;
+    color: var(--verde2);
+    border: 1px solid rgba(46,125,50,0.2);
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 2px 9px;
+    border-radius: 4px;
+    margin: 2px 2px 2px 0;
+}
+.rh-note {
+    font-size: 0.75rem;
+    color: var(--dourado);
+    font-style: italic;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ── SECTION TITLE ── */
+.rh-section {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--verde);
+    margin: 20px 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--dourado);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── MÉTRICAS ── */
+.rh-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.rh-metric {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 18px 12px;
+    text-align: center;
+    border: 1px solid rgba(27,77,46,0.08);
+    box-shadow: 0 2px 8px rgba(27,77,46,0.05);
+}
+.rh-metric-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.rh-metric-label {
+    font-size: 0.7rem;
+    color: var(--sub);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+}
+
+/* ── DIVIDER ── */
+.rh-divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--dourado), transparent);
+    margin: 20px 0;
+    opacity: 0.4;
+}
+
+/* ── UPLOAD AREA ── */
+[data-testid="stFileUploader"] {
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    border: 1.5px dashed rgba(27,77,46,0.2) !important;
+    padding: 4px 8px !important;
+}
+
+/* ── BUTTON ── */
+.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, var(--verde), var(--verde2)) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px !important;
+    padding: 12px 24px !important;
+    box-shadow: 0 4px 15px rgba(27,77,46,0.3) !important;
+}
+
+/* ── FOOTER ── */
+.rh-footer {
+    text-align: center;
+    color: var(--sub);
+    font-size: 0.75rem;
+    padding: 24px 0 8px;
+    border-top: 1px solid rgba(27,77,46,0.1);
+    margin-top: 32px;
+}
 </style>
 """, unsafe_allow_html=True)
 
-
-# ─── Configurações fixas de e-mail ───────────────────────────
-# Lista fixa de destinatários que SEMPRE recebem o relatório.
-# Edite esta lista diretamente aqui para adicionar ou remover pessoas.
+# ── Configurações de e-mail ───────────────────────────────
 DESTINATARIOS_FIXOS = [
     "rafael.ferraz@rehagro.edu.br",
 ]
+REMETENTE = "rafael.ferraz@rehagro.edu.br"
 
-REMETENTE = "rafael.ferraz@rehagro.edu.br"   # E-mail verificado no SendGrid
 
-
-# ─── Funções de processamento ────────────────────────────────
+# ── Funções de processamento ─────────────────────────────
 
 def carregar_canvas(arquivo):
     df = pd.read_excel(arquivo, skiprows=2)
     df.columns = df.columns.str.strip()
-    col_nome   = next((c for c in df.columns if 'NOME' in c.upper()), None)
-    col_email  = next((c for c in df.columns if 'E-MAIL' in c.upper() or 'EMAIL' in c.upper()), None)
-    col_dias   = next((c for c in df.columns if 'DIAS' in c.upper()), None)
-    col_curso  = next((c for c in df.columns if c.upper() == 'CURSO'), None)
-    col_turma  = next((c for c in df.columns if c.upper() == 'TURMA'), None)
+    col_nome  = next((c for c in df.columns if 'NOME' in c.upper()), None)
+    col_email = next((c for c in df.columns if 'E-MAIL' in c.upper() or 'EMAIL' in c.upper()), None)
+    col_dias  = next((c for c in df.columns if 'DIAS' in c.upper()), None)
+    col_curso = next((c for c in df.columns if c.upper() == 'CURSO'), None)
+    col_turma = next((c for c in df.columns if c.upper() == 'TURMA'), None)
     if not col_nome or not col_dias:
-        raise ValueError("Arquivo Canvas: colunas esperadas não encontradas. Verifique os filtros.")
+        raise ValueError("Arquivo Canvas: colunas não encontradas.")
     df['_key']  = (df[col_nome].astype(str).str.strip().str.lower() + '||' +
                    (df[col_turma].astype(str).str.strip().str.lower() if col_turma else ''))
     df['_dias'] = pd.to_numeric(df[col_dias], errors='coerce')
@@ -102,9 +287,9 @@ def carregar_canvas(arquivo):
     if col_curso: cols[col_curso] = 'Curso'
     if col_turma: cols[col_turma] = 'Turma'
     res = df[df['_dias'] > 30][list(cols.keys())].copy().rename(columns=cols)
-    if 'Email'  not in res.columns: res['Email']  = ''
-    if 'Curso'  not in res.columns: res['Curso']  = ''
-    if 'Turma'  not in res.columns: res['Turma']  = ''
+    if 'Email' not in res.columns: res['Email'] = ''
+    if 'Curso' not in res.columns: res['Curso'] = ''
+    if 'Turma' not in res.columns: res['Turma'] = ''
     return res[['_key', 'Nome', 'Email', 'Curso', 'Turma', 'Dias sem acesso']]
 
 
@@ -118,15 +303,53 @@ def carregar_nps(arquivo):
         'DATA' in c.upper() and 'AULA' in c.upper() and
         'ANO' not in c.upper() and 'MÊS' not in c.upper() and 'DIA' not in c.upper())), None)
     if not col_aluno or not col_nps:
-        raise ValueError("Arquivo NPS: colunas esperadas não encontradas. Verifique os filtros.")
+        raise ValueError("Arquivo NPS: colunas não encontradas.")
     df_v = df[df[col_nps].notna()].copy()
     if col_data:
-        df_v['_data'] = pd.to_datetime(df_v[col_data], errors='coerce')
-        df_v = df_v.sort_values([col_aluno, '_data'])
+        df_v['_data_dt'] = pd.to_datetime(df_v[col_data], errors='coerce')
+        df_v = df_v.sort_values([col_aluno, '_data_dt'])
     df_v['_key'] = (df_v[col_aluno].astype(str).str.strip().str.lower() + '||' +
                     (df_v[col_turma].astype(str).str.strip().str.lower() if col_turma else ''))
     ultima = df_v.groupby('_key').last().reset_index()
-    return ultima[pd.to_numeric(ultima[col_nps], errors='coerce') < 0][['_key']].copy()
+    det = ultima[pd.to_numeric(ultima[col_nps], errors='coerce') < 0].copy()
+    det = det[['_key', col_nps] + ([col_data] if col_data else [])].copy()
+    det.columns = ['_key', 'NPS_valor'] + (['NPS_data'] if col_data else [])
+    if 'NPS_data' not in det.columns:
+        det['NPS_data'] = ''
+    return det
+
+
+def carregar_comentarios(arquivo):
+    """Carrega comentários de aula — opcional."""
+    df = pd.read_excel(arquivo, skiprows=2)
+    df.columns = df.columns.str.strip()
+    col_aluno    = next((c for c in df.columns if 'NOME' in c.upper() or c.upper() == 'NOME ALUNO'), None)
+    col_turma    = next((c for c in df.columns if c.upper() == 'TURMA'), None)
+    col_resposta = next((c for c in df.columns if 'RESPOSTA' in c.upper() or 'COMENTÁRIO' in c.upper() or 'COMENT' in c.upper()), None)
+    col_data     = next((c for c in df.columns if 'DATA' in c.upper()), None)
+    col_aula     = next((c for c in df.columns if 'COMENTÁRIO' in c.upper() or 'AULA' in c.upper() or 'COMMENT' in c.upper()), None)
+    if not col_aluno or not col_resposta:
+        raise ValueError("Arquivo Comentários: colunas não encontradas.")
+    df = df[df[col_resposta].notna() & (df[col_resposta].astype(str).str.strip() != '')].copy()
+    df['_key'] = (df[col_aluno].astype(str).str.strip().str.lower() + '||' +
+                  (df[col_turma].astype(str).str.strip().str.lower() if col_turma else ''))
+    # Agrupa múltiplos comentários do mesmo aluno
+    def agrupar(group):
+        comentarios = []
+        for _, row in group.iterrows():
+            data_str = ''
+            if col_data and pd.notna(row.get(col_data)):
+                try:
+                    data_str = pd.to_datetime(row[col_data]).strftime('%d/%m/%Y')
+                except:
+                    data_str = str(row[col_data])[:10]
+            aula_str = str(row[col_aula])[:60] + '...' if col_aula and pd.notna(row.get(col_aula)) and len(str(row[col_aula])) > 60 else (str(row[col_aula]) if col_aula and pd.notna(row.get(col_aula)) else '')
+            linha = f"[{data_str}] {aula_str}: {str(row[col_resposta]).strip()}" if data_str else str(row[col_resposta]).strip()
+            comentarios.append(linha)
+        return ' | '.join(comentarios)
+    resultado = df.groupby('_key').apply(agrupar).reset_index()
+    resultado.columns = ['_key', 'Comentarios']
+    return resultado
 
 
 def carregar_frequencia(arquivo):
@@ -137,15 +360,14 @@ def carregar_frequencia(arquivo):
     col_data   = next((c for c in df.columns if 'DATA' in c.upper() or 'PARTE' in c.upper()), None)
     col_turma  = next((c for c in df.columns if c.upper() == 'TURMA'), None)
     if not col_aluno or not col_status:
-        raise ValueError("Arquivo Frequência: colunas esperadas não encontradas. Verifique os filtros.")
+        raise ValueError("Arquivo Frequência: colunas não encontradas.")
     df_a = df[~df[col_status].isin(['-', 'DESISTENTE'])].copy()
     def extr(s):
         m = re.match(r'(\d{2}/\d{2}/\d{4})', str(s))
         return pd.to_datetime(m.group(1), format='%d/%m/%Y') if m else pd.NaT
     if col_data:
         df_a['_data'] = df_a[col_data].apply(extr)
-        sort_cols = [col_aluno, col_turma, '_data'] if col_turma else [col_aluno, '_data']
-        df_a = df_a.sort_values(sort_cols)
+        df_a = df_a.sort_values([col_aluno, col_turma, '_data'] if col_turma else [col_aluno, '_data'])
     group_cols = [col_aluno, col_turma] if col_turma else [col_aluno]
     ausentes = []
     for keys, g in df_a.groupby(group_cols):
@@ -162,7 +384,7 @@ def carregar_frequencia(arquivo):
     return pd.DataFrame(ausentes) if ausentes else pd.DataFrame(columns=['_key', 'Ultimas_2_aulas'])
 
 
-def gerar_relatorio(df_canvas, df_nps, df_freq):
+def gerar_relatorio(df_canvas, df_nps, df_freq, df_coment=None):
     todos_keys = set(df_canvas['_key']) | set(df_nps['_key']) | set(df_freq['_key'])
     info_map = df_canvas.set_index('_key')[['Nome', 'Email', 'Curso', 'Turma']].to_dict('index')
     for key in todos_keys:
@@ -170,30 +392,53 @@ def gerar_relatorio(df_canvas, df_nps, df_freq):
             partes = key.split('||')
             info_map[key] = {'Nome': partes[0].title(), 'Email': '',
                              'Curso': '', 'Turma': partes[1].upper() if len(partes) > 1 else ''}
+    coment_map = {}
+    if df_coment is not None and not df_coment.empty:
+        coment_map = df_coment.set_index('_key')['Comentarios'].to_dict()
+
     relatorio = []
     for key in sorted(todos_keys):
         info = info_map[key]
         alertas, acoes = [], []
+
         c = df_canvas[df_canvas['_key'] == key]
         if not c.empty:
             dias = int(c.iloc[0]['Dias sem acesso'])
             alertas.append(f"Sem acesso ao Canvas há {dias} dias")
             acoes.append("Enviar link de acesso à plataforma")
-        if not df_nps[df_nps['_key'] == key].empty:
-            alertas.append("Última avaliação: detrator (NPS negativo)")
+
+        n = df_nps[df_nps['_key'] == key]
+        if not n.empty:
+            nps_val  = int(n.iloc[0]['NPS_valor'])
+            nps_data = ''
+            if 'NPS_data' in n.columns and pd.notna(n.iloc[0]['NPS_data']):
+                try:
+                    nps_data = pd.to_datetime(n.iloc[0]['NPS_data']).strftime('%d/%m/%Y')
+                except:
+                    nps_data = str(n.iloc[0]['NPS_data'])[:10]
+            label = f"Detrator (NPS {nps_val})"
+            if nps_data:
+                label += f" — avaliação em {nps_data}"
+            alertas.append(f"Última avaliação: {label}")
             acoes.append("Retomar feedback negativo da avaliação")
+
         f = df_freq[df_freq['_key'] == key]
         if not f.empty:
             alertas.append(f"Ausente nas últimas 2 aulas ao vivo ({f.iloc[0]['Ultimas_2_aulas']})")
             acoes.append("Enviar data da próxima aula ao vivo")
+
         if alertas:
             relatorio.append({
-                'Curso': info['Curso'], 'Turma': info['Turma'],
-                'Nome': info['Nome'], 'E-mail': info['Email'],
-                'Qtd. Alertas': len(alertas),
+                'Curso':                 info['Curso'],
+                'Turma':                 info['Turma'],
+                'Nome':                  info['Nome'],
+                'E-mail':                info['Email'],
+                'Qtd. Alertas':          len(alertas),
                 'Alertas Identificados': ' | '.join(alertas),
-                'Ações Recomendadas': ' | '.join(acoes),
+                'Ações Recomendadas':    ' | '.join(acoes),
+                'Comentários do Aluno':  coment_map.get(key, ''),
             })
+
     df = pd.DataFrame(relatorio)
     return df.sort_values(['Curso', 'Turma', 'Qtd. Alertas', 'Nome'],
                           ascending=[True, True, False, True]).reset_index(drop=True)
@@ -203,98 +448,106 @@ def exportar_excel_bytes(df):
     wb = Workbook()
     ws = wb.active
     ws.title = "Relatório CS"
-    verde_escuro = "1B4D2E"; verde_medio = "2E7D32"; branco = "FFFFFF"; cinza = "F5F5F5"
-    n_cols = 7
-    last_col = get_column_letter(n_cols)
+    VE = "1B4D2E"; VM = "2E7D32"; BR = "FFFFFF"; CR = "F9F6EF"
+    DO = "C8A951"; n_cols = 8
+    lc = get_column_letter(n_cols)
 
-    ws.merge_cells(f'A1:{last_col}1')
-    ws['A1'] = "RELATÓRIO DE ENGAJAMENTO — CUSTOMER SUCCESS REHAGRO"
-    ws['A1'].font = Font(bold=True, size=14, color=branco)
-    ws['A1'].fill = PatternFill("solid", fgColor=verde_escuro)
-    ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
-    ws.row_dimensions[1].height = 30
+    def hr_cell(cell, txt, bg, fg=BR, sz=11, bold=True):
+        cell.value = txt
+        cell.font = Font(bold=bold, size=sz, color=fg)
+        cell.fill = PatternFill("solid", fgColor=bg)
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
-    ws.merge_cells(f'A2:{last_col}2')
-    ws['A2'] = f"Gerado em: {datetime.now().strftime('%d/%m/%Y às %H:%M')}   |   Total de alunos desengajados: {len(df)}"
-    ws['A2'].font = Font(size=10, color=branco)
-    ws['A2'].fill = PatternFill("solid", fgColor=verde_medio)
-    ws['A2'].alignment = Alignment(horizontal='center', vertical='center')
-    ws.row_dimensions[2].height = 20
+    ws.merge_cells(f'A1:{lc}1')
+    hr_cell(ws['A1'], "RELATÓRIO DE ENGAJAMENTO — CUSTOMER SUCCESS REHAGRO", VE, sz=13)
+    ws.row_dimensions[1].height = 28
+
+    ws.merge_cells(f'A2:{lc}2')
+    hr_cell(ws['A2'],
+            f"Gerado em: {datetime.now().strftime('%d/%m/%Y às %H:%M')}   |   Total de alunos desengajados: {len(df)}",
+            VM, sz=9)
+    ws.row_dimensions[2].height = 18
 
     ws.append([])
-    ws.merge_cells(f'A4:{last_col}4')
-    ws['A4'] = "LEGENDA DE AÇÕES"
-    ws['A4'].font = Font(bold=True, size=10, color=verde_escuro)
-    ws['A4'].fill = PatternFill("solid", fgColor="E8F5E9")
-    ws['A4'].alignment = Alignment(horizontal='left')
+    ws.merge_cells(f'A4:{lc}4')
+    hr_cell(ws['A4'], "LEGENDA DE AÇÕES", "EEF7F0", VE, sz=9)
+    ws['A4'].alignment = Alignment(horizontal='left', indent=1)
+
+    thin = Side(style='thin', color='DEDAD2')
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
     for i, txt in enumerate([
         "⚠️  Sem acesso ao Canvas há +30 dias  →  Enviar link de acesso à plataforma",
-        "⚠️  Última avaliação com NPS negativo  →  Retomar feedback negativo da avaliação",
+        "⚠️  Última avaliação com NPS negativo (nota e data indicadas)  →  Retomar feedback negativo",
         "⚠️  Ausente nas últimas 2 aulas ao vivo  →  Enviar data da próxima aula ao vivo",
     ], 5):
-        ws.merge_cells(f'A{i}:{last_col}{i}')
+        ws.merge_cells(f'A{i}:{lc}{i}')
         ws[f'A{i}'] = txt
-        ws[f'A{i}'].font = Font(size=9, color="424242")
-        ws[f'A{i}'].fill = PatternFill("solid", fgColor=cinza)
-        ws[f'A{i}'].alignment = Alignment(horizontal='left', indent=1)
+        ws[f'A{i}'].font = Font(size=8, color="6B6B5E")
+        ws[f'A{i}'].fill = PatternFill("solid", fgColor=CR)
+        ws[f'A{i}'].alignment = Alignment(horizontal='left', indent=2)
 
     ws.append([])
-    headers = ['Curso', 'Turma', 'Nome do Aluno', 'E-mail', 'Qtd. Alertas', 'Alertas Identificados', 'Ações Recomendadas']
+    headers = ['Curso', 'Turma', 'Nome do Aluno', 'E-mail',
+               'Qtd.', 'Alertas Identificados', 'Ações Recomendadas', 'Comentários do Aluno']
     ws.append(headers)
     hr = ws.max_row
     for ci, h in enumerate(headers, 1):
         c = ws.cell(row=hr, column=ci)
-        c.font = Font(bold=True, color=branco, size=10)
-        c.fill = PatternFill("solid", fgColor=verde_escuro)
+        c.font = Font(bold=True, color=BR, size=9)
+        c.fill = PatternFill("solid", fgColor=VE)
         c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-    ws.row_dimensions[hr].height = 22
-
-    thin = Side(style='thin', color='BDBDBD')
-    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    ws.row_dimensions[hr].height = 20
 
     for _, row in df.iterrows():
         ws.append([row['Curso'], row['Turma'], row['Nome'], row['E-mail'],
-                   row['Qtd. Alertas'], row['Alertas Identificados'], row['Ações Recomendadas']])
+                   row['Qtd. Alertas'], row['Alertas Identificados'],
+                   row['Ações Recomendadas'], row.get('Comentários do Aluno', '')])
         dr = ws.max_row
-        fc = "FFCDD2" if row['Qtd. Alertas'] >= 3 else ("FFE0B2" if row['Qtd. Alertas'] == 2 else "FFF9C4")
+        fc = "FFCDD2" if row['Qtd. Alertas'] >= 3 else ("FFE0B2" if row['Qtd. Alertas'] == 2 else "FFFDE7")
+        tem_coment = bool(str(row.get('Comentários do Aluno', '')).strip())
         for ci in range(1, n_cols + 1):
             c = ws.cell(row=dr, column=ci)
             if ci <= 2:
-                c.fill = PatternFill("solid", fgColor="E8F5E9")
-                c.font = Font(size=9, color="2E7D32", bold=True)
+                c.fill = PatternFill("solid", fgColor="EEF7F0")
+                c.font = Font(size=8, color=VM, bold=True)
             elif ci == 5:
                 c.fill = PatternFill("solid", fgColor=fc)
-                c.font = Font(bold=True, size=11)
+                c.font = Font(bold=True, size=12)
                 c.alignment = Alignment(horizontal='center', vertical='center')
+            elif ci == 8:
+                # Comentários — destaque dourado se houver conteúdo
+                c.fill = PatternFill("solid", fgColor="FFF8E1" if tem_coment else BR)
+                c.font = Font(size=8, color="5D4037" if tem_coment else "AAAAAA",
+                              italic=not tem_coment)
             else:
-                c.fill = PatternFill("solid", fgColor=fc if ci > 4 else "FFFFFF")
+                c.fill = PatternFill("solid", fgColor=fc if ci > 4 else BR)
             c.border = border
-            if ci not in [2, 5]:
+            if ci not in [5]:
                 c.alignment = Alignment(vertical='center', wrap_text=True)
-        ws.row_dimensions[dr].height = 30
+        ws.row_dimensions[dr].height = 32
 
-    for ci, w in enumerate([18, 20, 32, 30, 12, 65, 50], 1):
+    for ci, w in enumerate([16, 18, 30, 28, 6, 60, 45, 55], 1):
         ws.column_dimensions[get_column_letter(ci)].width = w
 
-    # Aba resumo por turma
+    # Aba Resumo
     ws2 = wb.create_sheet("Resumo por Turma")
-    for ci, w in enumerate([22, 22, 18, 14, 14, 14], 1):
+    for ci, w in enumerate([20, 20, 16, 12, 12, 12], 1):
         ws2.column_dimensions[get_column_letter(ci)].width = w
     ws2.append(["RESUMO POR TURMA", "", "", "", "", ""])
-    ws2['A1'].font = Font(bold=True, size=12, color=branco)
-    ws2['A1'].fill = PatternFill("solid", fgColor=verde_escuro)
+    ws2['A1'].font = Font(bold=True, size=12, color=BR)
+    ws2['A1'].fill = PatternFill("solid", fgColor=VE)
     ws2.merge_cells('A1:F1')
     ws2['A1'].alignment = Alignment(horizontal='center')
-    ws2.row_dimensions[1].height = 25
-    ws2.append(["Curso", "Turma", "Total Desengajados", "🔴 Críticos", "🟠 Atenção", "🟡 Monitorar"])
+    ws2.row_dimensions[1].height = 24
+    ws2.append(["Curso", "Turma", "Total", "🔴 Críticos", "🟠 Atenção", "🟡 Monitorar"])
     hr2 = ws2.max_row
     for ci in range(1, 7):
         c = ws2.cell(row=hr2, column=ci)
-        c.font = Font(bold=True, color=branco, size=9)
-        c.fill = PatternFill("solid", fgColor="2E7D32")
-        c.alignment = Alignment(horizontal='center', wrap_text=True)
-    ws2.row_dimensions[hr2].height = 20
+        c.font = Font(bold=True, color=BR, size=9)
+        c.fill = PatternFill("solid", fgColor=VM)
+        c.alignment = Alignment(horizontal='center')
+    ws2.row_dimensions[hr2].height = 18
     for (curso, turma), g in df.groupby(['Curso', 'Turma']):
         ws2.append([curso, turma, len(g),
                     len(g[g['Qtd. Alertas'] >= 3]),
@@ -303,10 +556,10 @@ def exportar_excel_bytes(df):
         r = ws2.max_row
         for ci in range(1, 7):
             c = ws2.cell(row=r, column=ci)
-            c.font = Font(size=10)
+            c.font = Font(size=9)
             c.alignment = Alignment(horizontal='center' if ci > 2 else 'left')
             c.border = border
-        ws2.row_dimensions[r].height = 18
+        ws2.row_dimensions[r].height = 16
     ws2.append(["TOTAL GERAL", "", len(df),
                 len(df[df['Qtd. Alertas'] >= 3]),
                 len(df[df['Qtd. Alertas'] == 2]),
@@ -314,10 +567,10 @@ def exportar_excel_bytes(df):
     r = ws2.max_row
     for ci in range(1, 7):
         c = ws2.cell(row=r, column=ci)
-        c.font = Font(bold=True, size=10, color=branco)
-        c.fill = PatternFill("solid", fgColor=verde_escuro)
+        c.font = Font(bold=True, size=9, color=BR)
+        c.fill = PatternFill("solid", fgColor=VE)
         c.alignment = Alignment(horizontal='center' if ci > 2 else 'left')
-    ws2.row_dimensions[r].height = 20
+    ws2.row_dimensions[r].height = 18
 
     buf = io.BytesIO()
     wb.save(buf)
@@ -326,260 +579,235 @@ def exportar_excel_bytes(df):
 
 
 def enviar_email(excel_bytes, destinatarios, data_hoje, total, criticos, atencao, monitorar):
-    """Envia o relatório Excel por e-mail via SendGrid."""
     api_key = st.secrets.get("SENDGRID_API_KEY", "")
     if not api_key:
         return False, "Chave SendGrid não configurada."
-
-    lista_dest = list(set(destinatarios + DESTINATARIOS_FIXOS))
-
+    lista = list(set(destinatarios + DESTINATARIOS_FIXOS))
     assunto = f"Relatório CS Rehagro — Engajamento {data_hoje}"
+    html = f"""
+    <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#F9F6EF;">
+      <div style="background:#1B4D2E;padding:32px 40px;border-radius:12px 12px 0 0;">
+        <p style="color:#C8A951;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin:0 0 8px">Customer Success · Rehagro</p>
+        <h1 style="color:#fff;font-size:22px;margin:0;font-family:Georgia,serif;">Relatório de Engajamento</h1>
+        <p style="color:rgba(255,255,255,0.6);margin:6px 0 0;font-size:13px;">Gerado em {data_hoje}</p>
+      </div>
+      <div style="background:#fff;padding:32px 40px;border:1px solid #e8e2d4;">
+        <p style="color:#444;font-size:14px;margin:0 0 24px;">Segue em anexo o relatório semanal de engajamento dos alunos.</p>
+        <table width="100%" cellpadding="0" cellspacing="8">
+          <tr>
+            <td style="background:#EEF7F0;border-radius:10px;padding:16px;text-align:center;width:25%">
+              <div style="font-size:30px;font-weight:800;color:#1B4D2E;font-family:Georgia,serif;">{total}</div>
+              <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px;">Total</div>
+            </td>
+            <td style="background:#FFEBEE;border-radius:10px;padding:16px;text-align:center;width:25%">
+              <div style="font-size:30px;font-weight:800;color:#C62828;font-family:Georgia,serif;">{criticos}</div>
+              <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px;">🔴 Críticos</div>
+            </td>
+            <td style="background:#FFF3E0;border-radius:10px;padding:16px;text-align:center;width:25%">
+              <div style="font-size:30px;font-weight:800;color:#E65100;font-family:Georgia,serif;">{atencao}</div>
+              <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px;">🟠 Atenção</div>
+            </td>
+            <td style="background:#FFFDE7;border-radius:10px;padding:16px;text-align:center;width:25%">
+              <div style="font-size:30px;font-weight:800;color:#F57F17;font-family:Georgia,serif;">{monitorar}</div>
+              <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px;">🟡 Monitorar</div>
+            </td>
+          </tr>
+        </table>
+        <p style="color:#999;font-size:11px;margin-top:24px;">O arquivo Excel em anexo contém o relatório completo com alertas, ações recomendadas e comentários dos alunos.</p>
+      </div>
+      <div style="background:#F9F6EF;padding:16px;border-radius:0 0 12px 12px;text-align:center;border:1px solid #e8e2d4;border-top:none;">
+        <p style="color:#aaa;font-size:10px;margin:0;">Rehagro · Customer Success · Agente de Engajamento</p>
+      </div>
+    </div>"""
 
-    corpo_html = f"""
-    <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: linear-gradient(135deg, #1B4D2E, #2E7D32); padding: 32px; border-radius: 12px 12px 0 0;">
-            <p style="color:#F9A825; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin:0 0 8px 0;">Customer Success · Rehagro</p>
-            <h1 style="color:#ffffff; font-size:22px; margin:0;">🌱 Relatório de Engajamento</h1>
-            <p style="color:rgba(255,255,255,0.7); margin:6px 0 0 0; font-size:14px;">Gerado em {data_hoje}</p>
-        </div>
-        <div style="background:#ffffff; padding: 32px; border: 1px solid #e0e0e0;">
-            <p style="color:#444; font-size:15px;">Segue em anexo o relatório semanal de engajamento dos alunos.</p>
-            <div style="display:flex; gap:12px; margin: 24px 0;">
-                <div style="flex:1; background:#f7f5f0; border-radius:8px; padding:16px; text-align:center;">
-                    <div style="font-size:28px; font-weight:800; color:#1B4D2E;">{total}</div>
-                    <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:1px;">Total</div>
-                </div>
-                <div style="flex:1; background:#FFEBEE; border-radius:8px; padding:16px; text-align:center;">
-                    <div style="font-size:28px; font-weight:800; color:#C62828;">{criticos}</div>
-                    <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:1px;">🔴 Críticos</div>
-                </div>
-                <div style="flex:1; background:#FFF3E0; border-radius:8px; padding:16px; text-align:center;">
-                    <div style="font-size:28px; font-weight:800; color:#E65100;">{atencao}</div>
-                    <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:1px;">🟠 Atenção</div>
-                </div>
-                <div style="flex:1; background:#FFFDE7; border-radius:8px; padding:16px; text-align:center;">
-                    <div style="font-size:28px; font-weight:800; color:#F57F17;">{monitorar}</div>
-                    <div style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:1px;">🟡 Monitorar</div>
-                </div>
-            </div>
-            <p style="color:#888; font-size:12px; margin-top:24px;">
-                O arquivo Excel em anexo contém o relatório completo com os alertas e ações recomendadas para cada aluno.
-            </p>
-        </div>
-        <div style="background:#f7f5f0; padding:16px; border-radius: 0 0 12px 12px; text-align:center;">
-            <p style="color:#aaa; font-size:11px; margin:0;">Rehagro · Customer Success · Agente de Engajamento</p>
-        </div>
-    </div>
-    """
-
-    encoded = base64.b64encode(excel_bytes).decode()
-    nome_arquivo = f"relatorio_cs_{data_hoje.replace('/', '')}.xlsx"
-
-    message = Mail(
-        from_email=REMETENTE,
-        to_emails=lista_dest[0],
-        subject=assunto,
-        html_content=corpo_html,
-    )
-
-    # Adicionar demais destinatários em CC
-    if len(lista_dest) > 1:
-        from sendgrid.helpers.mail import Cc
-        for dest in lista_dest[1:]:
+    encoded  = base64.b64encode(excel_bytes).decode()
+    nome_arq = f"relatorio_cs_{data_hoje.replace('/', '')}.xlsx"
+    message  = Mail(from_email=REMETENTE, to_emails=lista[0],
+                    subject=assunto, html_content=html)
+    if len(lista) > 1:
+        for dest in lista[1:]:
             message.add_cc(dest)
-
-    attachment = Attachment(
-        FileContent(encoded),
-        FileName(nome_arquivo),
+    message.attachment = Attachment(
+        FileContent(encoded), FileName(nome_arq),
         FileType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-        Disposition("attachment")
-    )
-    message.attachment = attachment
-
+        Disposition("attachment"))
     try:
-        sg = SendGridAPIClient(api_key)
-        response = sg.send(message)
-        if response.status_code in [200, 201, 202]:
-            return True, f"E-mail enviado para {len(lista_dest)} destinatário(s)."
-        else:
-            return False, f"Erro SendGrid: status {response.status_code}"
+        sg  = SendGridAPIClient(api_key)
+        res = sg.send(message)
+        if res.status_code in [200, 201, 202]:
+            return True, f"E-mail enviado para {len(lista)} destinatário(s)."
+        return False, f"Erro SendGrid: status {res.status_code}"
     except Exception as e:
         return False, str(e)
 
 
-# ─── UI ─────────────────────────────────────────────────────
+# ── UI ───────────────────────────────────────────────────
 
+# Hero
 st.markdown("""
-<div class="hero">
-    <div class="hero-badge">Customer Success · Rehagro</div>
-    <p class="hero-title">🌱 Agente de Engajamento</p>
-    <p class="hero-sub">Identifique alunos desengajados e saiba exatamente qual ação tomar — em segundos.</p>
+<div class="rh-hero">
+  <div class="rh-logo">
+    <span class="rh-logo-leaf"></span> Rehagro
+  </div>
+  <div class="rh-badge">Customer Success · Agente de Engajamento</div>
+  <p class="rh-title">Monitoramento<br>de Alunos</p>
+  <p class="rh-sub">Identifique alunos desengajados e saiba exatamente qual ação tomar — em segundos.</p>
 </div>
 """, unsafe_allow_html=True)
 
 col_esq, col_dir = st.columns([1, 1], gap="large")
 
 with col_esq:
-    st.markdown('<p class="section-title">📋 Como exportar do Power BI</p>', unsafe_allow_html=True)
+    st.markdown('<p class="rh-section">📋 Como exportar do Power BI</p>', unsafe_allow_html=True)
     st.markdown("""
-    <div class="step-card">
-        <div class="step-num">Dashboard 1</div>
-        <div class="step-title">Acesso ao Canvas (AVA)</div>
-        <div class="step-desc">
-            Relatório <b>Rehagro - Canvas</b> → página <b>Acesso ao Canvas-Ok</b><br><br>
-            Filtros obrigatórios:<br>
-            <span class="filter-tag">Colaborador = Não</span>
-            <span class="filter-tag">Status Usuário Curso = Ativo</span><br>
-            <span class="filter-tag">Curso = selecione os cursos da sua área</span>
-            <span class="filter-tag">Turma = selecione as turmas desejadas</span><br><br>
-            Exporte a <b>Tabela de dados</b> → Excel
-            <p class="filter-note">💡 Você pode selecionar múltiplos cursos e turmas.</p>
-        </div>
+    <div class="rh-card">
+      <div class="rh-step-num">Dashboard 1</div>
+      <div class="rh-step-title">Acesso ao Canvas (AVA)</div>
+      <div class="rh-step-desc">
+        Relatório <b>Rehagro - Canvas</b> → página <b>Acesso ao Canvas-Ok</b><br><br>
+        <span class="rh-tag">Colaborador = Não</span>
+        <span class="rh-tag">Status Usuário Curso = Ativo</span>
+        <span class="rh-tag">Curso = seus cursos</span>
+        <span class="rh-tag">Turma = suas turmas</span><br><br>
+        Exporte a <b>Tabela de dados</b> → Excel
+        <p class="rh-note">💡 Múltiplos cursos e turmas são suportados.</p>
+      </div>
     </div>
-    <div class="step-card">
-        <div class="step-num">Dashboard 2</div>
-        <div class="step-title">NPS Médio por Aluno</div>
-        <div class="step-desc">
-            Relatório <b>Rehagro Educação - Avaliação de Aula</b> → página <b>Avaliações de aula/aluno</b><br><br>
-            Filtros obrigatórios:<br>
-            <span class="filter-tag">Formato Curso = Online</span>
-            <span class="filter-tag">Tipo de aula = On-line ao vivo</span>
-            <span class="filter-tag">Ano_aula = ano atual</span>
-            <span class="filter-tag">Questão = "...quanto...você indicaria o Rehagro..."</span><br>
-            <span class="filter-tag">Área = sua área</span>
-            <span class="filter-tag">Curso = seus cursos</span><br><br>
-            Exporte a <b>Tabela NPS médio/aluno</b> → Excel
-        </div>
+    <div class="rh-card">
+      <div class="rh-step-num">Dashboard 2</div>
+      <div class="rh-step-title">NPS Médio por Aluno</div>
+      <div class="rh-step-desc">
+        Relatório <b>Rehagro Educação - Avaliação de Aula</b> → página <b>Avaliações de aula/aluno</b><br><br>
+        <span class="rh-tag">Formato Curso = Online</span>
+        <span class="rh-tag">Tipo de aula = On-line ao vivo</span>
+        <span class="rh-tag">Ano_aula = ano atual</span>
+        <span class="rh-tag">Questão = "...você indicaria o Rehagro..."</span>
+        <span class="rh-tag">Área = sua área</span>
+        <span class="rh-tag">Curso = seus cursos</span><br><br>
+        Exporte a <b>Tabela NPS médio/aluno</b> → Excel
+      </div>
     </div>
-    <div class="step-card">
-        <div class="step-num">Dashboard 3</div>
-        <div class="step-title">Frequência nas Aulas ao Vivo</div>
-        <div class="step-desc">
-            Relatório <b>Rehagro Alunado</b> → página <b>Análise de Frequência e Faltas</b><br><br>
-            Filtros obrigatórios:<br>
-            <span class="filter-tag">Área = sua área</span>
-            <span class="filter-tag">Formato do curso = Online</span>
-            <span class="filter-tag">Turma = selecione as turmas da sua área</span><br><br>
-            Exporte a <b>Tabela de frequência</b> → Excel
-            <p class="filter-note">💡 Você pode selecionar todas as turmas da área de uma vez.</p>
-        </div>
+    <div class="rh-card">
+      <div class="rh-step-num">Dashboard 3</div>
+      <div class="rh-step-title">Frequência nas Aulas ao Vivo</div>
+      <div class="rh-step-desc">
+        Relatório <b>Rehagro Alunado</b> → página <b>Análise de Frequência e Faltas</b><br><br>
+        <span class="rh-tag">Área = sua área</span>
+        <span class="rh-tag">Formato do curso = Online</span>
+        <span class="rh-tag">Turma = suas turmas</span><br><br>
+        Exporte a <b>Tabela de frequência</b> → Excel
+      </div>
+    </div>
+    <div class="rh-card">
+      <div class="rh-step-num">Dashboard 4 — Opcional</div>
+      <div class="rh-step-title">Comentários das Aulas</div>
+      <div class="rh-step-desc">
+        Relatório <b>Rehagro Educação - Avaliação de Aula</b> → página <b>Avaliações de aula/aluno</b><br><br>
+        <span class="rh-tag">Mesmos filtros do Dashboard 2</span><br><br>
+        Exporte a <b>Tabela de Comentários</b> → Excel
+        <p class="rh-note">💡 Enriquece o relatório com o contexto do feedback do aluno.</p>
+      </div>
     </div>
     """, unsafe_allow_html=True)
 
 with col_dir:
-    st.markdown('<p class="section-title">📁 Envie os arquivos exportados</p>', unsafe_allow_html=True)
+    st.markdown('<p class="rh-section">📁 Envie os arquivos</p>', unsafe_allow_html=True)
 
-    f_canvas = st.file_uploader("1️⃣  Arquivo Canvas (acesso ao AVA)",    type=["xlsx"], key="canvas")
-    f_nps    = st.file_uploader("2️⃣  Arquivo NPS (avaliações de aula)",   type=["xlsx"], key="nps")
-    f_freq   = st.file_uploader("3️⃣  Arquivo Frequência (aulas ao vivo)", type=["xlsx"], key="freq")
+    f_canvas  = st.file_uploader("1️⃣  Canvas — acesso ao AVA",           type=["xlsx"], key="canvas")
+    f_nps     = st.file_uploader("2️⃣  NPS — avaliações de aula",          type=["xlsx"], key="nps")
+    f_freq    = st.file_uploader("3️⃣  Frequência — aulas ao vivo",        type=["xlsx"], key="freq")
+    f_coment  = st.file_uploader("4️⃣  Comentários — opcional",            type=["xlsx"], key="coment")
 
-    st.markdown('<p class="section-title">✉️ Envio por e-mail</p>', unsafe_allow_html=True)
-
-    email_usuario = st.text_input(
-        "Seu e-mail (receberá uma cópia junto com a lista fixa):",
-        placeholder="seuemail@rehagro.com.br"
-    )
-
+    st.markdown('<p class="rh-section">✉️ Envio por e-mail</p>', unsafe_allow_html=True)
+    email_usuario = st.text_input("Seu e-mail (receberá cópia junto à lista fixa):",
+                                  placeholder="seuemail@rehagro.com.br")
     with st.expander("👁️ Ver destinatários fixos"):
-        st.write("O relatório sempre será enviado para:")
         for d in DESTINATARIOS_FIXOS:
             st.write(f"• {d}")
 
-    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="rh-divider"></div>', unsafe_allow_html=True)
 
-    todos_prontos = f_canvas and f_nps and f_freq
-
-    if not todos_prontos:
-        faltando = []
-        if not f_canvas: faltando.append("Canvas")
-        if not f_nps:    faltando.append("NPS")
-        if not f_freq:   faltando.append("Frequência")
-        st.info(f"Aguardando arquivos: **{', '.join(faltando)}**")
+    obrigatorios = f_canvas and f_nps and f_freq
+    if not obrigatorios:
+        faltando = [n for f, n in [(f_canvas,"Canvas"),(f_nps,"NPS"),(f_freq,"Frequência")] if not f]
+        st.info(f"Aguardando arquivos obrigatórios: **{', '.join(faltando)}**")
     else:
-        st.success("✅ Todos os arquivos recebidos! Clique para gerar e enviar o relatório.")
-
+        st.success("✅ Arquivos recebidos! Clique para gerar e enviar o relatório.")
         if st.button("🔍 Gerar e Enviar Relatório", type="primary", use_container_width=True):
-            with st.spinner("Analisando dados e enviando e-mail..."):
+            with st.spinner("Analisando dados..."):
                 try:
-                    df_canvas_data = carregar_canvas(f_canvas)
-                    df_nps_data    = carregar_nps(f_nps)
-                    df_freq_data   = carregar_frequencia(f_freq)
-                    df_rel         = gerar_relatorio(df_canvas_data, df_nps_data, df_freq_data)
+                    dc = carregar_canvas(f_canvas)
+                    dn = carregar_nps(f_nps)
+                    df_fr = carregar_frequencia(f_freq)
+                    df_co = carregar_comentarios(f_coment) if f_coment else None
+                    df_rel = gerar_relatorio(dc, dn, df_fr, df_co)
 
                     criticos  = len(df_rel[df_rel['Qtd. Alertas'] >= 3])
                     atencao   = len(df_rel[df_rel['Qtd. Alertas'] == 2])
                     monitorar = len(df_rel[df_rel['Qtd. Alertas'] == 1])
 
                     st.markdown(f"""
-                    <div class="metric-row">
-                        <div class="metric-card">
-                            <div class="metric-num" style="color:#1B4D2E">{len(df_rel)}</div>
-                            <div class="metric-label">Total desengajados</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-num" style="color:#C62828">{criticos}</div>
-                            <div class="metric-label">🔴 Críticos</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-num" style="color:#E65100">{atencao}</div>
-                            <div class="metric-label">🟠 Atenção</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-num" style="color:#F57F17">{monitorar}</div>
-                            <div class="metric-label">🟡 Monitorar</div>
-                        </div>
+                    <div class="rh-metrics">
+                      <div class="rh-metric">
+                        <div class="rh-metric-num" style="color:#1B4D2E">{len(df_rel)}</div>
+                        <div class="rh-metric-label">Total</div>
+                      </div>
+                      <div class="rh-metric">
+                        <div class="rh-metric-num" style="color:#C62828">{criticos}</div>
+                        <div class="rh-metric-label">🔴 Críticos</div>
+                      </div>
+                      <div class="rh-metric">
+                        <div class="rh-metric-num" style="color:#E65100">{atencao}</div>
+                        <div class="rh-metric-label">🟠 Atenção</div>
+                      </div>
+                      <div class="rh-metric">
+                        <div class="rh-metric-num" style="color:#F57F17">{monitorar}</div>
+                        <div class="rh-metric-label">🟡 Monitorar</div>
+                      </div>
                     </div>
                     """, unsafe_allow_html=True)
 
-                    turmas_disp = sorted(df_rel['Turma'].dropna().unique().tolist())
-                    if len(turmas_disp) > 1:
-                        turma_sel = st.multiselect("Filtrar por turma:", options=turmas_disp, default=turmas_disp)
-                        df_view = df_rel[df_rel['Turma'].isin(turma_sel)]
-                    else:
-                        df_view = df_rel
+                    turmas = sorted(df_rel['Turma'].dropna().unique().tolist())
+                    df_view = df_rel
+                    if len(turmas) > 1:
+                        sel = st.multiselect("Filtrar por turma:", turmas, default=turmas)
+                        df_view = df_rel[df_rel['Turma'].isin(sel)]
 
-                    st.markdown('<p class="section-title">👥 Alunos desengajados</p>', unsafe_allow_html=True)
-                    st.dataframe(
-                        df_view[['Curso', 'Turma', 'Nome', 'Qtd. Alertas', 'Alertas Identificados', 'Ações Recomendadas']],
-                        use_container_width=True, hide_index=True, height=300
-                    )
+                    st.markdown('<p class="rh-section">👥 Alunos desengajados</p>', unsafe_allow_html=True)
+                    colunas_view = ['Curso', 'Turma', 'Nome', 'Qtd. Alertas',
+                                    'Alertas Identificados', 'Ações Recomendadas']
+                    if df_co is not None:
+                        colunas_view.append('Comentários do Aluno')
+                    st.dataframe(df_view[colunas_view],
+                                 use_container_width=True, hide_index=True, height=320)
 
                     excel_bytes = exportar_excel_bytes(df_rel)
                     data_hoje   = datetime.now().strftime('%d/%m/%Y')
 
-                    # Envio por e-mail
-                    destinatarios_envio = []
-                    if email_usuario and "@" in email_usuario:
-                        destinatarios_envio.append(email_usuario.strip())
-
+                    dests = [email_usuario.strip()] if email_usuario and "@" in email_usuario else []
                     if SENDGRID_OK:
-                        ok, msg = enviar_email(
-                            excel_bytes, destinatarios_envio,
-                            data_hoje, len(df_rel), criticos, atencao, monitorar
-                        )
+                        ok, msg = enviar_email(excel_bytes, dests, data_hoje,
+                                               len(df_rel), criticos, atencao, monitorar)
                         if ok:
                             st.success(f"📧 {msg}")
                         else:
-                            st.warning(f"⚠️ Relatório gerado, mas e-mail não enviado: {msg}")
+                            st.warning(f"⚠️ E-mail não enviado: {msg}")
                     else:
-                        st.warning("⚠️ Biblioteca SendGrid não instalada. E-mail não enviado.")
+                        st.warning("⚠️ Biblioteca SendGrid não instalada.")
 
-                    # Download manual sempre disponível
                     st.download_button(
-                        label="⬇️  Baixar Relatório Excel",
+                        "⬇️  Baixar Relatório Excel",
                         data=excel_bytes,
                         file_name=f"relatorio_cs_{datetime.now().strftime('%d%m%Y')}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         use_container_width=True,
                     )
-
                 except Exception as e:
                     st.error(f"Erro ao processar: {e}")
                     st.info("Verifique se os arquivos corretos foram enviados com os filtros indicados.")
 
 st.markdown("""
-<br>
-<div style="text-align:center; color:#aaa; font-size:0.78rem; padding: 16px 0;">
-    Rehagro · Customer Success · Agente de Engajamento
+<div class="rh-footer">
+    Rehagro &copy; 2026 · Customer Success · Agente de Engajamento
 </div>
 """, unsafe_allow_html=True)
