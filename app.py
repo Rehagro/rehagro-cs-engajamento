@@ -161,8 +161,8 @@ html, body, [class*="css"] {
 .rh-dash-card:hover { border-left-color: var(--ouro); }
 
 .rh-dash-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 0.75rem;
+    font-family: 'Bebas Neue', sans-serif !important;
+    font-size: 3rem !important;
     letter-spacing: 3px;
     color: var(--ouro);
     margin-bottom: 4px;
@@ -411,54 +411,52 @@ def carregar_nps(arquivo):
     col_aluno = next((c for c in df.columns if c.upper() == 'ALUNO'), None)
     col_nps   = next((c for c in df.columns if 'NPS' in c.upper() and 'REA' in c.upper()), None)
     col_turma = next((c for c in df.columns if c.upper() == 'TURMA'), None)
-    col_data  = next((c for c in df.columns if c.upper() == 'DATA AULA' or (
-        'DATA' in c.upper() and 'AULA' in c.upper() and
-        'ANO' not in c.upper() and 'MÊS' not in c.upper() and 'DIA' not in c.upper())), None)
     if not col_aluno or not col_nps:
         raise ValueError("Arquivo NPS: colunas não encontradas.")
     df_v = df[df[col_nps].notna()].copy()
-    if col_data:
-        df_v['_data_dt'] = pd.to_datetime(df_v[col_data], errors='coerce')
-        df_v = df_v.sort_values([col_aluno, '_data_dt'])
+
+    # tenta coluna de data combinada primeiro; senão combina DIA + MÊS/ANO separados
+    col_data_unica = next((c for c in df_v.columns if c.upper() == 'DATA AULA' or (
+        'DATA' in c.upper() and 'AULA' in c.upper() and
+        'ANO' not in c.upper() and 'MÊS' not in c.upper() and 'DIA' not in c.upper())), None)
+    col_dia     = next((c for c in df_v.columns if c.upper() in ('DIA', 'DIA AULA')), None)
+    col_mes_ano = next((c for c in df_v.columns if 'MÊS' in c.upper() or 'MES' in c.upper()), None)
+
+    if col_data_unica:
+        df_v['_data_dt'] = pd.to_datetime(df_v[col_data_unica], errors='coerce')
+    elif col_dia and col_mes_ano:
+        df_v['_data_str'] = (df_v[col_dia].astype(str).str.strip().str.zfill(2) + '/' +
+                             df_v[col_mes_ano].astype(str).str.strip())
+        df_v['_data_dt'] = pd.to_datetime(df_v['_data_str'], format='%d/%m/%Y', errors='coerce')
+    else:
+        df_v['_data_dt'] = pd.NaT
+
+    df_v = df_v.sort_values([col_aluno, '_data_dt'])
     df_v['_key'] = (df_v[col_aluno].astype(str).str.strip().str.lower() + '||' +
                     (df_v[col_turma].astype(str).str.strip().str.lower() if col_turma else ''))
     ultima = df_v.groupby('_key').last().reset_index()
     det = ultima[pd.to_numeric(ultima[col_nps], errors='coerce') < 0].copy()
-    det = det[['_key', col_nps] + ([col_data] if col_data else [])].copy()
-    det.columns = ['_key','NPS_valor'] + (['NPS_data'] if col_data else [])
-    if 'NPS_data' not in det.columns: det['NPS_data'] = ''
+    det = det[['_key', col_nps, '_data_dt']].copy()
+    det.columns = ['_key', 'NPS_valor', 'NPS_data']
     return det
 
 def carregar_comentarios(arquivo):
     df = pd.read_excel(arquivo, skiprows=2)
     df.columns = df.columns.str.strip()
-    col_aluno    = next((c for c in df.columns if 'NOME' in c.upper() or c.upper() == 'NOME ALUNO'), None)
+    col_aluno    = next((c for c in df.columns if 'NOME' in c.upper() or c.upper() in ('NOME ALUNO', 'ALUNO')), None)
     col_turma    = next((c for c in df.columns if c.upper() == 'TURMA'), None)
     col_resposta = next((c for c in df.columns if 'RESPOSTA' in c.upper() or 'COMENT' in c.upper()), None)
     col_data     = next((c for c in df.columns if 'DATA' in c.upper()), None)
-    col_aula     = next((c for c in df.columns if 'AULA' in c.upper() or 'COMENTÁRIO' in c.upper()), None)
     if not col_aluno or not col_resposta:
         raise ValueError("Arquivo Comentários: colunas não encontradas.")
     df = df[df[col_resposta].notna() & (df[col_resposta].astype(str).str.strip() != '')].copy()
     df['_key'] = (df[col_aluno].astype(str).str.strip().str.lower() + '||' +
                   (df[col_turma].astype(str).str.strip().str.lower() if col_turma else ''))
-    def agrupar(group):
-        comentarios = []
-        for _, row in group.iterrows():
-            data_str = ''
-            if col_data and pd.notna(row.get(col_data)):
-                try: data_str = pd.to_datetime(row[col_data]).strftime('%d/%m/%Y')
-                except: data_str = str(row[col_data])[:10]
-            aula_str = ''
-            if col_aula and pd.notna(row.get(col_aula)):
-                aula_str = str(row[col_aula])
-                if len(aula_str) > 50: aula_str = aula_str[:50] + '...'
-            linha = f"[{data_str}] {aula_str}: {str(row[col_resposta]).strip()}" if data_str else str(row[col_resposta]).strip()
-            comentarios.append(linha)
-        return ' | '.join(comentarios)
-    resultado = df.groupby('_key').apply(agrupar).reset_index()
-    resultado.columns = ['_key','Comentarios']
-    return resultado
+    if col_data:
+        df['_data_norm'] = pd.to_datetime(df[col_data], errors='coerce').dt.normalize()
+    else:
+        df['_data_norm'] = pd.NaT
+    return df[['_key', '_data_norm', col_resposta]].rename(columns={col_resposta: 'Comentario'})
 
 def carregar_frequencia(arquivo):
     df = pd.read_excel(arquivo, skiprows=2)
@@ -497,9 +495,12 @@ def gerar_relatorio(df_canvas, df_nps, df_freq, df_coment=None):
             partes = key.split('||')
             info_map[key] = {'Nome': partes[0].title(),'Email':'','Curso':'',
                              'Turma': partes[1].upper() if len(partes)>1 else ''}
+    # monta lookup: (key, data_normalizada) -> comentario
     coment_map = {}
     if df_coment is not None and not df_coment.empty:
-        coment_map = df_coment.set_index('_key')['Comentarios'].to_dict()
+        for _, row in df_coment.iterrows():
+            data_key = row['_data_norm'] if pd.notna(row['_data_norm']) else None
+            coment_map[(row['_key'], data_key)] = row['Comentario']
     relatorio = []
     for key in sorted(todos_keys):
         info = info_map[key]
@@ -510,12 +511,17 @@ def gerar_relatorio(df_canvas, df_nps, df_freq, df_coment=None):
             alertas.append(f"Sem acesso ao Canvas há {dias} dias")
             acoes.append("Enviar link de acesso à plataforma")
         n = df_nps[df_nps['_key'] == key]
+        nps_data_norm = None
         if not n.empty:
             nps_val = int(n.iloc[0]['NPS_valor'])
             nps_data = ''
-            if 'NPS_data' in n.columns and pd.notna(n.iloc[0]['NPS_data']):
-                try: nps_data = pd.to_datetime(n.iloc[0]['NPS_data']).strftime('%d/%m/%Y')
-                except: nps_data = str(n.iloc[0]['NPS_data'])[:10]
+            nps_data_norm = None
+            raw_nps_data = n.iloc[0].get('NPS_data')
+            if pd.notna(raw_nps_data):
+                nps_dt = pd.to_datetime(raw_nps_data, errors='coerce')
+                if pd.notna(nps_dt):
+                    nps_data = nps_dt.strftime('%d/%m/%Y')
+                    nps_data_norm = nps_dt.normalize()
             label = f"Detrator (NPS {nps_val})"
             if nps_data: label += f" — avaliação em {nps_data}"
             alertas.append(f"Última avaliação: {label}")
@@ -525,12 +531,13 @@ def gerar_relatorio(df_canvas, df_nps, df_freq, df_coment=None):
             alertas.append(f"Ausente nas últimas 2 aulas ao vivo ({f.iloc[0]['Ultimas_2_aulas']})")
             acoes.append("Enviar data da próxima aula ao vivo")
         if alertas:
+            comentario = coment_map.get((key, nps_data_norm), '')
             relatorio.append({'Curso': info['Curso'],'Turma': info['Turma'],
                               'Nome': info['Nome'],'E-mail': info['Email'],
                               'Qtd. Alertas': len(alertas),
                               'Alertas Identificados': ' | '.join(alertas),
                               'Ações Recomendadas': ' | '.join(acoes),
-                              'Comentários do Aluno': coment_map.get(key,'')})
+                              'Comentários do Aluno': comentario})
     df = pd.DataFrame(relatorio)
     return df.sort_values(['Curso','Turma','Qtd. Alertas','Nome'],
                           ascending=[True,True,False,True]).reset_index(drop=True)
@@ -702,7 +709,7 @@ with col_esq:
     st.markdown("""
     <div>
       <div class="rh-dash-card" style="border-radius:12px 12px 0 0">
-        <div class="rh-dash-num">Dashboard 01</div>
+        <div class="rh-dash-num" style="font-size:1.05rem!important">Dashboard 01</div>
         <div class="rh-dash-title">Acesso ao Canvas (AVA)</div>
         <div class="rh-dash-desc">
           Relatório <b>Rehagro - Canvas</b> → página <b>Acesso ao Canvas-Ok</b><br><br>
@@ -715,7 +722,7 @@ with col_esq:
         </div>
       </div>
       <div class="rh-dash-card">
-        <div class="rh-dash-num">Dashboard 02</div>
+        <div class="rh-dash-num" style="font-size:1.05rem!important">Dashboard 02</div>
         <div class="rh-dash-title">NPS Médio por Aluno</div>
         <div class="rh-dash-desc">
           Relatório <b>Rehagro Educação - Avaliação de Aula</b> → página <b>Avaliações de aula/aluno</b><br><br>
@@ -729,7 +736,7 @@ with col_esq:
         </div>
       </div>
       <div class="rh-dash-card">
-        <div class="rh-dash-num">Dashboard 03</div>
+        <div class="rh-dash-num" style="font-size:1.05rem!important">Dashboard 03</div>
         <div class="rh-dash-title">Frequência nas Aulas ao Vivo</div>
         <div class="rh-dash-desc">
           Relatório <b>Rehagro Alunado</b> → página <b>Análise de Frequência e Faltas</b><br><br>
@@ -741,7 +748,7 @@ with col_esq:
       </div>
       <div class="rh-dash-card" style="border-radius:0 0 12px 12px">
         <div class="rh-opt-badge">Opcional</div>
-        <div class="rh-dash-num">Dashboard 04</div>
+        <div class="rh-dash-num" style="font-size:1.05rem!important">Dashboard 04</div>
         <div class="rh-dash-title">Comentários das Aulas</div>
         <div class="rh-dash-desc">
           Mesma página do Dashboard 02 → <b>Tabela de Comentários</b> → Excel
@@ -823,7 +830,10 @@ with col_dir:
                     dests = [email_usuario.strip()] if email_usuario and "@" in email_usuario else []
                     if SENDGRID_OK:
                         ok,msg = enviar_email(excel_bytes,dests,data_hoje,len(df_rel),criticos,atencao,monitorar)
-                        st.success(f"📧 {msg}") if ok else st.warning(f"⚠️ E-mail não enviado: {msg}")
+                        if ok:
+                            st.success(f"📧 {msg}")
+                        else:
+                            st.warning(f"⚠️ E-mail não enviado: {msg}")
                     else:
                         st.warning("⚠️ Biblioteca SendGrid não instalada.")
 
