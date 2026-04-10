@@ -54,7 +54,7 @@ html, body, [class*="css"] {
 /* ── HERO ─────────────────────────────── */
 .rh-hero {
     background: var(--verde);
-    padding: 52px 56px 56px;
+    padding: 24px 40px 28px;
     margin: -1rem -1rem 0 -1rem;
     position: relative;
     overflow: hidden;
@@ -80,7 +80,7 @@ html, body, [class*="css"] {
     letter-spacing: 4px;
     text-transform: uppercase;
     color: var(--ouro);
-    margin: 0 0 16px 0;
+    margin: 0 0 8px 0;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -93,23 +93,25 @@ html, body, [class*="css"] {
 }
 .rh-hero-title {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 5rem;
-    line-height: 0.92;
+    font-size: 2.6rem;
+    line-height: 1;
     color: var(--branco);
-    margin: 0 0 6px 0;
+    margin: 0 0 4px 0;
     letter-spacing: 2px;
+    white-space: nowrap;
 }
 .rh-hero-title span { color: var(--ouro); }
 .rh-hero-sub {
-    font-size: 1.05rem;
+    font-size: 0.9rem;
     color: rgba(255,255,255,0.6);
     font-weight: 300;
-    margin: 16px 0 0 0;
-    max-width: 480px;
-    line-height: 1.6;
+    margin: 6px 0 0 0;
+    max-width: 640px;
+    line-height: 1.5;
+    white-space: nowrap;
 }
 .rh-hero-pills {
-    display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap;
+    display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;
 }
 .rh-pill {
     background: rgba(200,169,81,0.15);
@@ -786,7 +788,7 @@ st.markdown("""
   <div class="rh-hero-grid"></div>
   <div class="rh-hero-inner">
     <p class="rh-eyebrow">Rehagro · Customer Success</p>
-    <h1 class="rh-hero-title">MONITORAMENTO<br><span>DE ALUNOS</span></h1>
+    <h1 class="rh-hero-title">MONITORAMENTO <span>DE ALUNOS</span></h1>
     <p class="rh-hero-sub">Identifique alunos desengajados e saiba exatamente qual ação tomar — em segundos.</p>
     <div class="rh-hero-pills">
       <span class="rh-pill">Canvas AVA</span>
@@ -805,6 +807,16 @@ col_esq, col_dir = st.columns([1, 1], gap="large")
 with col_esq:
     st.markdown('<p class="rh-section">Como exportar do Power BI</p>', unsafe_allow_html=True)
     st.markdown("""
+    <div style="background:#FFF8E1;border:1.5px solid #C8A951;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start;">
+      <span style="font-size:1.2rem;line-height:1.4;">⚠️</span>
+      <div>
+        <div style="font-size:0.82rem;font-weight:700;color:#5D4037;letter-spacing:0.5px;margin-bottom:4px;text-transform:uppercase;">Atenção antes de exportar</div>
+        <div style="font-size:0.85rem;color:#6D4C41;line-height:1.6;">
+          Todos os arquivos devem ser exportados no formato <b>Dados Resumidos</b>.<br>
+          Os <b>filtros necessários</b> para cada extração estão descritos em cada ponto abaixo — siga as instruções de cada dashboard.
+        </div>
+      </div>
+    </div>
     <div>
       <div class="rh-dash-card" style="border-radius:12px 12px 0 0">
         <div class="rh-dash-num" style="font-size:1.1rem!important">Dashboard 01</div>
