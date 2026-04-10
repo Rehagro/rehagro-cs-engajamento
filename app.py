@@ -750,12 +750,12 @@ def exportar_excel_bytes(df):
         cell.alignment=Alignment(horizontal=align,vertical='center',wrap_text=True)
     ws.merge_cells(f'A1:{lc}1')
     hcell(ws['A1'],"RELATÓRIO DE ENGAJAMENTO — CUSTOMER SUCCESS REHAGRO",VE,sz=13)
-    ws.row_dimensions[1].height=48
+    ws.row_dimensions[1].height=52
     try:
         logo_xl = XLImage("Logo-Rehagro-chapada-branca.png")
-        logo_xl.height = 28
-        logo_xl.width  = 90
-        logo_xl.anchor = get_column_letter(n_cols - 1) + "1"
+        logo_xl.height = 61
+        logo_xl.width  = 210
+        logo_xl.anchor = get_column_letter(n_cols - 2) + "1"
         ws.add_image(logo_xl)
     except Exception:
         pass
