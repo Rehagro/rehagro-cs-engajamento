@@ -555,9 +555,9 @@ def gerar_alertas_nps(df_nps, df_coment, df_freq_ativo):
         try: return pd.Timestamp(d).strftime('%d/%m/%Y')
         except: return str(d)
 
-    def add(key, texto, acao, topico='', professor=''):
+    def add(key, texto, acao, topico='', professor='', comentario=''):
         alertas_por_aluno.setdefault(key, []).append(
-            {'texto': texto, 'acao': acao, 'topico': topico, 'professor': professor}
+            {'texto': texto, 'acao': acao, 'topico': topico, 'professor': professor, 'comentario': comentario}
         )
 
     # Mapa de comentários: (key, data, topico) → {prof, resp}
@@ -649,16 +649,18 @@ def gerar_alertas_nps(df_nps, df_coment, df_freq_ativo):
                     # D: Detrator + comentário na mesma aula → 1 alerta unificado
                     r = nps_mesma.iloc[0]
                     add(key,
-                        f"Detrator com comentário em {fmt_data(c_data)} · {crow['_topico_orig']} · Prof. {crow['_prof']}: \"{crow['_resp']}\"",
+                        f"Escreveu comentário em {fmt_data(c_data)} (com avaliação negativa)",
                         "Retomar feedback negativo e comentário da avaliação",
-                        crow['_topico_orig'], crow['_prof'])
+                        crow['_topico_orig'], crow['_prof'],
+                        comentario=crow['_resp'])
                     alertas_gerados.add(c_key)
                 elif c_key not in alertas_gerados:
                     # C ou E: comentário sem NPS negativo na mesma aula
                     add(key,
-                        f"Comentário em {fmt_data(c_data)} · {crow['_topico_orig']} · Prof. {crow['_prof']}: \"{crow['_resp']}\"",
+                        f"Escreveu comentário em {fmt_data(c_data)}",
                         "Analisar comentário e dar retorno ao aluno",
-                        crow['_topico_orig'], crow['_prof'])
+                        crow['_topico_orig'], crow['_prof'],
+                        comentario=crow['_resp'])
                     # Não adiciona ao alertas_gerados pois pode ter NPS negativo separado
 
     return alertas_por_aluno
@@ -684,7 +686,7 @@ def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None, turm
         if desistentes_keys and key in desistentes_keys:
             continue
         info = info_map[key]
-        alertas_txt, acoes_txt, topicos_txt, profs_txt = [], [], [], []
+        alertas_txt, acoes_txt, topicos_txt, profs_txt, comentarios_txt = [], [], [], [], []
 
         # Canvas
         c = df_canvas[df_canvas['_key'] == key]
@@ -694,6 +696,7 @@ def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None, turm
             acoes_txt.append("Enviar link de acesso à plataforma")
             topicos_txt.append('')
             profs_txt.append('')
+            comentarios_txt.append('')
 
         # NPS
         if key in alertas_nps:
@@ -702,6 +705,7 @@ def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None, turm
                 acoes_txt.append(al['acao'])
                 topicos_txt.append(al.get('topico',''))
                 profs_txt.append(al.get('professor',''))
+                comentarios_txt.append(al.get('comentario',''))
 
         # Frequência
         f = df_freq[df_freq['_key'] == key]
@@ -710,6 +714,7 @@ def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None, turm
             acoes_txt.append("Enviar data da próxima aula ao vivo")
             topicos_txt.append('')
             profs_txt.append('')
+            comentarios_txt.append('')
 
         if alertas_txt:
             relatorio.append({
@@ -722,6 +727,7 @@ def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None, turm
                 'Ações Recomendadas':    ' | '.join(acoes_txt),
                 'Tópico':                ' | '.join([t for t in topicos_txt if t]),
                 'Professor':             ' | '.join([p for p in profs_txt if p]),
+                'Comentário':            ' | '.join([c for c in comentarios_txt if c]),
             })
 
     df = pd.DataFrame(relatorio)
@@ -761,7 +767,7 @@ def exportar_excel_bytes(df):
         ws[f'A{i}'].alignment=Alignment(horizontal='left',indent=2)
     ws.append([])
     headers=['Curso','Turma','Nome do Aluno','E-mail','Qtd. Alertas',
-             'Alertas Identificados','Ações Recomendadas','Tópico','Professor']
+             'Alertas Identificados','Ações Recomendadas','Tópico','Professor','Comentário']
     ws.append(headers)
     hr=ws.max_row
     for ci,h in enumerate(headers,1):
@@ -781,29 +787,41 @@ def exportar_excel_bytes(df):
         return "F9F6EF"
 
     def expandir_linha(row):
-        alertas = [a.strip() for a in str(row.get('Alertas Identificados','')).split(' | ') if a.strip()]
-        acoes   = [a.strip() for a in str(row.get('Ações Recomendadas','')).split(' | ') if a.strip()]
-        topicos = [t.strip() for t in str(row.get('Tópico','')).split(' | ') if t.strip()]
-        profs   = [p.strip() for p in str(row.get('Professor','')).split(' | ') if p.strip()]
-        acoes_vistas=set(); linhas=[]; tp_idx=0
-        for i,alerta in enumerate(alertas):
-            acao_raw=acoes[i] if i<len(acoes) else ''
-            acao=acao_raw if acao_raw not in acoes_vistas else ''
-            acoes_vistas.add(acao_raw)
-            eh_nps=not any(x in alerta for x in ['Canvas','videoconfer'])
-            comentario=''; alerta_limpo=alerta
-            if eh_nps:
-                m=_re.search(r'[""](.*?)[""]\s*$',alerta)
-                if m:
-                    comentario=m.group(1)
-                    alerta_limpo=_re.sub(r':\s*["""].*?["""]\s*$','',alerta).strip().rstrip(': ')
-                prof=profs[tp_idx] if tp_idx<len(profs) else ''
-                topico=topicos[tp_idx] if tp_idx<len(topicos) else ''
-                tp_idx+=1
+        alertas    = [a.strip() for a in str(row.get('Alertas Identificados','')).split(' | ') if a.strip()]
+        acoes      = [a.strip() for a in str(row.get('Ações Recomendadas','')).split(' | ') if a.strip()]
+        topicos    = [t.strip() for t in str(row.get('Tópico','')).split(' | ')]
+        profs      = [p.strip() for p in str(row.get('Professor','')).split(' | ')]
+        comentarios= [c.strip() for c in str(row.get('Comentário','')).split(' | ')]
+
+        # Separar alertas de plataforma (Canvas/Frequência) dos de NPS/Comentário
+        plataforma, nps_coment = [], []
+        for i, alerta in enumerate(alertas):
+            acao = acoes[i] if i < len(acoes) else ''
+            if any(x in alerta for x in ['Canvas', 'videoconfer']):
+                plataforma.append((alerta, acao))
             else:
-                prof=topico=''
-            linhas.append({'alerta':alerta_limpo,'acao':acao,'prof':prof,'topico':topico,'comentario':comentario})
-        return linhas
+                nps_coment.append((i, alerta, acao))
+
+        linhas = []
+
+        # Canvas + Frequência → uma única linha combinada
+        if plataforma:
+            alertas_comb = ' | '.join(a for a, _ in plataforma)
+            acoes_comb   = ' | '.join(ac for _, ac in plataforma)
+            linhas.append({'alerta': alertas_comb, 'acao': acoes_comb,
+                           'prof': '', 'topico': '', 'comentario': ''})
+
+        # NPS / Comentários → cada um em linha própria
+        tp_idx = 0
+        for orig_i, alerta, acao in nps_coment:
+            prof   = profs[tp_idx]       if tp_idx < len(profs)        else ''
+            topico = topicos[tp_idx]     if tp_idx < len(topicos)      else ''
+            coment = comentarios[tp_idx] if tp_idx < len(comentarios)  else ''
+            tp_idx += 1
+            linhas.append({'alerta': alerta, 'acao': acao,
+                           'prof': prof, 'topico': topico, 'comentario': coment})
+
+        return linhas if linhas else [{'alerta':'','acao':'','prof':'','topico':'','comentario':''}]
 
     for _,row in df.iterrows():
         linhas=expandir_linha(row)
