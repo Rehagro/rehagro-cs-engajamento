@@ -749,6 +749,7 @@ def exportar_excel_bytes(df):
             c=ws.cell(row=dr,column=ci)
             if ci<=2: c.fill=PatternFill("solid",fgColor="EDF7EE"); c.font=Font(size=8,color=VM,bold=True)
             elif ci==5: c.fill=PatternFill("solid",fgColor=fc); c.font=Font(bold=True,size=12); c.alignment=Alignment(horizontal='center',vertical='center')
+            elif ci in (6,7): c.fill=PatternFill("solid",fgColor=fc if ci>4 else BR); c.font=Font(size=10)
             elif ci==8: c.fill=PatternFill("solid",fgColor="FFF8E1" if tem_c else BR); c.font=Font(size=8,color="5D4037" if tem_c else "AAAAAA",italic=not tem_c)
             else: c.fill=PatternFill("solid",fgColor=fc if ci>4 else BR)
             c.border=border
