@@ -468,7 +468,8 @@ def carregar_nps(arquivo, desistentes_keys=None):
         if prof:   partes.append(f"Prof. {prof}")
         return ' | '.join(partes)
 
-    alertas_nps = {}  # _key -> lista de alertas
+    alertas_nps = {}           # _key -> lista de alertas
+    detratores_penultima = {}  # _key -> contexto da penúltima aula avaliada
 
     for key, group in df.groupby('_key'):
         alertas = []
@@ -515,10 +516,16 @@ def carregar_nps(arquivo, desistentes_keys=None):
                     'acao': 'Analisar comentário e dar retorno ao aluno'
                 })
 
+        # ── Rastrear detrator na penúltima aula avaliada (para cruzar com frequência) ──
+        if len(respondidas) >= 2:
+            penultima_row = respondidas.iloc[-2]
+            if pd.to_numeric(penultima_row[col_nps], errors='coerce') < 0:
+                detratores_penultima[key] = ctx(penultima_row)
+
         if alertas:
             alertas_nps[key] = alertas
 
-    return alertas_nps
+    return alertas_nps, detratores_penultima
 
 def carregar_comentarios(arquivo):
     df = pd.read_excel(arquivo, skiprows=2)
@@ -573,26 +580,35 @@ def carregar_frequencia(arquivo):
 
     group_cols = [col_aluno, col_turma] if col_turma else [col_aluno]
     ausentes = []
+    ausentes_ultima_keys = set()  # alunos ausentes na última aula
     for keys, g in df_a.groupby(group_cols):
         aluno = keys[0] if col_turma else keys
         turma = keys[1] if col_turma else ''
+        key   = f"{str(aluno).strip().lower()}||{str(turma).strip().lower()}"
+        if len(g) < 1: continue
+        last1 = g.tail(1)
+        if last1.iloc[0][col_status] == 'AUSENTE':
+            ausentes_ultima_keys.add(key)
         if len(g) < 2: continue
         last2 = g.tail(2)
         if all(last2[col_status] == 'AUSENTE'):
             datas = last2[col_data].tolist() if col_data else ['N/D','N/D']
             ausentes.append({
-                '_key': f"{str(aluno).strip().lower()}||{str(turma).strip().lower()}",
+                '_key': key,
                 'Ultimas_2_aulas': f"{datas[0]} e {datas[1]}"
             })
 
     df_ausentes = pd.DataFrame(ausentes) if ausentes else pd.DataFrame(columns=['_key','Ultimas_2_aulas'])
-    return df_ausentes, desistentes_keys
+    return df_ausentes, desistentes_keys, ausentes_ultima_keys
 
-def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None):
+def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None,
+                    detratores_penultima=None, ausentes_ultima_keys=None):
     """
     Cruza todas as fontes e gera relatório final.
     alertas_nps: dict {_key: [lista de alertas]} retornado por carregar_nps()
     desistentes_keys: set de _keys de desistentes (excluídos do NPS, mas não do Canvas/Freq)
+    detratores_penultima: dict {_key: ctx} de quem foi detrator na penúltima aula avaliada
+    ausentes_ultima_keys: set de _keys de quem faltou na última aula ao vivo
     """
     todos_keys = set(df_canvas['_key']) | set(alertas_nps.keys()) | set(df_freq['_key'])
 
@@ -626,6 +642,13 @@ def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None):
         if not f.empty:
             alertas.append(f"Ausente nas últimas 2 videoconferências ({f.iloc[0]['Ultimas_2_aulas']})")
             acoes.append("Enviar data da próxima aula ao vivo")
+
+        # ── Detrator na penúltima + ausente na última aula ao vivo ──
+        if (detratores_penultima and ausentes_ultima_keys and
+                key in detratores_penultima and key in ausentes_ultima_keys):
+            ctx_aula = detratores_penultima[key]
+            alertas.append(f"Detrator na penúltima aula ao vivo ({ctx_aula}) e ausente na aula subsequente")
+            acoes.append("Contato prioritário — risco de abandono após feedback negativo")
 
         if alertas:
             relatorio.append({
@@ -892,10 +915,14 @@ with col_dir:
         if st.button("Gerar e Enviar Relatório →", type="primary", use_container_width=True):
             with st.spinner("Analisando dados..."):
                 try:
-                    dc                    = carregar_canvas(f_canvas)
-                    df_fr, desist_keys    = carregar_frequencia(f_freq)
-                    alertas_nps           = carregar_nps(f_nps, desistentes_keys=desist_keys)
-                    df_rel                = gerar_relatorio(dc, alertas_nps, df_fr, desist_keys)
+                    dc                                   = carregar_canvas(f_canvas)
+                    df_fr, desist_keys, ausentes_ultima  = carregar_frequencia(f_freq)
+                    alertas_nps, detratores_penultima    = carregar_nps(f_nps, desistentes_keys=desist_keys)
+                    df_rel                               = gerar_relatorio(
+                        dc, alertas_nps, df_fr, desist_keys,
+                        detratores_penultima=detratores_penultima,
+                        ausentes_ultima_keys=ausentes_ultima,
+                    )
 
                     criticos  = len(df_rel[df_rel['Qtd. Alertas']>=3])
                     atencao   = len(df_rel[df_rel['Qtd. Alertas']==2])
