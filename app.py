@@ -752,9 +752,9 @@ def exportar_excel_bytes(df):
     hcell(ws['A1'],"RELATÓRIO DE ENGAJAMENTO — CUSTOMER SUCCESS REHAGRO",VE,sz=13)
     ws.row_dimensions[1].height=48
     try:
-        logo_xl = XLImage("Logo_Rehagro.png")
-        logo_xl.height = 36
-        logo_xl.width  = 120
+        logo_xl = XLImage("Logo-Rehagro-chapada-branca.png")
+        logo_xl.height = 28
+        logo_xl.width  = 90
         logo_xl.anchor = get_column_letter(n_cols - 1) + "1"
         ws.add_image(logo_xl)
     except Exception:
