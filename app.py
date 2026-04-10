@@ -761,7 +761,7 @@ def exportar_excel_bytes(df):
         ws[f'A{i}'].alignment=Alignment(horizontal='left',indent=2)
     ws.append([])
     headers=['Curso','Turma','Nome do Aluno','E-mail','Qtd. Alertas',
-             'Alerta Identificado','Ação Recomendada','Professor','Tópico','Comentário do Aluno']
+             'Alertas Identificados','Ações Recomendadas','Tópico','Professor']
     ws.append(headers)
     hr=ws.max_row
     for ci,h in enumerate(headers,1):
@@ -1080,7 +1080,7 @@ with col_dir:
                         df_view = df_rel[df_rel['Turma'].isin(sel)]
 
                     st.markdown('<p class="rh-section">Alunos desengajados</p>', unsafe_allow_html=True)
-                    cols_view = ['Curso','Turma','Nome','Qtd. Alertas','Alerta Identificado','Ação Recomendada','Professor','Tópico','Comentário']
+                    cols_view = ['Curso','Turma','Nome','Qtd. Alertas','Alertas Identificados','Ações Recomendadas','Tópico','Professor']
                     st.dataframe(df_view[cols_view], use_container_width=True, hide_index=True, height=320)
 
                     excel_bytes = exportar_excel_bytes(df_rel)
