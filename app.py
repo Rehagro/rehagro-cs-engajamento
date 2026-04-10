@@ -8,6 +8,7 @@ from datetime import datetime
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.drawing.image import Image as XLImage
 
 try:
     from sendgrid import SendGridAPIClient
@@ -749,7 +750,15 @@ def exportar_excel_bytes(df):
         cell.alignment=Alignment(horizontal=align,vertical='center',wrap_text=True)
     ws.merge_cells(f'A1:{lc}1')
     hcell(ws['A1'],"RELATÓRIO DE ENGAJAMENTO — CUSTOMER SUCCESS REHAGRO",VE,sz=13)
-    ws.row_dimensions[1].height=28
+    ws.row_dimensions[1].height=48
+    try:
+        logo_xl = XLImage("Logo_Rehagro.png")
+        logo_xl.height = 36
+        logo_xl.width  = 120
+        logo_xl.anchor = get_column_letter(n_cols - 1) + "1"
+        ws.add_image(logo_xl)
+    except Exception:
+        pass
     ws.merge_cells(f'A2:{lc}2')
     hcell(ws['A2'],f"Gerado em: {datetime.now().strftime('%d/%m/%Y às %H:%M')}   |   Total de alunos: {df['Nome'].nunique()}",VM,sz=9)
     ws.row_dimensions[2].height=18
@@ -951,21 +960,35 @@ def enviar_email(excel_bytes,destinatarios,data_hoje,total,criticos,atencao,moni
 
 # ── UI ────────────────────────────────────────────────────
 
+# Logo branca em base64 para o hero
+def _logo_b64(path):
+    try:
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except:
+        return ""
+
+_logo_hero = _logo_b64("Logo-Rehagro-chapada-branca.png")
+_logo_img  = f'<img src="data:image/png;base64,{_logo_hero}" style="height:38px;opacity:0.92;" />' if _logo_hero else ""
+
 # HERO
-st.markdown("""
+st.markdown(f"""
 <div class="rh-hero">
   <div class="rh-hero-bg"></div>
   <div class="rh-hero-grid"></div>
-  <div class="rh-hero-inner">
-    <p class="rh-eyebrow">Rehagro · Customer Success</p>
-    <h1 class="rh-hero-title">MONITORAMENTO <span>DE ALUNOS</span></h1>
-    <p class="rh-hero-sub">Identifique alunos desengajados e saiba exatamente qual ação tomar — em segundos.</p>
-    <div class="rh-hero-pills">
-      <span class="rh-pill">Canvas AVA</span>
-      <span class="rh-pill">NPS Avaliações</span>
-      <span class="rh-pill">Frequência ao Vivo</span>
-      <span class="rh-pill">Comentários</span>
+  <div class="rh-hero-inner" style="display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <p class="rh-eyebrow">Rehagro · Customer Success</p>
+      <h1 class="rh-hero-title">MONITORAMENTO <span>DE ALUNOS</span></h1>
+      <p class="rh-hero-sub">Identifique alunos desengajados e saiba exatamente qual ação tomar — em segundos.</p>
+      <div class="rh-hero-pills">
+        <span class="rh-pill">Canvas AVA</span>
+        <span class="rh-pill">NPS Avaliações</span>
+        <span class="rh-pill">Frequência ao Vivo</span>
+        <span class="rh-pill">Comentários</span>
+      </div>
     </div>
+    <div style="flex-shrink:0;padding-left:24px;">{_logo_img}</div>
   </div>
 </div>
 """, unsafe_allow_html=True)
