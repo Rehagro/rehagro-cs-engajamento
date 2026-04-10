@@ -969,7 +969,7 @@ def _logo_b64(path):
         return ""
 
 _logo_hero = _logo_b64("Logo-Rehagro-chapada-branca.png")
-_logo_img  = f'<img src="data:image/png;base64,{_logo_hero}" style="height:38px;opacity:0.92;" />' if _logo_hero else ""
+_logo_img  = f'<img src="data:image/png;base64,{_logo_hero}" style="height:76px;opacity:0.92;" />' if _logo_hero else ""
 
 # HERO
 st.markdown(f"""
