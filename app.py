@@ -977,6 +977,22 @@ col_esq, col_dir = st.columns([1, 1], gap="large")
 with col_esq:
     st.markdown('<p class="rh-section">Como exportar do Power BI</p>', unsafe_allow_html=True)
     st.markdown("""
+    <div style="
+        background: rgba(200,169,81,0.12);
+        border: 1.5px solid var(--ouro);
+        border-left: 4px solid var(--ouro);
+        border-radius: 8px;
+        padding: 14px 18px;
+        margin-bottom: 18px;
+    ">
+        <div style="font-size:0.78rem; font-weight:700; color:var(--verde); letter-spacing:0.3px; margin-bottom:5px;">
+            ⚠️ Atenção antes de exportar
+        </div>
+        <div style="font-size:0.82rem; color:var(--verde2); line-height:1.6;">
+            Todos os arquivos devem ser exportados no formato <strong>Dados Resumidos</strong> no Power BI.
+            Cada dashboard abaixo indica os <strong>filtros obrigatórios</strong> para a exportação correta.
+        </div>
+    </div>
     <div>
       <div class="rh-dash-card" style="border-radius:12px 12px 0 0">
         <div class="rh-dash-num" style="font-size:1.1rem!important">Dashboard 01</div>
