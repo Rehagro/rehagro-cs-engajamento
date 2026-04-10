@@ -755,7 +755,7 @@ def exportar_excel_bytes(df):
         logo_xl = XLImage("Logo-Rehagro-chapada-branca.png")
         logo_xl.height = 61
         logo_xl.width  = 210
-        logo_xl.anchor = get_column_letter(n_cols - 2) + "1"
+        logo_xl.anchor = get_column_letter(n_cols - 1) + "1"
         ws.add_image(logo_xl)
     except Exception:
         pass
