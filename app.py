@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import re
+import unicodedata
 import io
 import base64
 from datetime import datetime
@@ -54,7 +55,7 @@ html, body, [class*="css"] {
 /* ── HERO ─────────────────────────────── */
 .rh-hero {
     background: var(--verde);
-    padding: 24px 40px 28px;
+    padding: 52px 56px 56px;
     margin: -1rem -1rem 0 -1rem;
     position: relative;
     overflow: hidden;
@@ -80,7 +81,7 @@ html, body, [class*="css"] {
     letter-spacing: 4px;
     text-transform: uppercase;
     color: var(--ouro);
-    margin: 0 0 8px 0;
+    margin: 0 0 16px 0;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -93,25 +94,23 @@ html, body, [class*="css"] {
 }
 .rh-hero-title {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.6rem;
-    line-height: 1;
+    font-size: 5rem;
+    line-height: 0.92;
     color: var(--branco);
-    margin: 0 0 4px 0;
+    margin: 0 0 6px 0;
     letter-spacing: 2px;
-    white-space: nowrap;
 }
 .rh-hero-title span { color: var(--ouro); }
 .rh-hero-sub {
-    font-size: 0.9rem;
+    font-size: 1.05rem;
     color: rgba(255,255,255,0.6);
     font-weight: 300;
-    margin: 6px 0 0 0;
-    max-width: 640px;
-    line-height: 1.5;
-    white-space: nowrap;
+    margin: 16px 0 0 0;
+    max-width: 480px;
+    line-height: 1.6;
 }
 .rh-hero-pills {
-    display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;
+    display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap;
 }
 .rh-pill {
     background: rgba(200,169,81,0.15);
@@ -384,6 +383,34 @@ REMETENTE = "rafael.ferraz@rehagro.edu.br"
 
 # ── Funções de processamento ─────────────────────────────
 
+
+import unicodedata, re
+
+# ── Helper global ────────────────────────────────────────────
+def _norm(n):
+    n = str(n).strip().lower()
+    n = unicodedata.normalize('NFD', n)
+    n = ''.join(c for c in n if unicodedata.category(c) != 'Mn')
+    n = re.sub(r'\s+', ' ', n)
+    return n
+
+_MESES = {'janeiro':1,'fevereiro':2,'março':3,'abril':4,'maio':5,'junho':6,
+          'julho':7,'agosto':8,'setembro':9,'outubro':10,'novembro':11,'dezembro':12}
+
+def _parse_freq_date(s):
+    m = re.match(r'(\d{2}/\d{2}/\d{4})', str(s))
+    return pd.to_datetime(m.group(1), dayfirst=True) if m else pd.NaT
+
+def _montar_data_nps(row):
+    try:
+        ano = int(row['Data da aula - Ano'])
+        mes = _MESES.get(str(row['Data da aula - Mês']).strip().lower())
+        dia = int(row['Data da aula - Dia'])
+        if mes: return pd.Timestamp(year=ano, month=mes, day=dia)
+    except: pass
+    return pd.NaT
+
+
 def carregar_canvas(arquivo):
     df = pd.read_excel(arquivo, skiprows=2)
     df.columns = df.columns.str.strip()
@@ -395,162 +422,22 @@ def carregar_canvas(arquivo):
     col_funcao = next((c for c in df.columns if 'FUN' in c.upper() and 'DISCIPLINA' in c.upper()), None)
     if not col_nome or not col_dias:
         raise ValueError("Arquivo Canvas: colunas não encontradas.")
-    # Filtrar apenas alunos (excluir colaboradores/professores)
     if col_funcao:
         df = df[df[col_funcao].astype(str).str.upper().str.contains('ALUNO', na=False)].copy()
-    df['_key']  = (df[col_nome].astype(str).str.strip().str.lower() + '||' +
-                   (df[col_turma].astype(str).str.strip().str.lower() if col_turma else ''))
+    df['_key']  = df[col_nome].apply(_norm)
     df['_dias'] = pd.to_numeric(df[col_dias], errors='coerce')
-    cols = {'_key': '_key', col_nome: 'Nome', '_dias': 'Dias sem acesso'}
+    cols = {'_key':'_key', col_nome:'Nome', '_dias':'Dias sem acesso'}
     if col_email: cols[col_email] = 'Email'
     if col_curso: cols[col_curso] = 'Curso'
     if col_turma: cols[col_turma] = 'Turma'
-    # Critério: +20 dias sem acesso
     res = df[df['_dias'] > 20][list(cols.keys())].copy().rename(columns=cols)
     if 'Email' not in res.columns: res['Email'] = ''
     if 'Curso' not in res.columns: res['Curso'] = ''
     if 'Turma' not in res.columns: res['Turma'] = ''
     return res[['_key','Nome','Email','Curso','Turma','Dias sem acesso']]
 
-def carregar_nps(arquivo, desistentes_keys=None):
-    """
-    Retorna dict com alertas NPS por aluno:
-    - 'detrator_2': avaliou mal nos últimos 2 encontros
-    - 'sem_avaliacao': presente nas últimas 2 aulas mas não avaliou nenhuma
-    - 'comentario': fez qualquer comentário (com data, tópico e professor)
-    Desistentes são excluídos se desistentes_keys for fornecido.
-    """
-    df = pd.read_excel(arquivo, skiprows=2)
-    df.columns = df.columns.str.strip()
-
-    col_aluno    = next((c for c in df.columns if c.upper() == 'ALUNO'), None)
-    col_nps      = next((c for c in df.columns if 'NPS' in c.upper() and 'REA' in c.upper()), None)
-    col_turma    = next((c for c in df.columns if c.upper() == 'TURMA'), None)
-    col_topico   = next((c for c in df.columns if 'TÓPICO' in c.upper() or 'TOPICO' in c.upper()), None)
-    col_prof     = next((c for c in df.columns if 'PROFESSOR' in c.upper() or 'PROF' in c.upper()), None)
-    col_coment   = next((c for c in df.columns if 'COMMENT' in c.upper() or 'COMENT' in c.upper() or 'RESPOSTA' in c.upper()), None)
-
-    col_data_unica = next((c for c in df.columns if c.upper() == 'DATA AULA' or (
-        'DATA' in c.upper() and 'AULA' in c.upper() and
-        'ANO' not in c.upper() and 'MÊS' not in c.upper() and 'DIA' not in c.upper())), None)
-    col_dia     = next((c for c in df.columns if c.upper() in ('DIA', 'DIA AULA')), None)
-    col_mes_ano = next((c for c in df.columns if 'MÊS' in c.upper() or 'MES' in c.upper()), None)
-
-    if not col_aluno or not col_nps:
-        raise ValueError("Arquivo NPS: colunas não encontradas.")
-
-    # Normalizar data
-    if col_data_unica:
-        df['_data_dt'] = pd.to_datetime(df[col_data_unica], errors='coerce')
-    elif col_dia and col_mes_ano:
-        df['_data_str'] = (df[col_dia].astype(str).str.strip().str.zfill(2) + '/' +
-                           df[col_mes_ano].astype(str).str.strip())
-        df['_data_dt'] = pd.to_datetime(df['_data_str'], format='%d/%m/%Y', errors='coerce')
-    else:
-        df['_data_dt'] = pd.NaT
-
-    df['_key'] = (df[col_aluno].astype(str).str.strip().str.lower() + '||' +
-                  (df[col_turma].astype(str).str.strip().str.lower() if col_turma else ''))
-
-    # Remover desistentes
-    if desistentes_keys:
-        df = df[~df['_key'].isin(desistentes_keys)].copy()
-
-    df = df.sort_values(['_key', '_data_dt'])
-
-    # Helper para formatar contexto de uma aula
-    def ctx(row):
-        data_str = row['_data_dt'].strftime('%d/%m/%Y') if pd.notna(row['_data_dt']) else 'N/D'
-        topico   = str(row[col_topico]).strip() if col_topico and pd.notna(row.get(col_topico)) else ''
-        prof     = str(row[col_prof]).strip() if col_prof and pd.notna(row.get(col_prof)) else ''
-        partes   = [data_str]
-        if topico: partes.append(topico)
-        if prof:   partes.append(f"Prof. {prof}")
-        return ' | '.join(partes)
-
-    alertas_nps = {}           # _key -> lista de alertas
-    detratores_penultima = {}  # _key -> contexto da penúltima aula avaliada
-
-    for key, group in df.groupby('_key'):
-        alertas = []
-
-        # Últimas 2 aulas com NPS respondido
-        respondidas = group[group[col_nps].notna()].sort_values('_data_dt')
-        ult2_resp   = respondidas.tail(2)
-
-        # Todas as aulas (para checar presença sem avaliação)
-        todas_aulas = group.sort_values('_data_dt')
-        ult2_todas  = todas_aulas.tail(2)
-
-        # ── Critério 1: Detrator nos últimos 2 encontros avaliados ──
-        if len(ult2_resp) == 2 and all(pd.to_numeric(ult2_resp[col_nps], errors='coerce') < 0):
-            detalhes = [ctx(r) for _, r in ult2_resp.iterrows()]
-            alertas.append({
-                'tipo': 'detrator_2',
-                'texto': f"Avaliou mal nos últimos 2 encontros: {' · '.join(detalhes)}",
-                'acao': 'Retomar feedback negativo da avaliação'
-            })
-
-        # ── Critério 2: Presente nas últimas 2 aulas mas não avaliou nenhuma ──
-        if len(ult2_todas) == 2 and all(ult2_todas[col_nps].isna()):
-            detalhes = [ctx(r) for _, r in ult2_todas.iterrows()]
-            alertas.append({
-                'tipo': 'sem_avaliacao',
-                'texto': f"Presente nas últimas 2 aulas sem avaliação: {' · '.join(detalhes)}",
-                'acao': 'Incentivar participação nas avaliações de aula'
-            })
-
-        # ── Critério 3: Qualquer comentário ──
-        if col_coment:
-            com_coment = group[group[col_coment].notna() &
-                               (group[col_coment].astype(str).str.strip() != '')].copy()
-            if not com_coment.empty:
-                itens = []
-                for _, row in com_coment.iterrows():
-                    c_ctx  = ctx(row)
-                    c_text = str(row[col_coment]).strip()
-                    itens.append(f"[{c_ctx}]: {c_text}")
-                alertas.append({
-                    'tipo': 'comentario',
-                    'texto': 'Comentário(s) registrado(s): ' + ' | '.join(itens),
-                    'acao': 'Analisar comentário e dar retorno ao aluno'
-                })
-
-        # ── Rastrear detrator na penúltima aula avaliada (para cruzar com frequência) ──
-        if len(respondidas) >= 2:
-            penultima_row = respondidas.iloc[-2]
-            if pd.to_numeric(penultima_row[col_nps], errors='coerce') < 0:
-                detratores_penultima[key] = ctx(penultima_row)
-
-        if alertas:
-            alertas_nps[key] = alertas
-
-    return alertas_nps, detratores_penultima
-
-def carregar_comentarios(arquivo):
-    df = pd.read_excel(arquivo, skiprows=2)
-    df.columns = df.columns.str.strip()
-    col_aluno    = next((c for c in df.columns if 'NOME' in c.upper() or c.upper() in ('NOME ALUNO', 'ALUNO')), None)
-    col_turma    = next((c for c in df.columns if c.upper() == 'TURMA'), None)
-    col_resposta = next((c for c in df.columns if 'RESPOSTA' in c.upper() or 'COMENT' in c.upper()), None)
-    col_data     = next((c for c in df.columns if 'DATA' in c.upper()), None)
-    if not col_aluno or not col_resposta:
-        raise ValueError("Arquivo Comentários: colunas não encontradas.")
-    df = df[df[col_resposta].notna() & (df[col_resposta].astype(str).str.strip() != '')].copy()
-    df['_key'] = (df[col_aluno].astype(str).str.strip().str.lower() + '||' +
-                  (df[col_turma].astype(str).str.strip().str.lower() if col_turma else ''))
-    if col_data:
-        df['_data_norm'] = pd.to_datetime(df[col_data], errors='coerce').dt.normalize()
-    else:
-        df['_data_norm'] = pd.NaT
-    return df[['_key', '_data_norm', col_resposta]].rename(columns={col_resposta: 'Comentario'})
 
 def carregar_frequencia(arquivo):
-    """
-    Retorna:
-    - df_ausentes: alunos ausentes nas últimas 2 videoconferências
-    - desistentes_keys: set de _keys de alunos desistentes (para excluir do NPS)
-    """
     df = pd.read_excel(arquivo, skiprows=2)
     df.columns = df.columns.str.strip()
     col_aluno  = next((c for c in df.columns if c.upper() == 'ALUNO'), None)
@@ -559,106 +446,254 @@ def carregar_frequencia(arquivo):
     col_turma  = next((c for c in df.columns if c.upper() == 'TURMA'), None)
     if not col_aluno or not col_status:
         raise ValueError("Arquivo Frequência: colunas não encontradas.")
-
-    # Identificar desistentes
-    df['_key_freq'] = (df[col_aluno].astype(str).str.strip().str.lower() + '||' +
-                       (df[col_turma].astype(str).str.strip().str.lower() if col_turma else ''))
+    df['_key'] = df[col_aluno].apply(_norm)
+    df['_data'] = df[col_data].apply(_parse_freq_date) if col_data else pd.NaT
+    # Desistentes em qualquer momento → excluir de TODOS os alertas
     desistentes_keys = set(
-        df[df[col_status].str.upper() == 'DESISTENTE']['_key_freq'].unique()
+        df[df[col_status].astype(str).str.upper() == 'DESISTENTE']['_key'].unique()
     )
-
-    # Processar apenas ativos (sem '-' e sem desistentes)
-    df_a = df[~df[col_status].isin(['-','DESISTENTE'])].copy()
-
-    def extr(s):
-        m = re.match(r'(\d{2}/\d{2}/\d{4})', str(s))
-        return pd.to_datetime(m.group(1), format='%d/%m/%Y') if m else pd.NaT
-
-    if col_data:
-        df_a['_data'] = df_a[col_data].apply(extr)
-        df_a = df_a.sort_values([col_aluno, col_turma, '_data'] if col_turma else [col_aluno,'_data'])
-
-    group_cols = [col_aluno, col_turma] if col_turma else [col_aluno]
+    # Turma por aluno (para relatório)
+    turma_map = {}
+    if col_turma:
+        for _, row in df.iterrows():
+            k = row['_key']
+            if k not in turma_map and pd.notna(row[col_turma]):
+                turma_map[k] = str(row[col_turma]).strip()
+    # Apenas ativos
+    df_a = df[~df['_key'].isin(desistentes_keys) & (df[col_status].astype(str).str.strip() != '-')].copy()
+    df_a = df_a.sort_values(['_key', '_data'])
     ausentes = []
-    ausentes_ultima_keys = set()  # alunos ausentes na última aula
-    for keys, g in df_a.groupby(group_cols):
-        aluno = keys[0] if col_turma else keys
-        turma = keys[1] if col_turma else ''
-        key   = f"{str(aluno).strip().lower()}||{str(turma).strip().lower()}"
-        if len(g) < 1: continue
-        last1 = g.tail(1)
-        if last1.iloc[0][col_status] == 'AUSENTE':
-            ausentes_ultima_keys.add(key)
+    for nome, g in df_a.groupby('_key'):
         if len(g) < 2: continue
         last2 = g.tail(2)
-        if all(last2[col_status] == 'AUSENTE'):
+        status_last2 = last2[col_status].astype(str).str.upper().tolist()
+        if status_last2 == ['AUSENTE', 'AUSENTE']:
             datas = last2[col_data].tolist() if col_data else ['N/D','N/D']
-            ausentes.append({
-                '_key': key,
-                'Ultimas_2_aulas': f"{datas[0]} e {datas[1]}"
-            })
-
+            ausentes.append({'_key': nome, 'Ultimas_2_aulas': f"{datas[0]} e {datas[1]}"})
     df_ausentes = pd.DataFrame(ausentes) if ausentes else pd.DataFrame(columns=['_key','Ultimas_2_aulas'])
-    return df_ausentes, desistentes_keys, ausentes_ultima_keys
+    return df_ausentes, desistentes_keys, turma_map, df_a
 
-def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None,
-                    detratores_penultima=None, ausentes_ultima_keys=None):
+
+def carregar_comentarios(arquivo):
+    df = pd.read_excel(arquivo, skiprows=2)
+    df.columns = df.columns.str.strip()
+    col_aluno  = next((c for c in df.columns if c.upper() == 'ALUNO'), None)
+    col_data   = next((c for c in df.columns if 'DATA DA AULA' in c.upper() or c.upper() == 'DATA DA AULA'), None)
+    col_topico = next((c for c in df.columns if 'TÓPICO' in c.upper() or 'TOPICO' in c.upper()), None)
+    col_prof   = next((c for c in df.columns if 'PROFESSOR' in c.upper()), None)
+    col_resp   = next((c for c in df.columns if 'RESPOSTA' in c.upper()), None)
+    if not col_aluno or not col_resp:
+        raise ValueError("Arquivo Comentários: colunas não encontradas.")
+    df = df[df[col_resp].notna() & (df[col_resp].astype(str).str.strip() != '')].copy()
+    df['_key']    = df[col_aluno].apply(_norm)
+    df['_data']   = pd.to_datetime(df[col_data], errors='coerce').dt.normalize() if col_data else pd.NaT
+    df['_topico'] = df[col_topico].astype(str).str.strip().str.lower() if col_topico else ''
+    df['_prof']   = df[col_prof].astype(str).str.strip() if col_prof else ''
+    df['_topico_orig'] = df[col_topico].astype(str).str.strip() if col_topico else ''
+    df['_resp']   = df[col_resp].astype(str).str.strip()
+    return df[['_key','_data','_topico','_topico_orig','_prof','_resp']]
+
+
+def carregar_nps(arquivo, desistentes_keys=None):
+    df = pd.read_excel(arquivo, skiprows=2)
+    df.columns = df.columns.str.strip()
+    col_aluno  = next((c for c in df.columns if c.upper() == 'ALUNO'), None)
+    col_nps    = next((c for c in df.columns if 'NPS' in c.upper() and 'REA' in c.upper()), None)
+    col_topico = next((c for c in df.columns if 'TÓPICO' in c.upper() or 'TOPICO' in c.upper()), None)
+    col_prof   = next((c for c in df.columns if 'PROFESSOR' in c.upper()), None)
+    if not col_aluno or not col_nps:
+        raise ValueError("Arquivo NPS: colunas não encontradas.")
+    # Data correta = Ano + Mês + Dia (colunas A, B, C)
+    df['_data'] = df.apply(_montar_data_nps, axis=1)
+    df['_key']  = df[col_aluno].apply(_norm)
+    df['_topico']      = df[col_topico].astype(str).str.strip().str.lower() if col_topico else ''
+    df['_topico_orig'] = df[col_topico].astype(str).str.strip() if col_topico else ''
+    df['_prof']        = df[col_prof].astype(str).str.strip() if col_prof else ''
+    df['_nps']         = pd.to_numeric(df[col_nps], errors='coerce')
+    if desistentes_keys:
+        df = df[~df['_key'].isin(desistentes_keys)].copy()
+    df = df.sort_values(['_key','_data'])
+    return df[['_key','_data','_topico','_topico_orig','_prof','_nps']]
+
+
+def gerar_alertas_nps(df_nps, df_coment, df_freq_ativo):
     """
-    Cruza todas as fontes e gera relatório final.
-    alertas_nps: dict {_key: [lista de alertas]} retornado por carregar_nps()
-    desistentes_keys: set de _keys de desistentes (excluídos do NPS, mas não do Canvas/Freq)
-    detratores_penultima: dict {_key: ctx} de quem foi detrator na penúltima aula avaliada
-    ausentes_ultima_keys: set de _keys de quem faltou na última aula ao vivo
+    Gera alertas NPS por aluno com critérios A-F.
+    Retorna dict: {_key: [{'texto':..., 'acao':..., 'topico':..., 'professor':...}]}
     """
+    alertas_por_aluno = {}
+
+    def fmt_data(d):
+        try: return pd.Timestamp(d).strftime('%d/%m/%Y')
+        except: return str(d)
+
+    def add(key, texto, acao, topico='', professor=''):
+        alertas_por_aluno.setdefault(key, []).append(
+            {'texto': texto, 'acao': acao, 'topico': topico, 'professor': professor}
+        )
+
+    # Mapa de comentários: (key, data, topico) → {prof, resp}
+    coment_map = {}
+    if df_coment is not None and not df_coment.empty:
+        for _, row in df_coment.iterrows():
+            k = (row['_key'], row['_data'], row['_topico'])
+            coment_map[k] = {'prof': row['_prof'], 'resp': row['_resp'],
+                             'topico_orig': row['_topico_orig']}
+
+    # Aulas de frequência por aluno (para critérios B e F)
+    freq_por_aluno = {}
+    if df_freq_ativo is not None and not df_freq_ativo.empty:
+        for nome, g in df_freq_ativo.groupby('_key'):
+            freq_por_aluno[nome] = g.sort_values('_data')
+
+    todos_keys = set(df_nps['_key'].unique()) | set(df_coment['_key'].unique() if df_coment is not None else [])
+
+    for key in todos_keys:
+        nps_aluno    = df_nps[df_nps['_key'] == key].sort_values('_data')
+        coment_aluno = df_coment[df_coment['_key'] == key] if df_coment is not None else pd.DataFrame()
+        freq_aluno   = freq_por_aluno.get(key, pd.DataFrame())
+
+        alertas_gerados = set()  # evitar duplicatas por aula
+
+        # ── A: Detrator nos últimos 2 encontros avaliados ──────────
+        respondidas = nps_aluno[nps_aluno['_nps'].notna()]
+        ult2_resp   = respondidas.tail(2)
+        if len(ult2_resp) == 2 and all(ult2_resp['_nps'] < 0):
+            detalhes = []
+            for _, r in ult2_resp.iterrows():
+                detalhes.append(f"{fmt_data(r['_data'])} | {r['_topico_orig']} | Prof. {r['_prof']}")
+                alertas_gerados.add((r['_data'], r['_topico']))
+            topicos  = ' · '.join([r['_topico_orig'] for _,r in ult2_resp.iterrows()])
+            profs    = ' · '.join([r['_prof'] for _,r in ult2_resp.iterrows()])
+            add(key,
+                f"Detrator nos últimos 2 encontros: {' || '.join(detalhes)}",
+                "Retomar feedback negativo da avaliação",
+                topicos, profs)
+
+        # ── B: Presente nas últimas 2 aulas sem avaliar nenhuma ────
+        if not freq_aluno.empty and len(freq_aluno) >= 2:
+            ult2_freq = freq_aluno.tail(2)
+            status_ult2 = ult2_freq['Primeiro StatusPresenca'].astype(str).str.upper().tolist() \
+                if 'Primeiro StatusPresenca' in ult2_freq.columns else []
+            if status_ult2 == ['PRESENTE', 'PRESENTE']:
+                datas_freq = ult2_freq['_data'].tolist()
+                nps_nessas = nps_aluno[nps_aluno['_data'].isin(datas_freq) & nps_aluno['_nps'].notna()]
+                if nps_nessas.empty:
+                    datas_str = ' e '.join([fmt_data(d) for d in datas_freq])
+                    add(key,
+                        f"Presente nas últimas 2 aulas sem avaliar: {datas_str}",
+                        "Incentivar participação nas avaliações de aula")
+
+        # ── F: Detrator na penúltima + ausente na última ────────────
+        if not freq_aluno.empty and len(freq_aluno) >= 2:
+            ult   = freq_aluno.iloc[-1]
+            penul = freq_aluno.iloc[-2]
+            status_cols = [c for c in freq_aluno.columns if 'STATUS' in c.upper() or 'PRESEN' in c.upper()]
+            if status_cols:
+                sc = status_cols[0]
+                if str(ult[sc]).upper() == 'AUSENTE':
+                    data_penul  = penul['_data']
+                    nps_penul   = nps_aluno[nps_aluno['_data'] == data_penul]
+                    det_penul   = nps_penul[nps_penul['_nps'] < 0]
+                    if not det_penul.empty:
+                        r = det_penul.iloc[0]
+                        chave_aula = (r['_data'], r['_topico'])
+                        if chave_aula not in alertas_gerados:
+                            add(key,
+                                f"Detrator na penúltima aula ({fmt_data(r['_data'])} | {r['_topico_orig']} | Prof. {r['_prof']}) e ausente na última ({fmt_data(ult['_data'])})",
+                                "Retomar feedback e verificar ausência",
+                                r['_topico_orig'], r['_prof'])
+                            alertas_gerados.add(chave_aula)
+
+        # ── C/D/E: Comentários ──────────────────────────────────────
+        if not coment_aluno.empty:
+            for _, crow in coment_aluno.iterrows():
+                c_data   = crow['_data']
+                c_topico = crow['_topico']
+                c_key    = (c_data, c_topico)
+
+                # Verificar se há NPS negativo na mesma aula
+                nps_mesma = nps_aluno[(nps_aluno['_data'] == c_data) &
+                                      (nps_aluno['_topico'] == c_topico) &
+                                      (nps_aluno['_nps'] < 0)]
+
+                if not nps_mesma.empty and c_key not in alertas_gerados:
+                    # D: Detrator + comentário na mesma aula → 1 alerta unificado
+                    r = nps_mesma.iloc[0]
+                    add(key,
+                        f"Detrator com comentário em {fmt_data(c_data)} | {crow['_topico_orig']} | Prof. {crow['_prof']}: \"{crow['_resp']}\"",
+                        "Retomar feedback negativo e comentário da avaliação",
+                        crow['_topico_orig'], crow['_prof'])
+                    alertas_gerados.add(c_key)
+                elif c_key not in alertas_gerados:
+                    # C ou E: comentário sem NPS negativo na mesma aula
+                    add(key,
+                        f"Comentário em {fmt_data(c_data)} | {crow['_topico_orig']} | Prof. {crow['_prof']}: \"{crow['_resp']}\"",
+                        "Analisar comentário e dar retorno ao aluno",
+                        crow['_topico_orig'], crow['_prof'])
+                    # Não adiciona ao alertas_gerados pois pode ter NPS negativo separado
+
+    return alertas_por_aluno
+
+
+def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None, turma_map=None):
     todos_keys = set(df_canvas['_key']) | set(alertas_nps.keys()) | set(df_freq['_key'])
-
+    # Info base do canvas
     info_map = df_canvas.set_index('_key')[['Nome','Email','Curso','Turma']].to_dict('index')
+    # Enriquecer com turma da frequência
+    if turma_map:
+        for k, turma in turma_map.items():
+            if k in info_map:
+                info_map[k]['Turma'] = turma
+            else:
+                info_map[k] = {'Nome': k.title(), 'Email': '', 'Curso': '', 'Turma': turma}
     for key in todos_keys:
         if key not in info_map:
-            partes = key.split('||')
-            info_map[key] = {'Nome': partes[0].title(), 'Email': '', 'Curso': '',
-                             'Turma': partes[1].upper() if len(partes) > 1 else ''}
+            info_map[key] = {'Nome': key.title(), 'Email': '', 'Curso': '', 'Turma': ''}
 
     relatorio = []
     for key in sorted(todos_keys):
+        if desistentes_keys and key in desistentes_keys:
+            continue
         info = info_map[key]
-        alertas, acoes = [], []
+        alertas_txt, acoes_txt, topicos_txt, profs_txt = [], [], [], []
 
-        # ── Canvas: +20 dias sem acesso ──────────────────────────
+        # Canvas
         c = df_canvas[df_canvas['_key'] == key]
         if not c.empty:
             dias = int(c.iloc[0]['Dias sem acesso'])
-            alertas.append(f"Sem acesso ao Canvas há {dias} dias")
-            acoes.append("Enviar link de acesso à plataforma")
+            alertas_txt.append(f"Sem acesso ao Canvas há {dias} dias")
+            acoes_txt.append("Enviar link de acesso à plataforma")
+            topicos_txt.append('')
+            profs_txt.append('')
 
-        # ── NPS: múltiplos critérios ──────────────────────────────
+        # NPS
         if key in alertas_nps:
-            for alerta in alertas_nps[key]:
-                alertas.append(alerta['texto'])
-                acoes.append(alerta['acao'])
+            for al in alertas_nps[key]:
+                alertas_txt.append(al['texto'])
+                acoes_txt.append(al['acao'])
+                topicos_txt.append(al.get('topico',''))
+                profs_txt.append(al.get('professor',''))
 
-        # ── Frequência: ausente nas últimas 2 videoconferências ──
+        # Frequência
         f = df_freq[df_freq['_key'] == key]
         if not f.empty:
-            alertas.append(f"Ausente nas últimas 2 videoconferências ({f.iloc[0]['Ultimas_2_aulas']})")
-            acoes.append("Enviar data da próxima aula ao vivo")
+            alertas_txt.append(f"Ausente nas últimas 2 videoconferências ({f.iloc[0]['Ultimas_2_aulas']})")
+            acoes_txt.append("Enviar data da próxima aula ao vivo")
+            topicos_txt.append('')
+            profs_txt.append('')
 
-        # ── Detrator na penúltima + ausente na última aula ao vivo ──
-        if (detratores_penultima and ausentes_ultima_keys and
-                key in detratores_penultima and key in ausentes_ultima_keys):
-            ctx_aula = detratores_penultima[key]
-            alertas.append(f"Detrator na penúltima aula ao vivo ({ctx_aula}) e ausente na aula subsequente")
-            acoes.append("Contato prioritário — risco de abandono após feedback negativo")
-
-        if alertas:
+        if alertas_txt:
             relatorio.append({
                 'Curso':                 info['Curso'],
                 'Turma':                 info['Turma'],
                 'Nome':                  info['Nome'],
                 'E-mail':                info['Email'],
-                'Qtd. Alertas':          len(alertas),
-                'Alertas Identificados': ' | '.join(alertas),
-                'Ações Recomendadas':    ' | '.join(acoes),
+                'Qtd. Alertas':          len(alertas_txt),
+                'Alertas Identificados': ' | '.join(alertas_txt),
+                'Ações Recomendadas':    ' | '.join(acoes_txt),
+                'Tópico':                ' | '.join([t for t in topicos_txt if t]),
+                'Professor':             ' | '.join([p for p in profs_txt if p]),
             })
 
     df = pd.DataFrame(relatorio)
@@ -669,7 +704,7 @@ def exportar_excel_bytes(df):
     wb = Workbook()
     ws = wb.active; ws.title = "Relatório CS"
     VE="0F3D20"; VM="1B5E35"; BR="FFFFFF"; CR="F4F0E6"; DO="C8A951"
-    n_cols=8; lc=get_column_letter(n_cols)
+    n_cols=9; lc=get_column_letter(n_cols)
     thin=Side(style='thin',color='E0DDD4')
     border=Border(left=thin,right=thin,top=thin,bottom=thin)
     def hcell(cell,txt,bg,fg=BR,sz=10,bold=True,align='center'):
@@ -707,10 +742,9 @@ def exportar_excel_bytes(df):
     for _,row in df.iterrows():
         ws.append([row['Curso'],row['Turma'],row['Nome'],row['E-mail'],
                    row['Qtd. Alertas'],row['Alertas Identificados'],
-                   row['Ações Recomendadas'],row.get('Comentários do Aluno','')])
+                   row['Ações Recomendadas'],row.get('Tópico',''),row.get('Professor','')])
         dr=ws.max_row
         fc="FFCDD2" if row['Qtd. Alertas']>=3 else ("FFE0B2" if row['Qtd. Alertas']==2 else "FFFDE7")
-        tem_c=bool(str(row.get('Comentários do Aluno','')).strip())
         for ci in range(1,n_cols+1):
             c=ws.cell(row=dr,column=ci)
             if ci<=2: c.fill=PatternFill("solid",fgColor="EDF7EE"); c.font=Font(size=8,color=VM,bold=True)
@@ -720,7 +754,7 @@ def exportar_excel_bytes(df):
             c.border=border
             if ci!=5: c.alignment=Alignment(vertical='center',wrap_text=True)
         ws.row_dimensions[dr].height=32
-    for ci,w in enumerate([16,18,30,28,6,60,45,55],1):
+    for ci,w in enumerate([16,18,30,28,6,60,45,40,30],1):
         ws.column_dimensions[get_column_letter(ci)].width=w
     ws2=wb.create_sheet("Resumo por Turma")
     for ci,w in enumerate([20,20,16,12,12,12],1): ws2.column_dimensions[get_column_letter(ci)].width=w
@@ -811,7 +845,7 @@ st.markdown("""
   <div class="rh-hero-grid"></div>
   <div class="rh-hero-inner">
     <p class="rh-eyebrow">Rehagro · Customer Success</p>
-    <h1 class="rh-hero-title">MONITORAMENTO <span>DE ALUNOS</span></h1>
+    <h1 class="rh-hero-title">MONITORAMENTO<br><span>DE ALUNOS</span></h1>
     <p class="rh-hero-sub">Identifique alunos desengajados e saiba exatamente qual ação tomar — em segundos.</p>
     <div class="rh-hero-pills">
       <span class="rh-pill">Canvas AVA</span>
@@ -830,16 +864,6 @@ col_esq, col_dir = st.columns([1, 1], gap="large")
 with col_esq:
     st.markdown('<p class="rh-section">Como exportar do Power BI</p>', unsafe_allow_html=True)
     st.markdown("""
-    <div style="background:#FFF8E1;border:1.5px solid #C8A951;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start;">
-      <span style="font-size:1.2rem;line-height:1.4;">⚠️</span>
-      <div>
-        <div style="font-size:0.82rem;font-weight:700;color:#5D4037;letter-spacing:0.5px;margin-bottom:4px;text-transform:uppercase;">Atenção antes de exportar</div>
-        <div style="font-size:0.85rem;color:#6D4C41;line-height:1.6;">
-          Todos os arquivos devem ser exportados no formato <b>Dados Resumidos</b>.<br>
-          Os <b>filtros necessários</b> para cada extração estão descritos em cada ponto abaixo — siga as instruções de cada dashboard.
-        </div>
-      </div>
-    </div>
     <div>
       <div class="rh-dash-card" style="border-radius:12px 12px 0 0">
         <div class="rh-dash-num" style="font-size:1.1rem!important">Dashboard 01</div>
@@ -883,8 +907,14 @@ with col_esq:
         <div class="rh-dash-num" style="font-size:1.1rem!important">Dashboard 04</div>
         <div class="rh-dash-title">Comentários das Aulas</div>
         <div class="rh-dash-desc">
-          Mesma página do Dashboard 02 → <b>Tabela de Comentários</b> → Excel
-          <p class="rh-note">💡 Enriquece o relatório com o contexto do feedback.</p>
+          Relatório <b>Rehagro Educação - Avaliação de Aula</b> → página <b>Tabela Comentários</b><br><br>
+          <span class="rh-tag">Área = sua área</span>
+          <span class="rh-tag">Formato Curso = Online</span>
+          <span class="rh-tag">Curso = seus cursos</span>
+          <span class="rh-tag">Tipo de aula = On-line ao vivo</span>
+          <span class="rh-tag">Ano_aula = ano atual</span><br><br>
+          Exporte a <b>Tabela Comentários</b> → Excel
+          <p class="rh-note">💡 Inclui data, tópico, professor e texto do comentário no relatório.</p>
         </div>
       </div>
     </div>
@@ -915,14 +945,12 @@ with col_dir:
         if st.button("Gerar e Enviar Relatório →", type="primary", use_container_width=True):
             with st.spinner("Analisando dados..."):
                 try:
-                    dc                                   = carregar_canvas(f_canvas)
-                    df_fr, desist_keys, ausentes_ultima  = carregar_frequencia(f_freq)
-                    alertas_nps, detratores_penultima    = carregar_nps(f_nps, desistentes_keys=desist_keys)
-                    df_rel                               = gerar_relatorio(
-                        dc, alertas_nps, df_fr, desist_keys,
-                        detratores_penultima=detratores_penultima,
-                        ausentes_ultima_keys=ausentes_ultima,
-                    )
+                    dc                              = carregar_canvas(f_canvas)
+                    df_fr, desist_keys, turma_map, df_freq_ativo = carregar_frequencia(f_freq)
+                    df_nps_raw                      = carregar_nps(f_nps, desistentes_keys=desist_keys)
+                    df_co                           = carregar_comentarios(f_coment) if f_coment else None
+                    alertas_nps                     = gerar_alertas_nps(df_nps_raw, df_co, df_freq_ativo)
+                    df_rel                          = gerar_relatorio(dc, alertas_nps, df_fr, desist_keys, turma_map)
 
                     criticos  = len(df_rel[df_rel['Qtd. Alertas']>=3])
                     atencao   = len(df_rel[df_rel['Qtd. Alertas']==2])
@@ -956,7 +984,7 @@ with col_dir:
                         df_view = df_rel[df_rel['Turma'].isin(sel)]
 
                     st.markdown('<p class="rh-section">Alunos desengajados</p>', unsafe_allow_html=True)
-                    cols_view = ['Curso','Turma','Nome','Qtd. Alertas','Alertas Identificados','Ações Recomendadas']
+                    cols_view = ['Curso','Turma','Nome','Qtd. Alertas','Alertas Identificados','Ações Recomendadas','Tópico','Professor']
                     st.dataframe(df_view[cols_view], use_container_width=True, hide_index=True, height=320)
 
                     excel_bytes = exportar_excel_bytes(df_rel)
