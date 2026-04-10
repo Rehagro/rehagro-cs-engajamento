@@ -411,6 +411,34 @@ def _montar_data_nps(row):
     return pd.NaT
 
 
+
+import unicodedata, re
+
+# ── Helper global ────────────────────────────────────────────
+def _norm(n):
+    n = str(n).strip().lower()
+    n = unicodedata.normalize('NFD', n)
+    n = ''.join(c for c in n if unicodedata.category(c) != 'Mn')
+    n = re.sub(r'\s+', ' ', n)
+    return n
+
+_MESES = {'janeiro':1,'fevereiro':2,'março':3,'abril':4,'maio':5,'junho':6,
+          'julho':7,'agosto':8,'setembro':9,'outubro':10,'novembro':11,'dezembro':12}
+
+def _parse_freq_date(s):
+    m = re.match(r'(\d{2}/\d{2}/\d{4})', str(s))
+    return pd.to_datetime(m.group(1), dayfirst=True) if m else pd.NaT
+
+def _montar_data_nps(row):
+    try:
+        ano = int(row['Data da aula - Ano'])
+        mes = _MESES.get(str(row['Data da aula - Mês']).strip().lower())
+        dia = int(row['Data da aula - Dia'])
+        if mes: return pd.Timestamp(year=ano, month=mes, day=dia)
+    except: pass
+    return pd.NaT
+
+
 def carregar_canvas(arquivo):
     df = pd.read_excel(arquivo, skiprows=2)
     df.columns = df.columns.str.strip()
@@ -561,7 +589,7 @@ def gerar_alertas_nps(df_nps, df_coment, df_freq_ativo):
         if len(ult2_resp) == 2 and all(ult2_resp['_nps'] < 0):
             detalhes = []
             for _, r in ult2_resp.iterrows():
-                detalhes.append(f"{fmt_data(r['_data'])} | {r['_topico_orig']} | Prof. {r['_prof']}")
+                detalhes.append(f"{fmt_data(r['_data'])} · {r['_topico_orig']} · Prof. {r['_prof']}")
                 alertas_gerados.add((r['_data'], r['_topico']))
             topicos  = ' · '.join([r['_topico_orig'] for _,r in ult2_resp.iterrows()])
             profs    = ' · '.join([r['_prof'] for _,r in ult2_resp.iterrows()])
@@ -581,7 +609,7 @@ def gerar_alertas_nps(df_nps, df_coment, df_freq_ativo):
                 if nps_nessas.empty:
                     datas_str = ' e '.join([fmt_data(d) for d in datas_freq])
                     add(key,
-                        f"Presente nas últimas 2 aulas sem avaliar: {datas_str}",
+                        f"Presente nas últimas 2 aulas sem avaliar ({datas_str})",
                         "Incentivar participação nas avaliações de aula")
 
         # ── F: Detrator na penúltima + ausente na última ────────────
@@ -600,7 +628,7 @@ def gerar_alertas_nps(df_nps, df_coment, df_freq_ativo):
                         chave_aula = (r['_data'], r['_topico'])
                         if chave_aula not in alertas_gerados:
                             add(key,
-                                f"Detrator na penúltima aula ({fmt_data(r['_data'])} | {r['_topico_orig']} | Prof. {r['_prof']}) e ausente na última ({fmt_data(ult['_data'])})",
+                                f"Detrator na penúltima aula ({fmt_data(r['_data'])} · {r['_topico_orig']} · Prof. {r['_prof']}) e ausente na última ({fmt_data(ult['_data'])})",
                                 "Retomar feedback e verificar ausência",
                                 r['_topico_orig'], r['_prof'])
                             alertas_gerados.add(chave_aula)
@@ -621,14 +649,14 @@ def gerar_alertas_nps(df_nps, df_coment, df_freq_ativo):
                     # D: Detrator + comentário na mesma aula → 1 alerta unificado
                     r = nps_mesma.iloc[0]
                     add(key,
-                        f"Detrator com comentário em {fmt_data(c_data)} | {crow['_topico_orig']} | Prof. {crow['_prof']}: \"{crow['_resp']}\"",
+                        f"Detrator com comentário em {fmt_data(c_data)} · {crow['_topico_orig']} · Prof. {crow['_prof']}: \"{crow['_resp']}\"",
                         "Retomar feedback negativo e comentário da avaliação",
                         crow['_topico_orig'], crow['_prof'])
                     alertas_gerados.add(c_key)
                 elif c_key not in alertas_gerados:
                     # C ou E: comentário sem NPS negativo na mesma aula
                     add(key,
-                        f"Comentário em {fmt_data(c_data)} | {crow['_topico_orig']} | Prof. {crow['_prof']}: \"{crow['_resp']}\"",
+                        f"Comentário em {fmt_data(c_data)} · {crow['_topico_orig']} · Prof. {crow['_prof']}: \"{crow['_resp']}\"",
                         "Analisar comentário e dar retorno ao aluno",
                         crow['_topico_orig'], crow['_prof'])
                     # Não adiciona ao alertas_gerados pois pode ter NPS negativo separado
@@ -701,36 +729,39 @@ def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None, turm
                           ascending=[True,True,False,True]).reset_index(drop=True)
 
 def exportar_excel_bytes(df):
+    import re as _re
     wb = Workbook()
     ws = wb.active; ws.title = "Relatório CS"
-    VE="0F3D20"; VM="1B5E35"; BR="FFFFFF"; CR="F4F0E6"; DO="C8A951"
-    n_cols=9; lc=get_column_letter(n_cols)
+    VE="0F3D20"; VM="1B5E35"; BR="FFFFFF"; CR="F4F0E6"
+    n_cols=10; lc=get_column_letter(n_cols)
     thin=Side(style='thin',color='E0DDD4')
     border=Border(left=thin,right=thin,top=thin,bottom=thin)
     def hcell(cell,txt,bg,fg=BR,sz=10,bold=True,align='center'):
-        cell.value=txt
-        cell.font=Font(bold=bold,size=sz,color=fg)
+        cell.value=txt; cell.font=Font(bold=bold,size=sz,color=fg)
         cell.fill=PatternFill("solid",fgColor=bg)
         cell.alignment=Alignment(horizontal=align,vertical='center',wrap_text=True)
     ws.merge_cells(f'A1:{lc}1')
     hcell(ws['A1'],"RELATÓRIO DE ENGAJAMENTO — CUSTOMER SUCCESS REHAGRO",VE,sz=13)
     ws.row_dimensions[1].height=28
     ws.merge_cells(f'A2:{lc}2')
-    hcell(ws['A2'],f"Gerado em: {datetime.now().strftime('%d/%m/%Y às %H:%M')}   |   Total desengajados: {len(df)}",VM,sz=9)
+    hcell(ws['A2'],f"Gerado em: {datetime.now().strftime('%d/%m/%Y às %H:%M')}   |   Total de alunos: {df['Nome'].nunique()}",VM,sz=9)
     ws.row_dimensions[2].height=18
     ws.append([])
     ws.merge_cells(f'A4:{lc}4')
-    hcell(ws['A4'],"LEGENDA DE AÇÕES","EDF7EE",VE,sz=9,align='left')
-    for i,txt in enumerate(["⚠️  Sem acesso ao Canvas há +20 dias  →  Enviar link de acesso à plataforma",
-        "⚠️  NPS: Detrator nos últimos 2 encontros | Presente sem avaliar | Comentário registrado",
-        "⚠️  Ausente nas últimas 2 aulas ao vivo  →  Enviar data da próxima aula"],5):
+    hcell(ws['A4'],"LEGENDA","EDF7EE",VE,sz=9,align='left')
+    for i,txt in enumerate([
+        "🟡 Canvas: Sem acesso há +20 dias  →  Enviar link",
+        "🟠 Frequência: Ausente nas últimas 2 videoconferências  →  Enviar data da próxima aula",
+        "🔴 NPS Detrator  →  Retomar feedback negativo",
+        "🟢 Comentário registrado  →  Analisar e dar retorno ao aluno",
+    ],5):
         ws.merge_cells(f'A{i}:{lc}{i}')
-        ws[f'A{i}']=txt
-        ws[f'A{i}'].font=Font(size=8,color="5A5A4A")
+        ws[f'A{i}']=txt; ws[f'A{i}'].font=Font(size=8,color="5A5A4A")
         ws[f'A{i}'].fill=PatternFill("solid",fgColor=CR)
         ws[f'A{i}'].alignment=Alignment(horizontal='left',indent=2)
     ws.append([])
-    headers=['Curso','Turma','Nome do Aluno','E-mail','Qtd.','Alertas Identificados','Ações Recomendadas','Comentários do Aluno']
+    headers=['Curso','Turma','Nome do Aluno','E-mail','Qtd. Alertas',
+             'Alerta Identificado','Ação Recomendada','Professor','Tópico','Comentário do Aluno']
     ws.append(headers)
     hr=ws.max_row
     for ci,h in enumerate(headers,1):
@@ -738,46 +769,107 @@ def exportar_excel_bytes(df):
         c.font=Font(bold=True,color=BR,size=9)
         c.fill=PatternFill("solid",fgColor=VE)
         c.alignment=Alignment(horizontal='center',vertical='center',wrap_text=True)
-    ws.row_dimensions[hr].height=20
+    ws.row_dimensions[hr].height=22
+
+    def cor_alerta(alerta):
+        a=str(alerta).lower()
+        if 'canvas'      in a: return "FFF9C4"
+        if 'videoconfer' in a: return "FFE0B2"
+        if 'detrat'      in a: return "FFCDD2"
+        if 'coment'      in a: return "E8F5E9"
+        if 'presente'    in a: return "E3F2FD"
+        return "F9F6EF"
+
+    def expandir_linha(row):
+        alertas = [a.strip() for a in str(row.get('Alertas Identificados','')).split(' | ') if a.strip()]
+        acoes   = [a.strip() for a in str(row.get('Ações Recomendadas','')).split(' | ') if a.strip()]
+        topicos = [t.strip() for t in str(row.get('Tópico','')).split(' | ') if t.strip()]
+        profs   = [p.strip() for p in str(row.get('Professor','')).split(' | ') if p.strip()]
+        acoes_vistas=set(); linhas=[]; tp_idx=0
+        for i,alerta in enumerate(alertas):
+            acao_raw=acoes[i] if i<len(acoes) else ''
+            acao=acao_raw if acao_raw not in acoes_vistas else ''
+            acoes_vistas.add(acao_raw)
+            eh_nps=not any(x in alerta for x in ['Canvas','videoconfer'])
+            comentario=''; alerta_limpo=alerta
+            if eh_nps:
+                m=_re.search(r'[""](.*?)[""]\s*$',alerta)
+                if m:
+                    comentario=m.group(1)
+                    alerta_limpo=_re.sub(r':\s*["""].*?["""]\s*$','',alerta).strip().rstrip(': ')
+                prof=profs[tp_idx] if tp_idx<len(profs) else ''
+                topico=topicos[tp_idx] if tp_idx<len(topicos) else ''
+                tp_idx+=1
+            else:
+                prof=topico=''
+            linhas.append({'alerta':alerta_limpo,'acao':acao,'prof':prof,'topico':topico,'comentario':comentario})
+        return linhas
+
     for _,row in df.iterrows():
-        ws.append([row['Curso'],row['Turma'],row['Nome'],row['E-mail'],
-                   row['Qtd. Alertas'],row['Alertas Identificados'],
-                   row['Ações Recomendadas'],row.get('Tópico',''),row.get('Professor','')])
-        dr=ws.max_row
-        fc="FFCDD2" if row['Qtd. Alertas']>=3 else ("FFE0B2" if row['Qtd. Alertas']==2 else "FFFDE7")
-        tem_topico = bool(str(row.get('Tópico','')).strip())
-        for ci in range(1,n_cols+1):
-            c=ws.cell(row=dr,column=ci)
-            if ci<=2: c.fill=PatternFill("solid",fgColor="EDF7EE"); c.font=Font(size=8,color=VM,bold=True)
-            elif ci==5: c.fill=PatternFill("solid",fgColor=fc); c.font=Font(bold=True,size=12); c.alignment=Alignment(horizontal='center',vertical='center')
-            elif ci in (6,7): c.fill=PatternFill("solid",fgColor=fc if ci>4 else BR); c.font=Font(size=10)
-            elif ci==8: c.fill=PatternFill("solid",fgColor="FFF8E1" if tem_topico else BR); c.font=Font(size=8,color="5D4037" if tem_topico else "AAAAAA",italic=not tem_topico)
-            else: c.fill=PatternFill("solid",fgColor=fc if ci>4 else BR)
-            c.border=border
-            if ci!=5: c.alignment=Alignment(vertical='center',wrap_text=True)
-        ws.row_dimensions[dr].height=32
-    for ci,w in enumerate([16,18,30,28,6,60,45,40,30],1):
+        linhas=expandir_linha(row)
+        qtd=len(linhas)
+        for li,linha in enumerate(linhas):
+            ws.append([
+                row['Curso']  if li==0 else '',
+                row['Turma']  if li==0 else '',
+                row['Nome']   if li==0 else '',
+                row['E-mail'] if li==0 else '',
+                qtd           if li==0 else '',
+                linha['alerta'], linha['acao'], linha['prof'], linha['topico'], linha['comentario'],
+            ])
+            dr=ws.max_row; fc=cor_alerta(linha['alerta'])
+            for ci in range(1,n_cols+1):
+                c=ws.cell(row=dr,column=ci)
+                if ci<=4:
+                    c.fill=PatternFill("solid",fgColor="FFFFFF" if li==0 else "F8F8F8")
+                    c.font=Font(size=8 if ci<=2 else 9,color=VM if (ci<=2 and li==0) else ("333333" if li==0 else "BBBBBB"),bold=(ci<=2 and li==0))
+                elif ci==5:
+                    c.fill=PatternFill("solid",fgColor="FFFFFF" if li==0 else "F8F8F8")
+                    c.font=Font(bold=True,size=11 if li==0 else 9,color="333333" if li==0 else "BBBBBB")
+                    c.alignment=Alignment(horizontal='center',vertical='center')
+                elif ci in(6,7):
+                    c.fill=PatternFill("solid",fgColor=fc); c.font=Font(size=9)
+                elif ci==8:
+                    c.fill=PatternFill("solid",fgColor="EEF7F0"); c.font=Font(size=8,color="2E7D32")
+                elif ci==9:
+                    c.fill=PatternFill("solid",fgColor="EEF7F0"); c.font=Font(size=8,color="1B5E35")
+                elif ci==10:
+                    tem=bool(str(linha['comentario']).strip())
+                    c.fill=PatternFill("solid",fgColor="FFF8E1" if tem else "FFFFFF")
+                    c.font=Font(size=8,color="5D4037" if tem else "AAAAAA",italic=not tem)
+                if ci!=5: c.alignment=Alignment(vertical='center',wrap_text=True)
+                c.border=border
+            ws.row_dimensions[dr].height=30
+
+    for ci,w in enumerate([14,16,28,26,8,55,38,28,36,45],1):
         ws.column_dimensions[get_column_letter(ci)].width=w
+
     ws2=wb.create_sheet("Resumo por Turma")
     for ci,w in enumerate([20,20,16,12,12,12],1): ws2.column_dimensions[get_column_letter(ci)].width=w
     ws2.append(["RESUMO POR TURMA","","","","",""])
     ws2['A1'].font=Font(bold=True,size=12,color=BR); ws2['A1'].fill=PatternFill("solid",fgColor=VE)
     ws2.merge_cells('A1:F1'); ws2['A1'].alignment=Alignment(horizontal='center')
     ws2.row_dimensions[1].height=24
-    ws2.append(["Curso","Turma","Total","🔴 Críticos","🟠 Atenção","🟡 Monitorar"])
+    ws2.append(["Curso","Turma","Total Alunos","🟡 Canvas","🟠 Frequência","🔴🟢 NPS/Comentário"])
     hr2=ws2.max_row
     for ci in range(1,7):
         c=ws2.cell(row=hr2,column=ci); c.font=Font(bold=True,color=BR,size=9)
         c.fill=PatternFill("solid",fgColor=VM); c.alignment=Alignment(horizontal='center')
     ws2.row_dimensions[hr2].height=18
     for (curso,turma),g in df.groupby(['Curso','Turma']):
-        ws2.append([curso,turma,len(g),len(g[g['Qtd. Alertas']>=3]),len(g[g['Qtd. Alertas']==2]),len(g[g['Qtd. Alertas']==1])])
+        n_c=g['Alertas Identificados'].str.contains('Canvas',na=False).sum()
+        n_f=g['Alertas Identificados'].str.contains('videoconfer',na=False).sum()
+        n_n=g['Alertas Identificados'].str.contains('etrat|oment|resente',na=False).sum()
+        ws2.append([curso,turma,len(g),n_c,n_f,n_n])
         r=ws2.max_row
         for ci in range(1,7):
             c=ws2.cell(row=r,column=ci); c.font=Font(size=9); c.border=border
             c.alignment=Alignment(horizontal='center' if ci>2 else 'left')
         ws2.row_dimensions[r].height=16
-    ws2.append(["TOTAL GERAL","",len(df),len(df[df['Qtd. Alertas']>=3]),len(df[df['Qtd. Alertas']==2]),len(df[df['Qtd. Alertas']==1])])
+    ws2.append(["TOTAL","",df['Nome'].nunique(),
+                df['Alertas Identificados'].str.contains('Canvas',na=False).sum(),
+                df['Alertas Identificados'].str.contains('videoconfer',na=False).sum(),
+                df['Alertas Identificados'].str.contains('etrat|oment|resente',na=False).sum()])
     r=ws2.max_row
     for ci in range(1,7):
         c=ws2.cell(row=r,column=ci); c.font=Font(bold=True,size=9,color=BR)
@@ -954,14 +1046,16 @@ with col_dir:
                     alertas_nps                     = gerar_alertas_nps(df_nps_raw, df_co, df_freq_ativo)
                     df_rel                          = gerar_relatorio(dc, alertas_nps, df_fr, desist_keys, turma_map)
 
-                    criticos  = len(df_rel[df_rel['Qtd. Alertas']>=3])
-                    atencao   = len(df_rel[df_rel['Qtd. Alertas']==2])
-                    monitorar = len(df_rel[df_rel['Qtd. Alertas']==1])
+                    df_alunos = df_rel.drop_duplicates(subset=['Nome','Turma'])
+                    criticos  = len(df_alunos[df_alunos['Qtd. Alertas']>=4])
+                    atencao   = len(df_alunos[df_alunos['Qtd. Alertas'].between(2,3)])
+                    monitorar = len(df_alunos[df_alunos['Qtd. Alertas']==1])
+                    total_al  = df_rel['Nome'].nunique()
 
                     st.markdown(f"""
                     <div class="rh-metrics">
                       <div class="rh-metric m-total">
-                        <div class="rh-metric-num" style="color:#0F3D20">{len(df_rel)}</div>
+                        <div class="rh-metric-num" style="color:#0F3D20">{total_al}</div>
                         <div class="rh-metric-label">Total</div>
                       </div>
                       <div class="rh-metric m-crit">
@@ -986,7 +1080,7 @@ with col_dir:
                         df_view = df_rel[df_rel['Turma'].isin(sel)]
 
                     st.markdown('<p class="rh-section">Alunos desengajados</p>', unsafe_allow_html=True)
-                    cols_view = ['Curso','Turma','Nome','Qtd. Alertas','Alertas Identificados','Ações Recomendadas','Tópico','Professor']
+                    cols_view = ['Curso','Turma','Nome','Qtd. Alertas','Alerta Identificado','Ação Recomendada','Professor','Tópico','Comentário']
                     st.dataframe(df_view[cols_view], use_container_width=True, hide_index=True, height=320)
 
                     excel_bytes = exportar_excel_bytes(df_rel)
