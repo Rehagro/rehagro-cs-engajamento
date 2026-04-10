@@ -763,7 +763,7 @@ def exportar_excel_bytes(df):
         "🟢 Comentário registrado  →  Analisar e dar retorno ao aluno",
     ],5):
         ws.merge_cells(f'A{i}:{lc}{i}')
-        ws[f'A{i}']=txt; ws[f'A{i}'].font=Font(size=8,color="5A5A4A")
+        ws[f'A{i}']=txt; ws[f'A{i}'].font=Font(size=11,color="5A5A4A")
         ws[f'A{i}'].fill=PatternFill("solid",fgColor=CR)
         ws[f'A{i}'].alignment=Alignment(horizontal='left',indent=2)
     ws.append([])
@@ -826,7 +826,7 @@ def exportar_excel_bytes(df):
 
     for _,row in df.iterrows():
         linhas=expandir_linha(row)
-        qtd=len(linhas)
+        qtd=row['Qtd. Alertas']
         for li,linha in enumerate(linhas):
             ws.append([
                 row['Curso']  if li==0 else '',
@@ -834,7 +834,7 @@ def exportar_excel_bytes(df):
                 row['Nome']   if li==0 else '',
                 row['E-mail'] if li==0 else '',
                 qtd           if li==0 else '',
-                linha['alerta'], linha['acao'], linha['prof'], linha['topico'], linha['comentario'],
+                linha['alerta'], linha['acao'], linha['topico'], linha['prof'], linha['comentario'],
             ])
             dr=ws.max_row; fc=cor_alerta(linha['alerta'])
             for ci in range(1,n_cols+1):
