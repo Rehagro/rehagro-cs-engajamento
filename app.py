@@ -165,20 +165,20 @@ html, body, [class*="css"] {
 
 .rh-dash-num {
     font-family: 'Bebas Neue', sans-serif !important;
-    font-size: 1.1rem !important;
+    font-size: 1.3rem !important;
     letter-spacing: 3px;
     color: var(--ouro);
     margin-bottom: 4px;
 }
 .rh-dash-title {
-    font-size: 1.05rem;
+    font-size: 1.2rem;
     font-weight: 700;
     color: var(--verde);
     margin-bottom: 12px;
     line-height: 1.2;
 }
 .rh-dash-desc {
-    font-size: 0.88rem;
+    font-size: 1rem;
     color: var(--sub);
     line-height: 1.7;
 }
@@ -187,14 +187,14 @@ html, body, [class*="css"] {
     background: #EDF7EE;
     color: var(--verde3);
     border: 1px solid rgba(46,125,50,0.18);
-    font-size: 0.75rem;
+    font-size: 0.88rem;
     font-weight: 500;
     padding: 3px 10px;
     border-radius: 4px;
     margin: 2px 2px 2px 0;
 }
 .rh-note {
-    font-size: 0.76rem;
+    font-size: 0.88rem;
     color: var(--ouro);
     margin-top: 10px;
     font-style: italic;
@@ -204,7 +204,7 @@ html, body, [class*="css"] {
     background: rgba(200,169,81,0.12);
     border: 1px solid rgba(200,169,81,0.3);
     color: var(--ouro);
-    font-size: 0.65rem;
+    font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
@@ -1008,17 +1008,17 @@ with col_esq:
         padding: 14px 18px;
         margin-bottom: 18px;
     ">
-        <div style="font-size:0.95rem; font-weight:700; color:var(--verde); letter-spacing:0.3px; margin-bottom:6px;">
+        <div style="font-size:1.05rem; font-weight:700; color:var(--verde); letter-spacing:0.3px; margin-bottom:6px;">
             ⚠️ Atenção antes de exportar
         </div>
-        <div style="font-size:0.88rem; color:var(--verde2); line-height:1.6;">
+        <div style="font-size:1rem; color:var(--verde2); line-height:1.6;">
             Todos os arquivos devem ser exportados no formato <strong>Dados Resumidos</strong> no Power BI.
             Cada dashboard abaixo indica os <strong>filtros obrigatórios</strong> para a exportação correta.
         </div>
     </div>
     <div>
       <div class="rh-dash-card" style="border-radius:12px 12px 0 0">
-        <div class="rh-dash-num" style="font-size:1.1rem!important">Dashboard 01</div>
+        <div class="rh-dash-num" style="font-size:1.3rem!important">Dashboard 01</div>
         <div class="rh-dash-title">Acesso ao Canvas (AVA)</div>
         <div class="rh-dash-desc">
           Relatório <b>Rehagro - Canvas</b> → página <b>Acesso ao Canvas-Ok</b><br><br>
@@ -1031,7 +1031,7 @@ with col_esq:
         </div>
       </div>
       <div class="rh-dash-card">
-        <div class="rh-dash-num" style="font-size:1.1rem!important">Dashboard 02</div>
+        <div class="rh-dash-num" style="font-size:1.3rem!important">Dashboard 02</div>
         <div class="rh-dash-title">NPS Médio por Aluno</div>
         <div class="rh-dash-desc">
           Relatório <b>Rehagro Educação - Avaliação de Aula</b> → página <b>Avaliações de aula/aluno</b><br><br>
@@ -1045,7 +1045,7 @@ with col_esq:
         </div>
       </div>
       <div class="rh-dash-card">
-        <div class="rh-dash-num" style="font-size:1.1rem!important">Dashboard 03</div>
+        <div class="rh-dash-num" style="font-size:1.3rem!important">Dashboard 03</div>
         <div class="rh-dash-title">Frequência nas Aulas ao Vivo</div>
         <div class="rh-dash-desc">
           Relatório <b>Rehagro Alunado</b> → página <b>Análise de Frequência e Faltas</b><br><br>
@@ -1056,7 +1056,7 @@ with col_esq:
       </div>
       <div class="rh-dash-card" style="border-radius:0 0 12px 12px">
         <div class="rh-opt-badge">Opcional</div>
-        <div class="rh-dash-num" style="font-size:1.1rem!important">Dashboard 04</div>
+        <div class="rh-dash-num" style="font-size:1.3rem!important">Dashboard 04</div>
         <div class="rh-dash-title">Comentários das Aulas</div>
         <div class="rh-dash-desc">
           Relatório <b>Rehagro Educação - Avaliação de Aula</b> → página <b>Tabela Comentários</b><br><br>
