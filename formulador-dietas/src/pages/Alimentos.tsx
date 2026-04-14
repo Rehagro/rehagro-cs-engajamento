@@ -32,7 +32,7 @@ function Campo({ label, field, valor, onChange, tipo = 'number', opcoes }: {
         <select
           value={String(valor ?? '')}
           onChange={e => onChange(e.target.value)}
-          className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
         >
           {opcoes.map(o => <option key={o} value={o}>{o}</option>)}
         </select>
@@ -45,15 +45,13 @@ function Campo({ label, field, valor, onChange, tipo = 'number', opcoes }: {
       <input
         type={tipo}
         value={valor === null || valor === undefined ? '' : String(valor)}
-        placeholder={tipo === 'number' ? 'null' : ''}
+        placeholder={tipo === 'number' ? '—' : ''}
+        onFocus={e => tipo === 'number' && e.target.select()}
         onChange={e => {
-          if (tipo === 'number') {
-            onChange(e.target.value === '' ? null : parseFloat(e.target.value));
-          } else {
-            onChange(e.target.value);
-          }
+          if (tipo === 'number') onChange(e.target.value === '' ? null : parseFloat(e.target.value));
+          else onChange(e.target.value);
         }}
-        className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-green-500 w-full"
+        className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500 w-full tabular-nums"
       />
     </div>
   );
@@ -142,6 +140,40 @@ function FormAlimento({ inicial, onSalvar, onCancelar }: {
   );
 }
 
+// Helpers para exibição
+const pct = (v: number | null) => v !== null ? (v * 100).toFixed(2) : '—';
+const pct1 = (v: number | null) => v !== null ? (v * 100).toFixed(1) : '—';
+const mg = (v: number | null) => v !== null ? v.toFixed(1) : '—';
+const num = (v: number | null, d = 3) => v !== null ? v.toFixed(d) : '—';
+
+// Cabeçalho de grupo
+function GrupoTh({ label, cols }: { label: string; cols: number }) {
+  return (
+    <th
+      colSpan={cols}
+      className="text-center px-2 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-gray-100 border-x border-gray-200"
+    >
+      {label}
+    </th>
+  );
+}
+
+function Th({ children }: { children: React.ReactNode }) {
+  return (
+    <th className="text-right px-2 py-2 text-xs font-semibold text-gray-600 whitespace-nowrap border-x border-gray-100">
+      {children}
+    </th>
+  );
+}
+
+function Td({ children, align = 'right' }: { children: React.ReactNode; align?: 'left' | 'right' | 'center' }) {
+  return (
+    <td className={`px-2 py-1.5 text-xs tabular-nums text-gray-700 border-x border-gray-50 text-${align} whitespace-nowrap`}>
+      {children}
+    </td>
+  );
+}
+
 export default function Alimentos() {
   const { alimentos, adicionarAlimento, editarAlimento, excluirAlimento } = useDieta();
   const [busca, setBusca] = useState('');
@@ -155,10 +187,12 @@ export default function Alimentos() {
   );
 
   const tipoLabel = (t: string) => t === 'C' ? 'Concentrado' : t === 'F' ? 'Forragem' : t === 'M' ? 'Mineral' : t;
-  const tipoBg = (t: string) => t === 'C' ? 'bg-blue-100 text-blue-700' : t === 'F' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700';
+  const tipoBg = (t: string) =>
+    t === 'C' ? 'bg-blue-100 text-blue-700' :
+    t === 'F' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700';
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 py-6">
+    <div className="max-w-[1600px] mx-auto px-4 py-6">
       {(editando || novo) && (
         <FormAlimento
           inicial={editando ?? ALIMENTO_VAZIO}
@@ -188,7 +222,7 @@ export default function Alimentos() {
           placeholder="Buscar..."
           value={busca}
           onChange={e => setBusca(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-64"
+          className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-64"
         />
         {(['todos', 'C', 'F', 'M'] as const).map(t => (
           <button
@@ -206,54 +240,148 @@ export default function Alimentos() {
 
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left px-4 py-2.5 font-semibold text-gray-600">Nome</th>
-                <th className="text-center px-3 py-2.5 font-semibold text-gray-600">Tipo</th>
-                <th className="text-left px-3 py-2.5 font-semibold text-gray-600">Classificação</th>
-                <th className="text-right px-3 py-2.5 font-semibold text-gray-600">MS %</th>
-                <th className="text-right px-3 py-2.5 font-semibold text-gray-600">PB %</th>
-                <th className="text-right px-3 py-2.5 font-semibold text-gray-600">FDN %</th>
-                <th className="text-right px-3 py-2.5 font-semibold text-gray-600">NEl</th>
-                <th className="text-right px-3 py-2.5 font-semibold text-gray-600">Amido %</th>
-                <th className="text-right px-3 py-2.5 font-semibold text-gray-600">Custo R$/kg</th>
-                <th className="px-3 py-2.5" />
+          <table className="w-full text-xs border-collapse">
+            {/* Cabeçalhos de grupo */}
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th colSpan={3} className="text-center px-2 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50">Identificação</th>
+                <GrupoTh label="Base"    cols={2} />
+                <GrupoTh label="Energia" cols={5} />
+                <GrupoTh label="Proteína" cols={3} />
+                <GrupoTh label="Fibra"   cols={4} />
+                <GrupoTh label="Gordura" cols={1} />
+                <GrupoTh label="Macrominerais" cols={7} />
+                <GrupoTh label="Microminerais" cols={7} />
+                <GrupoTh label="Vitaminas" cols={3} />
+                <GrupoTh label="Aditivos"  cols={4} />
+                <th className="bg-gray-50 border-x border-gray-200" />
+              </tr>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                {/* Identificação */}
+                <th className="sticky left-0 z-10 bg-gray-50 text-left px-3 py-2.5 font-semibold text-gray-600 min-w-[180px] whitespace-nowrap">Nome</th>
+                <th className="text-center px-2 py-2.5 font-semibold text-gray-600 whitespace-nowrap">Tipo</th>
+                <th className="text-left px-2 py-2.5 font-semibold text-gray-600 whitespace-nowrap min-w-[90px]">Classif.</th>
+                {/* Base */}
+                <Th>MS %</Th>
+                <Th>R$/kg</Th>
+                {/* Energia */}
+                <Th>NEl</Th>
+                <Th>NDT %</Th>
+                <Th>CNF %</Th>
+                <Th>Amido %</Th>
+                <Th>kd Amid</Th>
+                {/* Proteína */}
+                <Th>PB %</Th>
+                <Th>PDR %</Th>
+                <Th>PNDR %</Th>
+                {/* Fibra */}
+                <Th>FDN %</Th>
+                <Th>eFDN %</Th>
+                <Th>FDNF %</Th>
+                <Th>FDA %</Th>
+                {/* Gordura */}
+                <Th>EE %</Th>
+                {/* Macrominerais */}
+                <Th>Ca %</Th>
+                <Th>P %</Th>
+                <Th>Mg %</Th>
+                <Th>K %</Th>
+                <Th>S %</Th>
+                <Th>Na %</Th>
+                <Th>Cl %</Th>
+                {/* Microminerais */}
+                <Th>Co</Th>
+                <Th>Cu</Th>
+                <Th>Mn</Th>
+                <Th>Zn</Th>
+                <Th>Se</Th>
+                <Th>I</Th>
+                <Th>Fe</Th>
+                {/* Vitaminas */}
+                <Th>Vit A</Th>
+                <Th>Vit D3</Th>
+                <Th>Vit E</Th>
+                {/* Aditivos */}
+                <Th>Biotina</Th>
+                <Th>Monen.</Th>
+                <Th>Cr</Th>
+                <Th>Leved.</Th>
+                {/* Ações */}
+                <th className="px-2 py-2.5 bg-gray-50" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtrados.map(a => (
-                <tr key={a.nome} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 font-medium text-gray-800">{a.nome}</td>
-                  <td className="px-3 py-2 text-center">
-                    <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full ${tipoBg(a.tipo)}`}>
-                      {tipoLabel(a.tipo)}
+                <tr key={a.nome} className="hover:bg-blue-50/30 transition-colors">
+                  {/* Identificação */}
+                  <td className="sticky left-0 z-10 bg-white px-3 py-2 font-semibold text-gray-800 whitespace-nowrap">{a.nome}</td>
+                  <td className="px-2 py-2 text-center">
+                    <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tipoBg(a.tipo)}`}>
+                      {a.tipo}
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-gray-600">{a.classificacao}</td>
-                  <td className="px-3 py-2 text-right font-mono text-gray-700">{(a.ms * 100).toFixed(1)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-gray-700">{(a.pb * 100).toFixed(2)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-gray-700">{a.fdn !== null ? (a.fdn * 100).toFixed(1) : '—'}</td>
-                  <td className="px-3 py-2 text-right font-mono text-gray-700">{a.nel !== null ? a.nel.toFixed(3) : a.ndt !== null ? ((0.0245 * a.ndt * 100) - 0.12).toFixed(3) : '—'}</td>
-                  <td className="px-3 py-2 text-right font-mono text-gray-700">{a.amido !== null ? (a.amido * 100).toFixed(1) : '—'}</td>
-                  <td className="px-3 py-2 text-right font-mono text-gray-700">{a.custo !== null ? a.custo.toFixed(3) : '—'}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-2 py-2 text-gray-500 whitespace-nowrap">{a.classificacao}</td>
+                  {/* Base */}
+                  <Td>{pct1(a.ms)}</Td>
+                  <Td>{a.custo !== null ? a.custo.toFixed(3) : '—'}</Td>
+                  {/* Energia */}
+                  <Td>{a.nel !== null ? num(a.nel) : a.ndt !== null ? ((0.0245 * a.ndt * 100) - 0.12).toFixed(3) : '—'}</Td>
+                  <Td>{a.ndt !== null ? pct1(a.ndt) : '—'}</Td>
+                  <Td>{a.cnf !== null ? pct1(a.cnf) : '—'}</Td>
+                  <Td>{a.amido !== null ? pct1(a.amido) : '—'}</Td>
+                  <Td>{a.kd_amido !== null ? num(a.kd_amido, 1) : '—'}</Td>
+                  {/* Proteína */}
+                  <Td>{pct(a.pb)}</Td>
+                  <Td>{a.pdr !== null ? pct(a.pdr) : '—'}</Td>
+                  <Td>{a.pndr !== null ? pct(a.pndr) : '—'}</Td>
+                  {/* Fibra */}
+                  <Td>{a.fdn !== null ? pct1(a.fdn) : '—'}</Td>
+                  <Td>{a.efdn !== null ? pct1(a.efdn) : '—'}</Td>
+                  <Td>{a.fdnf !== null ? pct1(a.fdnf) : '—'}</Td>
+                  <Td>{a.fda !== null ? pct1(a.fda) : '—'}</Td>
+                  {/* Gordura */}
+                  <Td>{a.ee !== null ? pct1(a.ee) : '—'}</Td>
+                  {/* Macrominerais */}
+                  <Td>{a.ca !== null ? pct(a.ca) : '—'}</Td>
+                  <Td>{a.p !== null ? pct(a.p) : '—'}</Td>
+                  <Td>{a.mg !== null ? pct(a.mg) : '—'}</Td>
+                  <Td>{a.k !== null ? pct(a.k) : '—'}</Td>
+                  <Td>{a.s !== null ? pct(a.s) : '—'}</Td>
+                  <Td>{a.na !== null ? pct(a.na) : '—'}</Td>
+                  <Td>{a.cl !== null ? pct(a.cl) : '—'}</Td>
+                  {/* Microminerais */}
+                  <Td>{mg(a.co)}</Td>
+                  <Td>{mg(a.cu)}</Td>
+                  <Td>{mg(a.mn_min)}</Td>
+                  <Td>{mg(a.zn)}</Td>
+                  <Td>{mg(a.se)}</Td>
+                  <Td>{mg(a.i)}</Td>
+                  <Td>{mg(a.fe)}</Td>
+                  {/* Vitaminas */}
+                  <Td>{a.vit_a !== null ? a.vit_a.toFixed(0) : '—'}</Td>
+                  <Td>{a.vit_d3 !== null ? a.vit_d3.toFixed(0) : '—'}</Td>
+                  <Td>{a.vit_e !== null ? a.vit_e.toFixed(1) : '—'}</Td>
+                  {/* Aditivos */}
+                  <Td>{mg(a.biotina)}</Td>
+                  <Td>{mg(a.monensina)}</Td>
+                  <Td>{mg(a.cr)}</Td>
+                  <Td>{a.levedura !== null ? a.levedura.toExponential(1) : '—'}</Td>
+                  {/* Ações */}
+                  <td className="px-2 py-1.5">
                     <div className="flex gap-1 justify-end">
                       <button
                         onClick={() => setEditando(a)}
                         className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                         title="Editar"
                       >
-                        <Pencil size={14} />
+                        <Pencil size={13} />
                       </button>
                       <button
-                        onClick={() => {
-                          if (confirm(`Excluir "${a.nome}"?`)) excluirAlimento(a.nome);
-                        }}
+                        onClick={() => { if (confirm(`Excluir "${a.nome}"?`)) excluirAlimento(a.nome); }}
                         className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                         title="Excluir"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   </td>

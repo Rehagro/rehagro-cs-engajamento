@@ -19,7 +19,7 @@ const ANIMAL_PADRAO: AnimalLactacao = {
 };
 
 function criarSlots(): SlotIngrediente[] {
-  return Array.from({ length: 10 }, (_, i) => ({
+  return Array.from({ length: 8 }, (_, i) => ({
     id: `slot_${i}`,
     alimentoNome: null,
     kgMN: 0,

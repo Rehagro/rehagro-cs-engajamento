@@ -146,14 +146,14 @@ export default function PainelResultados({ resultado, leite }: Props) {
       {/* Cards de leite potencial */}
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center">
-          <div className="text-xs font-semibold text-emerald-700 mb-1">⚡ Leite pot. NEl</div>
+          <div className="text-xs font-semibold text-emerald-700 mb-1">⚡ Leite Potencial Energia</div>
           <div className="text-2xl font-bold text-emerald-800 tabular-nums leading-tight">
             {leite_potencial_nel.toFixed(1)}
           </div>
           <div className="text-xs text-emerald-600 mt-0.5">kg/dia</div>
         </div>
         <div className="bg-violet-50 border border-violet-200 rounded-xl p-3 text-center">
-          <div className="text-xs font-semibold text-violet-700 mb-1">🧬 Leite pot. Proteína</div>
+          <div className="text-xs font-semibold text-violet-700 mb-1">🧬 Leite Potencial Proteína</div>
           <div className="text-2xl font-bold text-violet-800 tabular-nums leading-tight">
             {leite_potencial_prot.toFixed(1)}
           </div>
