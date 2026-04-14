@@ -18,22 +18,15 @@ const ALIMENTO_VAZIO: Alimento = {
 };
 
 function Campo({ label, field, valor, onChange, tipo = 'number', opcoes }: {
-  label: string;
-  field: string;
-  valor: unknown;
-  onChange: (v: unknown) => void;
-  tipo?: string;
-  opcoes?: string[];
+  label: string; field: string; valor: unknown;
+  onChange: (v: unknown) => void; tipo?: string; opcoes?: string[];
 }) {
   if (tipo === 'select' && opcoes) {
     return (
       <div className="flex flex-col gap-0.5">
         <label className="text-xs text-gray-500">{label}</label>
-        <select
-          value={String(valor ?? '')}
-          onChange={e => onChange(e.target.value)}
-          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
-        >
+        <select value={String(valor ?? '')} onChange={e => onChange(e.target.value)}
+          className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500">
           {opcoes.map(o => <option key={o} value={o}>{o}</option>)}
         </select>
       </div>
@@ -42,9 +35,7 @@ function Campo({ label, field, valor, onChange, tipo = 'number', opcoes }: {
   return (
     <div className="flex flex-col gap-0.5">
       <label className="text-xs text-gray-500">{label}</label>
-      <input
-        type={tipo}
-        value={valor === null || valor === undefined ? '' : String(valor)}
+      <input type={tipo} value={valor === null || valor === undefined ? '' : String(valor)}
         placeholder={tipo === 'number' ? '—' : ''}
         onFocus={e => tipo === 'number' && e.target.select()}
         onChange={e => {
@@ -58,13 +49,10 @@ function Campo({ label, field, valor, onChange, tipo = 'number', opcoes }: {
 }
 
 function FormAlimento({ inicial, onSalvar, onCancelar }: {
-  inicial: Alimento;
-  onSalvar: (a: Alimento) => void;
-  onCancelar: () => void;
+  inicial: Alimento; onSalvar: (a: Alimento) => void; onCancelar: () => void;
 }) {
   const [form, setForm] = useState<Alimento>(inicial);
   const set = (key: keyof Alimento) => (v: unknown) => setForm(f => ({ ...f, [key]: v }));
-
   const campos: { label: string; key: keyof Alimento; tipo?: string; opcoes?: string[] }[] = [
     { label: 'Nome', key: 'nome', tipo: 'text' },
     { label: 'Custo R$/kg MN', key: 'custo' },
@@ -105,7 +93,6 @@ function FormAlimento({ inicial, onSalvar, onCancelar }: {
     { label: 'Cr mg/kg', key: 'cr' },
     { label: 'Levedura UFC/kg', key: 'levedura' },
   ];
-
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center overflow-y-auto py-8">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4">
@@ -115,23 +102,14 @@ function FormAlimento({ inicial, onSalvar, onCancelar }: {
         </div>
         <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto">
           {campos.map(c => (
-            <Campo
-              key={c.key}
-              label={c.label}
-              field={c.key}
-              valor={form[c.key]}
-              onChange={set(c.key)}
-              tipo={c.tipo}
-              opcoes={c.opcoes}
-            />
+            <Campo key={c.key} label={c.label} field={c.key} valor={form[c.key]}
+              onChange={set(c.key)} tipo={c.tipo} opcoes={c.opcoes} />
           ))}
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-gray-200">
           <button onClick={onCancelar} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
-          <button
-            onClick={() => form.nome ? onSalvar(form) : alert('Nome obrigatório')}
-            className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
-          >
+          <button onClick={() => form.nome ? onSalvar(form) : alert('Nome obrigatório')}
+            className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">
             <Check size={15} /> Salvar
           </button>
         </div>
@@ -140,27 +118,43 @@ function FormAlimento({ inicial, onSalvar, onCancelar }: {
   );
 }
 
-// Helpers para exibição
-const pct = (v: number | null) => v !== null ? (v * 100).toFixed(2) : '—';
-const pct1 = (v: number | null) => v !== null ? (v * 100).toFixed(1) : '—';
-const mg = (v: number | null) => v !== null ? v.toFixed(1) : '—';
-const num = (v: number | null, d = 3) => v !== null ? v.toFixed(d) : '—';
+// Helpers
+const pct  = (v: number | null) => v !== null ? (v * 100).toFixed(2) : '—';
+const pct1 = (v: number | null) => v !== null ? (v * 100).toFixed(1)  : '—';
+const mg   = (v: number | null) => v !== null ? v.toFixed(1)           : '—';
+const num  = (v: number | null, d = 3) => v !== null ? v.toFixed(d)   : '—';
 
-// Cabeçalho de grupo
-function GrupoTh({ label, cols }: { label: string; cols: number }) {
+/** PDR = armazenado ou calculado (PB - PNDR) */
+const calcPDR = (a: Alimento): number | null =>
+  a.pdr !== null ? a.pdr : (a.pndr !== null ? a.pb - a.pndr : null);
+
+// Larguras fixas das colunas congeladas (devem bater com w- e left-)
+const W_NOME = 180;  // px
+const W_TIPO = 68;   // px
+
+// Altura da primeira linha do cabeçalho (grupo) — usada como offset do top da segunda linha
+const H_GRUPO = 26; // px
+
+const stickyNomeTh = `sticky left-0 z-40 bg-gray-50 w-[${W_NOME}px] min-w-[${W_NOME}px]`;
+const stickyTipoTh = `sticky left-[${W_NOME}px] z-40 bg-gray-50 w-[${W_TIPO}px] min-w-[${W_TIPO}px]`;
+const stickyNomeTd = `sticky left-0 z-10 bg-white w-[${W_NOME}px] min-w-[${W_NOME}px]`;
+const stickyTipoTd = `sticky left-[${W_NOME}px] z-10 bg-white w-[${W_TIPO}px] min-w-[${W_TIPO}px]`;
+
+function GrupoTh({ label, cols, sticky, stickyClass }: {
+  label: string; cols: number; sticky?: boolean; stickyClass?: string;
+}) {
   return (
-    <th
-      colSpan={cols}
-      className="text-center px-2 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-gray-100 border-x border-gray-200"
-    >
+    <th colSpan={cols}
+      style={sticky ? undefined : undefined}
+      className={`text-center px-2 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-gray-100 border-x border-gray-200 sticky top-0 z-30 ${stickyClass ?? ''}`}>
       {label}
     </th>
   );
 }
 
-function Th({ children }: { children: React.ReactNode }) {
+function Th({ children, top }: { children: React.ReactNode; top: number }) {
   return (
-    <th className="text-right px-2 py-2 text-xs font-semibold text-gray-600 whitespace-nowrap border-x border-gray-100">
+    <th style={{ top }} className="text-right px-2 py-2 text-xs font-semibold text-gray-600 whitespace-nowrap border-x border-gray-100 sticky z-20 bg-gray-50">
       {children}
     </th>
   );
@@ -186,10 +180,11 @@ export default function Alimentos() {
     a.nome.toLowerCase().includes(busca.toLowerCase())
   );
 
-  const tipoLabel = (t: string) => t === 'C' ? 'Concentrado' : t === 'F' ? 'Forragem' : t === 'M' ? 'Mineral' : t;
   const tipoBg = (t: string) =>
     t === 'C' ? 'bg-blue-100 text-blue-700' :
     t === 'F' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700';
+
+  const tipoLabel = (t: string) => t === 'C' ? 'Concentrado' : t === 'F' ? 'Forragem' : 'Mineral';
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 py-6">
@@ -199,8 +194,7 @@ export default function Alimentos() {
           onSalvar={a => {
             if (editando) editarAlimento(editando.nome, a);
             else adicionarAlimento(a);
-            setEditando(null);
-            setNovo(false);
+            setEditando(null); setNovo(false);
           }}
           onCancelar={() => { setEditando(null); setNovo(false); }}
         />
@@ -208,185 +202,173 @@ export default function Alimentos() {
 
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h1 className="text-xl font-bold text-gray-800">🥩 Banco de Alimentos</h1>
-        <button
-          onClick={() => setNovo(true)}
-          className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
-        >
+        <button onClick={() => setNovo(true)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">
           <Plus size={15} /> Novo Alimento
         </button>
       </div>
 
       <div className="flex gap-2 mb-4 flex-wrap">
-        <input
-          type="text"
-          placeholder="Buscar..."
-          value={busca}
+        <input type="text" placeholder="Buscar..." value={busca}
           onChange={e => setBusca(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-64"
-        />
+          className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-64" />
         {(['todos', 'C', 'F', 'M'] as const).map(t => (
-          <button
-            key={t}
-            onClick={() => setFiltroTipo(t)}
+          <button key={t} onClick={() => setFiltroTipo(t)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              filtroTipo === t ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
+              filtroTipo === t ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
             {t === 'todos' ? 'Todos' : `${t === 'C' ? '🌽' : t === 'F' ? '🌾' : '🧂'} ${tipoLabel(t)}`}
           </button>
         ))}
         <span className="text-sm text-gray-400 self-center">{filtrados.length} alimentos</span>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs border-collapse">
-            {/* Cabeçalhos de grupo */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        {/* overflow-auto permite scroll em X e Y; cabeçalho e colunas ficam sticky */}
+        <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 220px)' }}>
+          <table className="text-xs" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
             <thead>
-              <tr className="border-b border-gray-200">
-                <th colSpan={3} className="text-center px-2 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50">Identificação</th>
-                <GrupoTh label="Base"    cols={2} />
-                <GrupoTh label="Energia" cols={5} />
-                <GrupoTh label="Proteína" cols={3} />
-                <GrupoTh label="Fibra"   cols={4} />
-                <GrupoTh label="Gordura" cols={1} />
-                <GrupoTh label="Macrominerais" cols={7} />
-                <GrupoTh label="Microminerais" cols={7} />
-                <GrupoTh label="Vitaminas" cols={3} />
-                <GrupoTh label="Aditivos"  cols={4} />
-                <th className="bg-gray-50 border-x border-gray-200" />
+              {/* ── Linha 1: Grupos ── sticky top-0 */}
+              <tr>
+                <th colSpan={2}
+                  className={`${stickyNomeTh} text-center px-2 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200 top-0`}
+                  style={{ top: 0 }}>
+                  Identificação
+                </th>
+                {/* colunas de grupo normais */}
+                {[
+                  ['Base', 2], ['Energia', 5], ['Proteína', 3], ['Fibra', 4],
+                  ['Gordura', 1], ['Macrominerais', 7], ['Microminerais', 7],
+                  ['Vitaminas', 3], ['Aditivos', 4],
+                ].map(([label, cols]) => (
+                  <th key={String(label)} colSpan={Number(cols)}
+                    style={{ top: 0 }}
+                    className="sticky z-30 text-center px-2 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-gray-100 border-x border-b border-gray-200">
+                    {label}
+                  </th>
+                ))}
+                <th style={{ top: 0 }} className="sticky z-30 bg-gray-50 border-b border-gray-200" />
               </tr>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                {/* Identificação */}
-                <th className="sticky left-0 z-10 bg-gray-50 text-left px-3 py-2.5 font-semibold text-gray-600 min-w-[180px] whitespace-nowrap">Nome</th>
-                <th className="text-center px-2 py-2.5 font-semibold text-gray-600 whitespace-nowrap">Tipo</th>
-                <th className="text-left px-2 py-2.5 font-semibold text-gray-600 whitespace-nowrap min-w-[90px]">Classif.</th>
-                {/* Base */}
-                <Th>MS %</Th>
-                <Th>R$/kg</Th>
-                {/* Energia */}
-                <Th>NEl</Th>
-                <Th>NDT %</Th>
-                <Th>CNF %</Th>
-                <Th>Amido %</Th>
-                <Th>kd Amid</Th>
-                {/* Proteína */}
-                <Th>PB %</Th>
-                <Th>PDR %</Th>
-                <Th>PNDR %</Th>
-                {/* Fibra */}
-                <Th>FDN %</Th>
-                <Th>eFDN %</Th>
-                <Th>FDNF %</Th>
-                <Th>FDA %</Th>
-                {/* Gordura */}
-                <Th>EE %</Th>
-                {/* Macrominerais */}
-                <Th>Ca %</Th>
-                <Th>P %</Th>
-                <Th>Mg %</Th>
-                <Th>K %</Th>
-                <Th>S %</Th>
-                <Th>Na %</Th>
-                <Th>Cl %</Th>
-                {/* Microminerais */}
-                <Th>Co</Th>
-                <Th>Cu</Th>
-                <Th>Mn</Th>
-                <Th>Zn</Th>
-                <Th>Se</Th>
-                <Th>I</Th>
-                <Th>Fe</Th>
-                {/* Vitaminas */}
-                <Th>Vit A</Th>
-                <Th>Vit D3</Th>
-                <Th>Vit E</Th>
-                {/* Aditivos */}
-                <Th>Biotina</Th>
-                <Th>Monen.</Th>
-                <Th>Cr</Th>
-                <Th>Leved.</Th>
-                {/* Ações */}
-                <th className="px-2 py-2.5 bg-gray-50" />
+
+              {/* ── Linha 2: Nomes das colunas ── sticky top-[H_GRUPO] */}
+              <tr>
+                {/* Nome — sticky esquerda + topo */}
+                <th style={{ top: H_GRUPO, left: 0, minWidth: W_NOME }}
+                  className="sticky z-40 bg-gray-50 text-left px-3 py-2 font-semibold text-gray-600 whitespace-nowrap border-b border-r border-gray-200">
+                  Nome
+                </th>
+                {/* Tipo — sticky esquerda + topo */}
+                <th style={{ top: H_GRUPO, left: W_NOME, minWidth: W_TIPO }}
+                  className="sticky z-40 bg-gray-50 text-center px-2 py-2 font-semibold text-gray-600 whitespace-nowrap border-b border-r border-gray-200">
+                  Tipo
+                </th>
+                {/* Demais cabeçalhos */}
+                {[
+                  // Base
+                  'MS %', 'R$/kg',
+                  // Energia
+                  'NEl', 'NDT %', 'CNF %', 'Amido %', 'kd Amid',
+                  // Proteína
+                  'PB %', 'PDR %', 'PNDR %',
+                  // Fibra
+                  'FDN %', 'eFDN %', 'FDNF %', 'FDA %',
+                  // Gordura
+                  'EE %',
+                  // Macrominerais
+                  'Ca %', 'P %', 'Mg %', 'K %', 'S %', 'Na %', 'Cl %',
+                  // Microminerais
+                  'Co', 'Cu', 'Mn', 'Zn', 'Se', 'I', 'Fe',
+                  // Vitaminas
+                  'Vit A', 'Vit D3', 'Vit E',
+                  // Aditivos
+                  'Biotina', 'Monen.', 'Cr', 'Leved.',
+                ].map(h => (
+                  <th key={h} style={{ top: H_GRUPO }}
+                    className="sticky z-20 bg-gray-50 text-right px-2 py-2 font-semibold text-gray-600 whitespace-nowrap border-b border-x border-gray-100">
+                    {h}
+                  </th>
+                ))}
+                <th style={{ top: H_GRUPO }} className="sticky z-20 bg-gray-50 border-b border-gray-100" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filtrados.map(a => (
-                <tr key={a.nome} className="hover:bg-blue-50/30 transition-colors">
-                  {/* Identificação */}
-                  <td className="sticky left-0 z-10 bg-white px-3 py-2 font-semibold text-gray-800 whitespace-nowrap">{a.nome}</td>
-                  <td className="px-2 py-2 text-center">
-                    <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tipoBg(a.tipo)}`}>
-                      {a.tipo}
-                    </span>
-                  </td>
-                  <td className="px-2 py-2 text-gray-500 whitespace-nowrap">{a.classificacao}</td>
-                  {/* Base */}
-                  <Td>{pct1(a.ms)}</Td>
-                  <Td>{a.custo !== null ? a.custo.toFixed(3) : '—'}</Td>
-                  {/* Energia */}
-                  <Td>{a.nel !== null ? num(a.nel) : a.ndt !== null ? ((0.0245 * a.ndt * 100) - 0.12).toFixed(3) : '—'}</Td>
-                  <Td>{a.ndt !== null ? pct1(a.ndt) : '—'}</Td>
-                  <Td>{a.cnf !== null ? pct1(a.cnf) : '—'}</Td>
-                  <Td>{a.amido !== null ? pct1(a.amido) : '—'}</Td>
-                  <Td>{a.kd_amido !== null ? num(a.kd_amido, 1) : '—'}</Td>
-                  {/* Proteína */}
-                  <Td>{pct(a.pb)}</Td>
-                  <Td>{a.pdr !== null ? pct(a.pdr) : '—'}</Td>
-                  <Td>{a.pndr !== null ? pct(a.pndr) : '—'}</Td>
-                  {/* Fibra */}
-                  <Td>{a.fdn !== null ? pct1(a.fdn) : '—'}</Td>
-                  <Td>{a.efdn !== null ? pct1(a.efdn) : '—'}</Td>
-                  <Td>{a.fdnf !== null ? pct1(a.fdnf) : '—'}</Td>
-                  <Td>{a.fda !== null ? pct1(a.fda) : '—'}</Td>
-                  {/* Gordura */}
-                  <Td>{a.ee !== null ? pct1(a.ee) : '—'}</Td>
-                  {/* Macrominerais */}
-                  <Td>{a.ca !== null ? pct(a.ca) : '—'}</Td>
-                  <Td>{a.p !== null ? pct(a.p) : '—'}</Td>
-                  <Td>{a.mg !== null ? pct(a.mg) : '—'}</Td>
-                  <Td>{a.k !== null ? pct(a.k) : '—'}</Td>
-                  <Td>{a.s !== null ? pct(a.s) : '—'}</Td>
-                  <Td>{a.na !== null ? pct(a.na) : '—'}</Td>
-                  <Td>{a.cl !== null ? pct(a.cl) : '—'}</Td>
-                  {/* Microminerais */}
-                  <Td>{mg(a.co)}</Td>
-                  <Td>{mg(a.cu)}</Td>
-                  <Td>{mg(a.mn_min)}</Td>
-                  <Td>{mg(a.zn)}</Td>
-                  <Td>{mg(a.se)}</Td>
-                  <Td>{mg(a.i)}</Td>
-                  <Td>{mg(a.fe)}</Td>
-                  {/* Vitaminas */}
-                  <Td>{a.vit_a !== null ? a.vit_a.toFixed(0) : '—'}</Td>
-                  <Td>{a.vit_d3 !== null ? a.vit_d3.toFixed(0) : '—'}</Td>
-                  <Td>{a.vit_e !== null ? a.vit_e.toFixed(1) : '—'}</Td>
-                  {/* Aditivos */}
-                  <Td>{mg(a.biotina)}</Td>
-                  <Td>{mg(a.monensina)}</Td>
-                  <Td>{mg(a.cr)}</Td>
-                  <Td>{a.levedura !== null ? a.levedura.toExponential(1) : '—'}</Td>
-                  {/* Ações */}
-                  <td className="px-2 py-1.5">
-                    <div className="flex gap-1 justify-end">
-                      <button
-                        onClick={() => setEditando(a)}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        title="Editar"
-                      >
-                        <Pencil size={13} />
-                      </button>
-                      <button
-                        onClick={() => { if (confirm(`Excluir "${a.nome}"?`)) excluirAlimento(a.nome); }}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                        title="Excluir"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+
+            <tbody>
+              {filtrados.map(a => {
+                const pdr = calcPDR(a);
+                return (
+                  <tr key={a.nome} className="hover:bg-blue-50/20 transition-colors">
+                    {/* Nome — sticky esquerda */}
+                    <td style={{ left: 0, minWidth: W_NOME }}
+                      className="sticky z-10 bg-white px-3 py-2 font-semibold text-gray-800 whitespace-nowrap border-b border-r border-gray-100">
+                      {a.nome}
+                    </td>
+                    {/* Tipo — sticky esquerda */}
+                    <td style={{ left: W_NOME, minWidth: W_TIPO }}
+                      className="sticky z-10 bg-white px-2 py-2 text-center border-b border-r border-gray-100">
+                      <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-full ${tipoBg(a.tipo)}`}>
+                        {a.tipo}
+                      </span>
+                    </td>
+                    {/* Base */}
+                    <Td>{pct1(a.ms)}</Td>
+                    <Td>{a.custo !== null ? a.custo.toFixed(3) : '—'}</Td>
+                    {/* Energia */}
+                    <Td>{a.nel !== null ? num(a.nel) : a.ndt !== null ? ((0.0245 * a.ndt * 100) - 0.12).toFixed(3) : '—'}</Td>
+                    <Td>{a.ndt !== null ? pct1(a.ndt) : '—'}</Td>
+                    <Td>{a.cnf !== null ? pct1(a.cnf) : '—'}</Td>
+                    <Td>{a.amido !== null ? pct1(a.amido) : '—'}</Td>
+                    <Td>{a.kd_amido !== null ? num(a.kd_amido, 1) : '—'}</Td>
+                    {/* Proteína */}
+                    <Td>{pct(a.pb)}</Td>
+                    <Td>{pct(pdr)}</Td>
+                    <Td>{a.pndr !== null ? pct(a.pndr) : '—'}</Td>
+                    {/* Fibra */}
+                    <Td>{a.fdn !== null ? pct1(a.fdn) : '—'}</Td>
+                    <Td>{a.efdn !== null ? pct1(a.efdn) : '—'}</Td>
+                    <Td>{a.fdnf !== null ? pct1(a.fdnf) : '—'}</Td>
+                    <Td>{a.fda !== null ? pct1(a.fda) : '—'}</Td>
+                    {/* Gordura */}
+                    <Td>{a.ee !== null ? pct1(a.ee) : '—'}</Td>
+                    {/* Macrominerais */}
+                    <Td>{a.ca   !== null ? pct(a.ca)   : '—'}</Td>
+                    <Td>{a.p    !== null ? pct(a.p)    : '—'}</Td>
+                    <Td>{a.mg   !== null ? pct(a.mg)   : '—'}</Td>
+                    <Td>{a.k    !== null ? pct(a.k)    : '—'}</Td>
+                    <Td>{a.s    !== null ? pct(a.s)    : '—'}</Td>
+                    <Td>{a.na   !== null ? pct(a.na)   : '—'}</Td>
+                    <Td>{a.cl   !== null ? pct(a.cl)   : '—'}</Td>
+                    {/* Microminerais */}
+                    <Td>{mg(a.co)}</Td>
+                    <Td>{mg(a.cu)}</Td>
+                    <Td>{mg(a.mn_min)}</Td>
+                    <Td>{mg(a.zn)}</Td>
+                    <Td>{mg(a.se)}</Td>
+                    <Td>{mg(a.i)}</Td>
+                    <Td>{mg(a.fe)}</Td>
+                    {/* Vitaminas */}
+                    <Td>{a.vit_a  !== null ? a.vit_a.toFixed(0)  : '—'}</Td>
+                    <Td>{a.vit_d3 !== null ? a.vit_d3.toFixed(0) : '—'}</Td>
+                    <Td>{a.vit_e  !== null ? a.vit_e.toFixed(1)  : '—'}</Td>
+                    {/* Aditivos */}
+                    <Td>{mg(a.biotina)}</Td>
+                    <Td>{mg(a.monensina)}</Td>
+                    <Td>{mg(a.cr)}</Td>
+                    <Td>{a.levedura !== null ? a.levedura.toExponential(1) : '—'}</Td>
+                    {/* Ações */}
+                    <td className="px-2 py-1.5 border-b border-gray-100">
+                      <div className="flex gap-1 justify-end">
+                        <button onClick={() => setEditando(a)}
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Editar">
+                          <Pencil size={13} />
+                        </button>
+                        <button onClick={() => { if (confirm(`Excluir "${a.nome}"?`)) excluirAlimento(a.nome); }}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Excluir">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
