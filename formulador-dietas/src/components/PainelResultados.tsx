@@ -131,7 +131,7 @@ export default function PainelResultados({ resultado, leite }: Props) {
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
         <div className="text-xs font-bold text-blue-700 mb-2">🥛 Consumo</div>
         <div className="flex justify-between text-sm text-blue-700 mb-1 font-medium">
-          <span>CMS real vs exigida</span>
+          <span>CMS formulada vs exigida</span>
           <span className="tabular-nums font-bold">{totalKgMS.toFixed(1)} / {cmsExigida.toFixed(1)} kg</span>
         </div>
         <div className="h-2.5 bg-blue-200 rounded-full overflow-hidden">

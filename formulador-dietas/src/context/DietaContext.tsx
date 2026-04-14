@@ -18,12 +18,24 @@ const ANIMAL_PADRAO: AnimalLactacao = {
   precoLeite: 2.20,
 };
 
+const SLOTS_PADRAO = 8;
+
 function criarSlots(): SlotIngrediente[] {
-  return Array.from({ length: 8 }, (_, i) => ({
+  return Array.from({ length: SLOTS_PADRAO }, (_, i) => ({
     id: `slot_${i}`,
     alimentoNome: null,
     kgMN: 0,
   }));
+}
+
+/** Remove slots vazios no final, mantendo no mínimo SLOTS_PADRAO */
+function normalizarSlots(slots: SlotIngrediente[]): SlotIngrediente[] {
+  const preenchidos = slots.filter(s => s.alimentoNome !== null || s.kgMN > 0);
+  const minTotal = Math.max(preenchidos.length + 1, SLOTS_PADRAO);
+  if (slots.length <= minTotal) return slots;
+  // Corta o excesso de slots vazios no final
+  const trimmed = slots.slice(0, minTotal);
+  return trimmed;
 }
 
 interface DietaContextType {
@@ -63,7 +75,7 @@ export function DietaProvider({ children }: { children: ReactNode }) {
     const ativaId = getDietaAtiva();
     if (ativaId) {
       const salva = getDietas().find(d => d.id === ativaId);
-      if (salva) return salva;
+      if (salva) return { ...salva, slots: normalizarSlots(salva.slots) };
     }
     return {
       id: gerarId(),
@@ -105,7 +117,7 @@ export function DietaProvider({ children }: { children: ReactNode }) {
 
   const carregarDieta = useCallback((id: string) => {
     const d = getDietas().find(x => x.id === id);
-    if (d) setDieta(d);
+    if (d) setDieta({ ...d, slots: normalizarSlots(d.slots) });
   }, []);
 
   const novaDieta = useCallback(() => {

@@ -40,10 +40,10 @@ export const REFERENCIAS_LACTACAO: Record<string, Referencia> = {
   levedura:   { label: 'Levedura',      unidade: 'UFC/kg',  ref: '1-2×10¹⁰' },
   // indicadores
   fdnf_kg_pv:      { label: 'FDNF/PV',           unidade: '%', max: 0.009, ref: 'Alta: 0,8–0,9% | Méd: 0,9% | Baixa: 0,9–1,1%' },
-  pct_forragem_ms: { label: '% Forragem MS',      unidade: '%',      min: 0.40,  max: 0.60 },
-  fdn8_amido_deg:  { label: 'FDN>8 / Amido Deg',  unidade: '',       min: 1 },
+  pct_forragem_ms: { label: '% Forragem MS',      unidade: '%',      min: 0.40,  max: 0.60, ref: '40–60%' },
+  fdn8_amido_deg:  { label: 'FDN>8 / Amido Deg',  unidade: '',       min: 1,                ref: '≥ 1' },
   lis_met:         { label: 'Lis / Met',           unidade: '',       ref: '~3' },
-  ca_p:            { label: 'Ca / P',              unidade: '',       min: 2,     max: 6 },
+  ca_p:            { label: 'Ca / P',              unidade: '',       min: 2,     max: 6,    ref: '2:1 – 6:1' },
   dcad:            { label: 'DCAD',                unidade: 'mEq/kg', min: 150 },
 };
 
