@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Read(//c/Users/rasaf/rehagro-cs-engajamento/**)",
+      "Bash(cat .gitignore)"
+    ]
+  }
+}
