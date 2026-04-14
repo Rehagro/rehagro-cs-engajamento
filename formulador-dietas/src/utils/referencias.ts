@@ -22,7 +22,7 @@ export const REFERENCIAS_LACTACAO: Record<string, Referencia> = {
   mg:         { label: 'Mg',            unidade: '% MS',    min: 0.0025, max: 0.0035 },
   k:          { label: 'K',             unidade: '% MS',    min: 0.009,  max: 0.010 },
   s:          { label: 'S',             unidade: '% MS',    min: 0.002,  max: 0.0025 },
-  na:         { label: 'Na',            unidade: '% MS',    min: 0.00022 },
+  na:         { label: 'Na',            unidade: '% MS',    min: 0.0022 },
   cl:         { label: 'Cl',            unidade: '% MS',    min: 0.0025, max: 0.0030 },
   co:         { label: 'Co',            unidade: 'mg/kg',   min: 0.2 },
   cu:         { label: 'Cu',            unidade: 'mg/kg',   min: 10,     max: 15 },
@@ -39,13 +39,38 @@ export const REFERENCIAS_LACTACAO: Record<string, Referencia> = {
   cr:         { label: 'Cr',            unidade: 'mg/kg',   min: 5 },
   levedura:   { label: 'Levedura',      unidade: 'UFC/kg',  ref: '1-2×10¹⁰' },
   // indicadores
-  fdnf_kg_pv:      { label: 'FDNF/PV',          unidade: '%',      max: 0.009 },
-  pct_forragem_ms: { label: '% Forragem MS',     unidade: '%',      min: 0.40,  max: 0.60 },
-  fdn8_amido_deg:  { label: 'FDN>8 / Amido Deg', unidade: '',       min: 1 },
-  lis_met:         { label: 'Lis / Met',          unidade: '',       ref: '3' },
-  ca_p:            { label: 'Ca / P',             unidade: '',       min: 2,     max: 6 },
-  dcad:            { label: 'DCAD',               unidade: 'mEq/kg', min: 150 },
+  fdnf_kg_pv:      { label: 'FDNF/PV',           unidade: '%', max: 0.009, ref: 'Alta: 0,8–0,9% | Méd: 0,9% | Baixa: 0,9–1,1%' },
+  pct_forragem_ms: { label: '% Forragem MS',      unidade: '%',      min: 0.40,  max: 0.60 },
+  fdn8_amido_deg:  { label: 'FDN>8 / Amido Deg',  unidade: '',       min: 1 },
+  lis_met:         { label: 'Lis / Met',           unidade: '',       ref: '~3' },
+  ca_p:            { label: 'Ca / P',              unidade: '',       min: 2,     max: 6 },
+  dcad:            { label: 'DCAD',                unidade: 'mEq/kg', min: 150 },
 };
+
+/** Retorna referências ajustadas dinamicamente pela produção de leite (PB e CNF) */
+export function getReferenciasLactacao(leite: number): Record<string, Referencia> {
+  const refs = { ...REFERENCIAS_LACTACAO };
+
+  // PB: dinâmico por faixa de produção
+  if (leite >= 30) {
+    refs.pb = { ...refs.pb, min: 0.16, max: 0.17 };
+  } else if (leite >= 20) {
+    refs.pb = { ...refs.pb, min: 0.15, max: 0.16 };
+  } else {
+    refs.pb = { ...refs.pb, min: 0.14, max: 0.15 };
+  }
+
+  // CNF: dinâmico por faixa de produção
+  if (leite >= 30) {
+    refs.cnf = { ...refs.cnf, min: 0.35, max: 0.45 };
+  } else if (leite >= 20) {
+    refs.cnf = { ...refs.cnf, min: 0.30, max: 0.35 };
+  } else {
+    refs.cnf = { ...refs.cnf, min: 0.20, max: 0.30 };
+  }
+
+  return refs;
+}
 
 export type StatusNutriente = 'ok' | 'alto' | 'baixo' | 'critico_alto' | 'critico_baixo' | 'sem_ref';
 
@@ -67,22 +92,22 @@ export function getStatus(valor: number, ref: Referencia): StatusNutriente {
 
 export function statusColor(status: StatusNutriente): string {
   switch (status) {
-    case 'ok':           return 'bg-green-100 text-green-800';
-    case 'baixo':        return 'bg-yellow-100 text-yellow-800';
-    case 'alto':         return 'bg-yellow-100 text-yellow-800';
-    case 'critico_baixo': return 'bg-red-100 text-red-800';
-    case 'critico_alto':  return 'bg-red-100 text-red-800';
-    default:             return 'bg-gray-50 text-gray-600';
+    case 'ok':            return 'bg-emerald-50 text-emerald-800 border border-emerald-100';
+    case 'baixo':         return 'bg-amber-50 text-amber-800 border border-amber-100';
+    case 'alto':          return 'bg-amber-50 text-amber-800 border border-amber-100';
+    case 'critico_baixo': return 'bg-red-50 text-red-800 border border-red-100';
+    case 'critico_alto':  return 'bg-red-50 text-red-800 border border-red-100';
+    default:              return 'bg-gray-50 text-gray-600 border border-gray-100';
   }
 }
 
 export function statusDot(status: StatusNutriente): string {
   switch (status) {
-    case 'ok':           return '🟢';
-    case 'baixo':        return '🟡';
-    case 'alto':         return '🟡';
+    case 'ok':            return '🟢';
+    case 'baixo':         return '🟡';
+    case 'alto':          return '🟡';
     case 'critico_baixo': return '🔴';
     case 'critico_alto':  return '🔴';
-    default:             return '⚪';
+    default:              return '⚪';
   }
 }

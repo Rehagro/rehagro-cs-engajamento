@@ -1,39 +1,45 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import type { ResultadoDieta } from '../types';
-import { REFERENCIAS_LACTACAO, getStatus, statusColor, statusDot } from '../utils/referencias';
+import type { Referencia, ResultadoDieta } from '../types';
+import { getReferenciasLactacao, getStatus, statusColor, statusDot } from '../utils/referencias';
 import { formatarValor } from '../utils/calculos';
 
 interface Props {
   resultado: ResultadoDieta;
+  leite: number;
 }
 
 interface NutrienteRowProps {
   chave: string;
   valor: number;
+  refs: Record<string, Referencia>;
 }
 
-function NutrienteRow({ chave, valor }: NutrienteRowProps) {
-  const ref = REFERENCIAS_LACTACAO[chave];
+function NutrienteRow({ chave, valor, refs }: NutrienteRowProps) {
+  const ref = refs[chave];
   if (!ref) return null;
   const status = getStatus(valor, ref);
   const color = statusColor(status);
   const dot = statusDot(status);
   const valorFormatado = formatarValor(valor, ref.unidade);
-  const refStr = ref.min !== undefined && ref.max !== undefined
+
+  // Preferir ref string explícita (ex: FDNF/PV com faixas por lote)
+  const refStr = ref.ref !== undefined
+    ? ref.ref
+    : ref.min !== undefined && ref.max !== undefined
     ? `${formatarValor(ref.min, ref.unidade)} – ${formatarValor(ref.max, ref.unidade)}`
     : ref.min !== undefined
     ? `≥ ${formatarValor(ref.min, ref.unidade)}`
     : ref.max !== undefined
     ? `≤ ${formatarValor(ref.max, ref.unidade)}`
-    : ref.ref ?? '—';
+    : '—';
 
   return (
-    <div className={`flex items-center justify-between px-3 py-1.5 rounded text-sm ${color}`}>
-      <span className="font-medium">{dot} {ref.label}</span>
+    <div className={`flex items-center justify-between px-3 py-2 rounded-lg ${color}`}>
+      <span className="text-sm font-semibold">{dot} {ref.label}</span>
       <div className="text-right">
-        <span className="font-mono font-bold">{valorFormatado}</span>
-        <span className="text-xs ml-2 opacity-70">{refStr}</span>
+        <span className="text-base font-bold tabular-nums">{valorFormatado}</span>
+        <span className="text-xs ml-2 opacity-60">{refStr}</span>
       </div>
     </div>
   );
@@ -43,34 +49,32 @@ interface SecaoProps {
   titulo: string;
   chaves: string[];
   resultado: ResultadoDieta;
+  refs: Record<string, Referencia>;
   defaultOpen?: boolean;
 }
 
-function Secao({ titulo, chaves, resultado, defaultOpen = false }: SecaoProps) {
+function Secao({ titulo, chaves, resultado, refs, defaultOpen = false }: SecaoProps) {
   const [open, setOpen] = useState(defaultOpen);
 
-  // contar alertas
   const alertas = chaves.filter(k => {
-    const ref = REFERENCIAS_LACTACAO[k];
+    const ref = refs[k];
     if (!ref) return false;
     const v = resultado[k as keyof ResultadoDieta] as number;
-    const s = getStatus(v, ref);
-    return s === 'critico_alto' || s === 'critico_baixo';
+    return ['critico_alto', 'critico_baixo'].includes(getStatus(v, ref));
   }).length;
 
   const avisos = chaves.filter(k => {
-    const ref = REFERENCIAS_LACTACAO[k];
+    const ref = refs[k];
     if (!ref) return false;
     const v = resultado[k as keyof ResultadoDieta] as number;
-    const s = getStatus(v, ref);
-    return s === 'alto' || s === 'baixo';
+    return ['alto', 'baixo'].includes(getStatus(v, ref));
   }).length;
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
       >
         <span className="text-sm font-semibold text-gray-700">{titulo}</span>
         <div className="flex items-center gap-1.5">
@@ -80,17 +84,22 @@ function Secao({ titulo, chaves, resultado, defaultOpen = false }: SecaoProps) {
             </span>
           )}
           {avisos > 0 && (
-            <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-1.5 py-0.5 rounded-full">
+            <span className="bg-amber-100 text-amber-700 text-xs font-bold px-1.5 py-0.5 rounded-full">
               {avisos}🟡
             </span>
           )}
-          {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          {open ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
         </div>
       </button>
       {open && (
-        <div className="p-2 flex flex-col gap-1">
+        <div className="p-2.5 flex flex-col gap-1.5">
           {chaves.map(k => (
-            <NutrienteRow key={k} chave={k} valor={resultado[k as keyof ResultadoDieta] as number} />
+            <NutrienteRow
+              key={k}
+              chave={k}
+              valor={resultado[k as keyof ResultadoDieta] as number}
+              refs={refs}
+            />
           ))}
         </div>
       )}
@@ -98,54 +107,68 @@ function Secao({ titulo, chaves, resultado, defaultOpen = false }: SecaoProps) {
   );
 }
 
-export default function PainelResultados({ resultado }: Props) {
+export default function PainelResultados({ resultado, leite }: Props) {
+  const refs = getReferenciasLactacao(leite);
   const { totalKgMS, cmsExigida, leite_potencial_nel, leite_potencial_prot } = resultado;
   const pctCMS = cmsExigida > 0 ? (totalKgMS / cmsExigida) * 100 : 0;
 
-  const barColor = pctCMS < 85 ? 'bg-red-500' : pctCMS < 95 ? 'bg-yellow-500' : pctCMS <= 110 ? 'bg-green-500' : 'bg-orange-500';
+  const barColor =
+    pctCMS < 85 ? 'bg-red-500' :
+    pctCMS < 95 ? 'bg-amber-400' :
+    pctCMS <= 110 ? 'bg-emerald-500' : 'bg-orange-500';
+
+  // Faixa de produção para exibir no label PB/CNF
+  const faixaLeite = leite >= 30 ? '≥30L' : leite >= 20 ? '20–30L' : '<20L';
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col gap-3">
       <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
         📊 Resultados
+        <span className="text-xs font-normal text-gray-400 ml-1">refs. PB/CNF para {faixaLeite}</span>
       </h2>
 
-      {/* Produção — sempre visível */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <div className="text-xs font-bold text-blue-700 mb-2">🥛 Produção</div>
-        <div className="flex flex-col gap-1.5">
-          <div>
-            <div className="flex justify-between text-xs text-blue-600 mb-0.5">
-              <span>CMS real vs exigida</span>
-              <span className="font-mono font-bold">{totalKgMS.toFixed(1)} / {cmsExigida.toFixed(1)} kg</span>
-            </div>
-            <div className="h-2 bg-blue-200 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${barColor}`}
-                style={{ width: `${Math.min(pctCMS, 120)}%` }}
-              />
-            </div>
-            <div className="text-xs text-blue-500 text-right mt-0.5">{pctCMS.toFixed(0)}%</div>
+      {/* CMS — barra de progresso */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+        <div className="text-xs font-bold text-blue-700 mb-2">🥛 Consumo</div>
+        <div className="flex justify-between text-sm text-blue-700 mb-1 font-medium">
+          <span>CMS real vs exigida</span>
+          <span className="tabular-nums font-bold">{totalKgMS.toFixed(1)} / {cmsExigida.toFixed(1)} kg</span>
+        </div>
+        <div className="h-2.5 bg-blue-200 rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-300 ${barColor}`}
+            style={{ width: `${Math.min(pctCMS, 120)}%` }}
+          />
+        </div>
+        <div className="text-xs text-blue-500 text-right mt-1 tabular-nums">{pctCMS.toFixed(0)}%</div>
+      </div>
+
+      {/* Cards de leite potencial */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center">
+          <div className="text-xs font-semibold text-emerald-700 mb-1">⚡ Leite pot. NEl</div>
+          <div className="text-2xl font-bold text-emerald-800 tabular-nums leading-tight">
+            {leite_potencial_nel.toFixed(1)}
           </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-600">Leite pot. NEl</span>
-            <span className="font-mono font-bold text-green-700">{leite_potencial_nel.toFixed(1)} kg/d</span>
+          <div className="text-xs text-emerald-600 mt-0.5">kg/dia</div>
+        </div>
+        <div className="bg-violet-50 border border-violet-200 rounded-xl p-3 text-center">
+          <div className="text-xs font-semibold text-violet-700 mb-1">🧬 Leite pot. Proteína</div>
+          <div className="text-2xl font-bold text-violet-800 tabular-nums leading-tight">
+            {leite_potencial_prot.toFixed(1)}
           </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-600">Leite pot. Proteína</span>
-            <span className="font-mono font-bold text-purple-700">{leite_potencial_prot.toFixed(1)} kg/d</span>
-          </div>
+          <div className="text-xs text-violet-600 mt-0.5">kg/dia</div>
         </div>
       </div>
 
       {/* Seções expansíveis */}
-      <Secao titulo="⚡ Energia & Carboidratos" chaves={['nel', 'ndt', 'cnf', 'amido', 'amido_deg']} resultado={resultado} />
-      <Secao titulo="🧬 Proteína" chaves={['pb', 'pdr', 'pndr', 'met', 'lys']} resultado={resultado} defaultOpen />
-      <Secao titulo="🌾 Fibra" chaves={['fdn', 'efdn', 'fdnf', 'fda']} resultado={resultado} defaultOpen />
-      <Secao titulo="🔬 Gordura" chaves={['ee', 'ee_insat']} resultado={resultado} />
-      <Secao titulo="🧂 Macrominerais" chaves={['ca', 'p', 'mg', 'k', 's', 'na', 'cl']} resultado={resultado} />
-      <Secao titulo="💊 Microminerais" chaves={['co', 'cu', 'mn_min', 'zn', 'se', 'i', 'fe']} resultado={resultado} />
-      <Secao titulo="🌟 Vitaminas & Aditivos" chaves={['vit_a', 'vit_d3', 'vit_e', 'biotina', 'monensina', 'cr', 'levedura']} resultado={resultado} />
+      <Secao titulo="⚡ Energia & Carboidratos" chaves={['nel', 'ndt', 'cnf', 'amido', 'amido_deg']} resultado={resultado} refs={refs} />
+      <Secao titulo="🧬 Proteína" chaves={['pb', 'pdr', 'pndr', 'met', 'lys']} resultado={resultado} refs={refs} defaultOpen />
+      <Secao titulo="🌾 Fibra" chaves={['fdn', 'efdn', 'fdnf', 'fda']} resultado={resultado} refs={refs} defaultOpen />
+      <Secao titulo="🔬 Gordura" chaves={['ee', 'ee_insat']} resultado={resultado} refs={refs} />
+      <Secao titulo="🧂 Macrominerais" chaves={['ca', 'p', 'mg', 'k', 's', 'na', 'cl']} resultado={resultado} refs={refs} />
+      <Secao titulo="💊 Microminerais" chaves={['co', 'cu', 'mn_min', 'zn', 'se', 'i', 'fe']} resultado={resultado} refs={refs} />
+      <Secao titulo="🌟 Vitaminas & Aditivos" chaves={['vit_a', 'vit_d3', 'vit_e', 'biotina', 'monensina', 'cr', 'levedura']} resultado={resultado} refs={refs} />
     </div>
   );
 }

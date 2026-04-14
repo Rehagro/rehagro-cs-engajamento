@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ChevronDown } from 'lucide-react';
+import { X, ChevronDown, Plus } from 'lucide-react';
 import type { SlotIngrediente, Alimento } from '../types';
 import { calcularNelAlimento } from '../utils/calculos';
 
@@ -9,6 +9,7 @@ interface Props {
   alimentos: Alimento[];
   totalKgMS: number;
   onSlotChange: (idx: number, partial: Partial<SlotIngrediente>) => void;
+  onAdicionarSlot: () => void;
 }
 
 function AlimentoSelect({
@@ -33,7 +34,6 @@ function AlimentoSelect({
     });
   }, []);
 
-  // Fechar ao clicar fora
   useEffect(() => {
     if (!open) return;
     function handle(e: MouseEvent) {
@@ -59,16 +59,13 @@ function AlimentoSelect({
     a.classificacao.toLowerCase().includes(query.toLowerCase())
   ).slice(0, 60);
 
-  const tipoColor = (tipo: string) =>
-    tipo === 'C' ? 'text-blue-600' : tipo === 'F' ? 'text-green-600' : 'text-purple-600';
-
   return (
     <>
       <button
         ref={btnRef}
         onClick={handleOpen}
-        className={`w-full flex items-center justify-between gap-1 px-2 py-1.5 text-left text-xs border rounded hover:border-green-400 bg-white transition-colors ${
-          open ? 'border-green-500 ring-1 ring-green-300' : 'border-gray-300'
+        className={`w-full flex items-center justify-between gap-1 px-2 py-1.5 text-left text-xs border rounded-lg hover:border-green-400 bg-white transition-colors ${
+          open ? 'border-green-500 ring-1 ring-green-300' : 'border-gray-200'
         }`}
       >
         <span className={`truncate ${value ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
@@ -80,23 +77,17 @@ function AlimentoSelect({
       {open && createPortal(
         <div
           id="alimento-select-portal"
-          style={{
-            position: 'absolute',
-            top: pos.top,
-            left: pos.left,
-            width: pos.width,
-            zIndex: 9999,
-          }}
-          className="bg-white border border-gray-300 rounded-lg shadow-2xl overflow-hidden"
+          style={{ position: 'absolute', top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}
+          className="bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden"
         >
-          <div className="p-2 border-b border-gray-200 bg-gray-50">
+          <div className="p-2 border-b border-gray-100 bg-gray-50">
             <input
               autoFocus
               type="text"
               placeholder="Buscar alimento..."
               value={query}
               onChange={e => setQuery(e.target.value)}
-              className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+              className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
             />
           </div>
           <div className="max-h-64 overflow-y-auto">
@@ -136,24 +127,24 @@ function AlimentoSelect({
   );
 }
 
-export default function TabelaIngredientes({ slots, alimentos, totalKgMS, onSlotChange }: Props) {
+export default function TabelaIngredientes({ slots, alimentos, totalKgMS, onSlotChange, onAdicionarSlot }: Props) {
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="text-left px-3 py-2 font-semibold text-gray-600 w-8">#</th>
-              <th className="text-left px-3 py-2 font-semibold text-gray-600 min-w-[220px]">Alimento</th>
-              <th className="text-right px-2 py-2 font-semibold text-gray-600">kg MN</th>
-              <th className="text-right px-2 py-2 font-semibold text-gray-600">kg MS</th>
-              <th className="text-right px-2 py-2 font-semibold text-gray-600">% MS dieta</th>
-              <th className="text-right px-2 py-2 font-semibold text-gray-600">MS %</th>
-              <th className="text-right px-2 py-2 font-semibold text-gray-600">NEl</th>
-              <th className="text-right px-2 py-2 font-semibold text-gray-600">PB %</th>
-              <th className="text-right px-2 py-2 font-semibold text-gray-600">FDN %</th>
-              <th className="text-right px-2 py-2 font-semibold text-gray-600">Amido %</th>
-              <th className="text-right px-2 py-2 font-semibold text-gray-600">R$/kg</th>
+              <th className="text-left px-3 py-2.5 font-semibold text-gray-500 w-8">#</th>
+              <th className="text-left px-3 py-2.5 font-semibold text-gray-500 min-w-[220px]">Alimento</th>
+              <th className="text-right px-2 py-2.5 font-semibold text-gray-500">kg MN</th>
+              <th className="text-right px-2 py-2.5 font-semibold text-gray-500">kg MS</th>
+              <th className="text-right px-2 py-2.5 font-semibold text-gray-500">% MS dieta</th>
+              <th className="text-right px-2 py-2.5 font-semibold text-gray-500">MS %</th>
+              <th className="text-right px-2 py-2.5 font-semibold text-gray-500">NEl</th>
+              <th className="text-right px-2 py-2.5 font-semibold text-gray-500">PB %</th>
+              <th className="text-right px-2 py-2.5 font-semibold text-gray-500">FDN %</th>
+              <th className="text-right px-2 py-2.5 font-semibold text-gray-500">Amido %</th>
+              <th className="text-right px-2 py-2.5 font-semibold text-gray-500">R$/kg</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -163,8 +154,8 @@ export default function TabelaIngredientes({ slots, alimentos, totalKgMS, onSlot
               const pctMS = totalKgMS > 0 && kgMS > 0 ? (kgMS / totalKgMS) * 100 : 0;
 
               return (
-                <tr key={slot.id} className="hover:bg-gray-50">
-                  <td className="px-3 py-1.5 text-gray-400 font-mono">{idx + 1}</td>
+                <tr key={slot.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-3 py-1.5 text-gray-400 tabular-nums">{idx + 1}</td>
                   <td className="px-2 py-1">
                     <AlimentoSelect
                       value={slot.alimentoNome}
@@ -180,24 +171,25 @@ export default function TabelaIngredientes({ slots, alimentos, totalKgMS, onSlot
                       value={slot.kgMN || ''}
                       placeholder="0"
                       disabled={!alimento}
+                      onFocus={e => e.target.select()}
                       onChange={e => onSlotChange(idx, { kgMN: parseFloat(e.target.value) || 0 })}
-                      className="w-20 text-right border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-green-500 disabled:bg-gray-50 disabled:text-gray-300 font-mono"
+                      className="w-20 text-right border border-gray-200 rounded-lg px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-green-500 disabled:bg-gray-50 disabled:text-gray-300 tabular-nums font-semibold"
                     />
                   </td>
-                  <td className="px-2 py-1.5 text-right font-mono text-gray-700">
+                  <td className="px-2 py-1.5 text-right tabular-nums text-gray-700">
                     {kgMS > 0 ? kgMS.toFixed(2) : '—'}
                   </td>
-                  <td className="px-2 py-1.5 text-right font-mono text-gray-700">
+                  <td className="px-2 py-1.5 text-right tabular-nums text-gray-700">
                     {pctMS > 0 ? pctMS.toFixed(1) + '%' : '—'}
                   </td>
                   {alimento ? (
                     <>
-                      <td className="px-2 py-1.5 text-right font-mono text-gray-600">{(alimento.ms * 100).toFixed(1)}</td>
-                      <td className="px-2 py-1.5 text-right font-mono text-gray-600">{calcularNelAlimento(alimento).toFixed(3)}</td>
-                      <td className="px-2 py-1.5 text-right font-mono text-gray-600">{(alimento.pb * 100).toFixed(2)}</td>
-                      <td className="px-2 py-1.5 text-right font-mono text-gray-600">{alimento.fdn !== null ? (alimento.fdn * 100).toFixed(1) : '—'}</td>
-                      <td className="px-2 py-1.5 text-right font-mono text-gray-600">{alimento.amido !== null ? (alimento.amido * 100).toFixed(1) : '—'}</td>
-                      <td className="px-2 py-1.5 text-right font-mono text-gray-600">{alimento.custo !== null ? alimento.custo.toFixed(3) : '—'}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-gray-600">{(alimento.ms * 100).toFixed(1)}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-gray-600">{calcularNelAlimento(alimento).toFixed(3)}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-gray-600">{(alimento.pb * 100).toFixed(2)}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-gray-600">{alimento.fdn !== null ? (alimento.fdn * 100).toFixed(1) : '—'}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-gray-600">{alimento.amido !== null ? (alimento.amido * 100).toFixed(1) : '—'}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-gray-600">{alimento.custo !== null ? alimento.custo.toFixed(3) : '—'}</td>
                     </>
                   ) : (
                     Array.from({ length: 6 }).map((_, i) => (
@@ -211,16 +203,27 @@ export default function TabelaIngredientes({ slots, alimentos, totalKgMS, onSlot
           <tfoot className="bg-gray-100 border-t-2 border-gray-300 font-semibold">
             <tr>
               <td colSpan={2} className="px-3 py-2 text-gray-700">TOTAL</td>
-              <td className="px-2 py-2 text-right font-mono text-gray-800">
+              <td className="px-2 py-2 text-right tabular-nums text-gray-800">
                 {slots.reduce((s, sl) => s + sl.kgMN, 0).toFixed(2)}
               </td>
-              <td className="px-2 py-2 text-right font-mono text-gray-800">
+              <td className="px-2 py-2 text-right tabular-nums text-gray-800">
                 {totalKgMS.toFixed(2)}
               </td>
               <td colSpan={7} />
             </tr>
           </tfoot>
         </table>
+      </div>
+
+      {/* Botão adicionar linha */}
+      <div className="px-3 py-2 border-t border-gray-100">
+        <button
+          onClick={onAdicionarSlot}
+          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-green-600 hover:bg-green-50 px-3 py-1.5 rounded-lg transition-colors font-medium"
+        >
+          <Plus size={13} />
+          Adicionar alimento
+        </button>
       </div>
     </div>
   );

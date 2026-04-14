@@ -9,7 +9,7 @@ import { calcularResultados } from '../utils/calculos';
 import { exportarXLSX } from '../utils/exportar';
 
 export default function Formulador() {
-  const { dieta, alimentos, setAnimal, setSlot, salvarDieta, novaDieta } = useDieta();
+  const { dieta, alimentos, setAnimal, setSlot, salvarDieta, novaDieta, adicionarSlot } = useDieta();
   const [nomeDieta, setNomeDieta] = useState(dieta.nome);
   const [salvando, setSalvando] = useState(false);
 
@@ -65,7 +65,7 @@ export default function Formulador() {
       {/* Layout principal: 2 colunas — Animal + Resultados */}
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4">
         <PainelAnimal animal={dieta.animal} onChange={setAnimal} />
-        <PainelResultados resultado={resultado} />
+        <PainelResultados resultado={resultado} leite={dieta.animal.leite} />
       </div>
 
       {/* Tabela de ingredientes */}
@@ -74,6 +74,7 @@ export default function Formulador() {
         alimentos={alimentos}
         totalKgMS={resultado.totalKgMS}
         onSlotChange={setSlot}
+        onAdicionarSlot={adicionarSlot}
       />
 
       {/* Indicadores */}

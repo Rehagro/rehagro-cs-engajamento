@@ -19,7 +19,7 @@ const ANIMAL_PADRAO: AnimalLactacao = {
 };
 
 function criarSlots(): SlotIngrediente[] {
-  return Array.from({ length: 16 }, (_, i) => ({
+  return Array.from({ length: 10 }, (_, i) => ({
     id: `slot_${i}`,
     alimentoNome: null,
     kgMN: 0,
@@ -38,6 +38,7 @@ interface DietaContextType {
   duplicarDieta: (id: string) => void;
   excluirDieta: (id: string) => void;
   renomearDieta: (id: string, nome: string) => void;
+  adicionarSlot: () => void;
   adicionarAlimento: (a: Alimento) => void;
   editarAlimento: (nomeOriginal: string, a: Alimento) => void;
   excluirAlimento: (nome: string) => void;
@@ -152,6 +153,13 @@ export function DietaProvider({ children }: { children: ReactNode }) {
     setDieta(d => d.id === id ? { ...d, nome } : d);
   }, []);
 
+  const adicionarSlot = useCallback(() => {
+    setDieta(d => ({
+      ...d,
+      slots: [...d.slots, { id: gerarId(), alimentoNome: null, kgMN: 0 }],
+    }));
+  }, []);
+
   const adicionarAlimento = useCallback((a: Alimento) => {
     setAlimentos(prev => {
       const novo = [...prev.filter(x => x.nome !== a.nome), a].sort((x, y) =>
@@ -185,6 +193,7 @@ export function DietaProvider({ children }: { children: ReactNode }) {
       dieta, alimentos, dietas,
       setAnimal, setSlot,
       salvarDieta, carregarDieta, novaDieta, duplicarDieta, excluirDieta, renomearDieta,
+      adicionarSlot,
       adicionarAlimento, editarAlimento, excluirAlimento,
     }}>
       {children}
