@@ -2,12 +2,6 @@ import streamlit as st
 import pandas as pd
 import io
 
-st.set_page_config(
-    page_title="CS Rehagro | Comportamento do Aluno",
-    page_icon="🌱",
-    layout="wide",
-)
-
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Clash+Display:wght@500;600;700&family=Cabinet+Grotesk:wght@400;500;700;800&display=swap');
@@ -353,9 +347,6 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="rh-body">', unsafe_allow_html=True)
-
-if st.button("← Monitoramento de Alunos", key="nav_monitoramento"):
-    st.switch_page("app.py")
 
 # ── Upload ────────────────────────────────────────────────
 st.markdown('<p class="rh-section">Carregar arquivos</p>', unsafe_allow_html=True)
