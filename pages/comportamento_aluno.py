@@ -354,7 +354,7 @@ st.markdown(f"""
 
 st.markdown('<div class="rh-body">', unsafe_allow_html=True)
 
-st.page_link("app.py", label="← Monitoramento de Alunos", icon="📊")
+st.markdown('<a href="/" target="_self" style="display:inline-block;background:transparent;color:#0F3D20;font-family:Outfit,sans-serif;font-weight:700;font-size:0.9rem;padding:8px 20px;border-radius:8px;text-decoration:none;border:2px solid #0F3D20;letter-spacing:0.5px;">← Monitoramento de Alunos</a>', unsafe_allow_html=True)
 
 # ── Upload ────────────────────────────────────────────────
 st.markdown('<p class="rh-section">Carregar arquivos</p>', unsafe_allow_html=True)
