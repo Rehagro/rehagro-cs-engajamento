@@ -877,6 +877,13 @@ st.markdown(f"""
 
 st.markdown('<div class="rh-body">', unsafe_allow_html=True)
 
+st.markdown("""
+<a href="/Comportamento_do_Aluno" target="_self" style="display:inline-flex;align-items:center;gap:8px;
+background:#0F3D20;color:#C8A951;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.88rem;
+padding:9px 20px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;margin-bottom:24px;">
+🔍 Comportamento do Aluno →</a>
+""", unsafe_allow_html=True)
+
 col_esq, col_dir = st.columns([1, 1], gap="large")
 
 with col_esq:
