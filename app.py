@@ -995,7 +995,8 @@ st.markdown(f"""
 
 st.markdown('<div class="rh-body">', unsafe_allow_html=True)
 
-st.markdown('<a href="/comportamento_aluno" target="_self" style="display:inline-block;background:#0F3D20;color:#C8A951;font-family:Outfit,sans-serif;font-weight:700;font-size:0.9rem;padding:8px 20px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;">🔍 Comportamento do Aluno →</a>', unsafe_allow_html=True)
+if st.button("🔍  Comportamento do Aluno →", key="nav_comportamento"):
+    st.switch_page("pages/comportamento_aluno.py")
 
 col_esq, col_dir = st.columns([1, 1], gap="large")
 
