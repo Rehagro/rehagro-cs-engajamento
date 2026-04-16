@@ -995,6 +995,8 @@ st.markdown(f"""
 
 st.markdown('<div class="rh-body">', unsafe_allow_html=True)
 
+st.page_link("pages/comportamento_aluno.py", label="Comportamento do Aluno →", icon="🔍")
+
 col_esq, col_dir = st.columns([1, 1], gap="large")
 
 with col_esq:
