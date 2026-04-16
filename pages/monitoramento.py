@@ -45,7 +45,9 @@ html, body, [class*="css"] {
 .stApp { background: var(--creme) !important; }
 #MainMenu, footer, header { visibility: hidden; }
 [data-testid="stAppViewContainer"] { padding-top: 0 !important; }
-[data-testid="stSidebarCollapseButton"] { display: none !important; }
+[data-testid="block-container"] { padding-top: 0 !important; }
+button[aria-label="Close sidebar"] { display: none !important; }
+button[aria-label="Fechar barra lateral"] { display: none !important; }
 [data-testid="stAppViewContainer"] { padding-top: 0 !important; }
 [data-testid="block-container"] { padding-top: 0 !important; }
 
