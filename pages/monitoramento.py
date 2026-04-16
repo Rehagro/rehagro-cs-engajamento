@@ -881,6 +881,9 @@ st.markdown(f"""
 
 st.markdown('<div class="rh-body">', unsafe_allow_html=True)
 
+if st.button("🔍  Comportamento do Aluno →", key="nav_comp"):
+    st.switch_page("pages/comportamento_aluno.py")
+
 col_esq, col_dir = st.columns([1, 1], gap="large")
 
 with col_esq:

@@ -352,6 +352,9 @@ st.markdown(f"""
 
 st.markdown('<div class="rh-body">', unsafe_allow_html=True)
 
+if st.button("← Monitoramento de Alunos", key="nav_mon"):
+    st.switch_page("pages/monitoramento.py")
+
 # ── Upload ────────────────────────────────────────────────
 st.markdown('<p class="rh-section">Carregar arquivos</p>', unsafe_allow_html=True)
 
