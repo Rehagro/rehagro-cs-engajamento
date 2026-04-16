@@ -27,9 +27,9 @@ html, body, [class*="css"] {
     color: var(--texto) !important;
 }
 .stApp { background: var(--creme) !important; }
-#MainMenu, footer { visibility: hidden; }
-[data-testid="stToolbar"] { visibility: hidden; }
-[data-testid="stDecoration"] { display: none; }
+#MainMenu, footer, header { visibility: hidden; }
+[data-testid="stAppViewContainer"] { padding-top: 0 !important; }
+[data-testid="stSidebarCollapseButton"] { display: none !important; }
 [data-testid="stAppViewContainer"] { padding-top: 0 !important; }
 [data-testid="block-container"] { padding-top: 0 !important; }
 
