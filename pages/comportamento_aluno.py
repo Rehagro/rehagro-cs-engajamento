@@ -88,12 +88,12 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     text-transform: uppercase; padding: 5px 14px;
     border-radius: 100px;
 }
-.rh-body { padding: 40px 0 0 0; }
+.rh-body { padding: 20px 0 0 0; }
 .rh-section {
     font-family: 'Outfit', sans-serif;
     font-size: 0.65rem; font-weight: 700;
     letter-spacing: 3.5px; text-transform: uppercase;
-    color: var(--ouro); margin: 0 0 20px 0;
+    color: var(--ouro); margin: 0 0 10px 0;
     display: flex; align-items: center; gap: 10px;
 }
 .rh-section::after {
@@ -103,7 +103,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 .rh-divider {
     height: 1px;
     background: linear-gradient(90deg, var(--ouro), transparent);
-    margin: 24px 0; opacity: 0.35;
+    margin: 12px 0; opacity: 0.35;
 }
 [data-testid="stFileUploader"] label,
 [data-testid="stFileUploader"] > div > label {
@@ -169,8 +169,8 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 .rh-aluno-card {
     background: var(--verde);
     border-radius: 12px;
-    padding: 20px 28px;
-    margin-bottom: 28px;
+    padding: 12px 20px;
+    margin-bottom: 12px;
     border-bottom: 3px solid var(--ouro);
 }
 .rh-aluno-nome {
@@ -192,15 +192,15 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 .rh-dash-bloco {
     background: var(--branco);
     border-radius: 12px;
-    padding: 24px 28px;
-    margin-bottom: 20px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
     border: 1px solid var(--cinza);
     border-top: 3px solid var(--ouro);
 }
 .rh-dash-bloco-titulo {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 1.1rem; letter-spacing: 2px;
-    color: var(--verde); margin-bottom: 16px;
+    color: var(--verde); margin-bottom: 8px;
     display: flex; align-items: center; gap: 10px;
 }
 
@@ -208,12 +208,12 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 .rh-info-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px; margin-bottom: 8px;
+    gap: 8px; margin-bottom: 4px;
 }
 .rh-info-item {
     background: var(--creme);
     border-radius: 8px;
-    padding: 12px 16px;
+    padding: 8px 12px;
     border: 1px solid var(--cinza);
 }
 .rh-info-label {
@@ -625,6 +625,7 @@ else:
             tabela[['ALUNO', 'DISCIPLINA', 'STATUS', 'Nota Atividade Prática', 'Nota Teste seu Conhecimento']],
             use_container_width=True,
             hide_index=True,
+            height=200,
         )
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -692,7 +693,7 @@ else:
         tabela_nps = tabela_nps.sort_values('Data da aula', ascending=False).reset_index(drop=True)
 
         st.markdown('<div class="rh-dash-bloco"><div class="rh-dash-bloco-titulo">⭐ NPS e Comentários</div>', unsafe_allow_html=True)
-        st.dataframe(tabela_nps, use_container_width=True, hide_index=True)
+        st.dataframe(tabela_nps, use_container_width=True, hide_index=True, height=200)
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
