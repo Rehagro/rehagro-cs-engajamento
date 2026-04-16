@@ -28,6 +28,7 @@ html, body, [class*="css"] {
 }
 .stApp { background: var(--creme) !important; }
 #MainMenu, footer, header { visibility: hidden; }
+[data-testid="stSidebarCollapsedControl"] { visibility: visible !important; }
 [data-testid="stAppViewContainer"] { padding-top: 0 !important; }
 [data-testid="block-container"] { padding-top: 0 !important; }
 
@@ -347,14 +348,6 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="rh-body">', unsafe_allow_html=True)
-
-st.markdown("""
-<a href="/" target="_self" style="display:inline-flex;align-items:center;gap:8px;
-background:transparent;color:#0F3D20;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.88rem;
-padding:9px 20px;border-radius:8px;text-decoration:none;letter-spacing:0.5px;
-border:2px solid #0F3D20;margin-bottom:24px;">
-← Monitoramento de Alunos</a>
-""", unsafe_allow_html=True)
 
 # ── Upload ────────────────────────────────────────────────
 st.markdown('<p class="rh-section">Carregar arquivos</p>', unsafe_allow_html=True)
