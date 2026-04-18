@@ -338,7 +338,9 @@ def carregar_envio_tarefas(arquivo_bytes):
 def carregar_nps(arquivo_bytes):
     df = pd.read_excel(io.BytesIO(arquivo_bytes), skiprows=2)
     df.columns = df.columns.str.strip()
-    df['_data'] = df.apply(_montar_data_nps, axis=1)
+    col_item = next((c for c in df.columns if c.upper() == 'ITEM'), None)
+    if col_item:
+        df = df[df[col_item].astype(str).str.contains('0 a 10', case=False, na=False)].copy()
     df['_aluno_norm'] = df['Aluno'].astype(str).str.strip().str.lower()
     df['_prof_norm'] = df['Professor'].astype(str).str.strip().str.lower()
     df['_topico_norm'] = df['Tópico'].astype(str).str.strip().str.lower()
@@ -458,9 +460,20 @@ with col_u2:
         </div>
     </div>
     """, unsafe_allow_html=True)
-    f_nps     = st.file_uploader("NPS por Aluno",      type=["xlsx"], key="ca_nps")
+    f_nps     = st.file_uploader("Avaliação de Aula/Etapa", type=["xlsx"], key="ca_nps")
+    st.markdown("""
+    <div class="rh-filtros-bloco">
+        <div class="rh-filtros-titulo">Filtros antes de exportar</div>
+        <div class="rh-filtros-chips">
+            <span class="rh-filtro-chip">
+                <span class="rh-filtro-label">Item</span>
+                <span class="rh-filtro-val">De 0 a 10 · Nota da aula</span>
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 with col_u3:
-    f_coment  = st.file_uploader("Comentários de Aula", type=["xlsx"], key="ca_coment")
+    f_coment  = st.file_uploader("Comentários", type=["xlsx"], key="ca_coment")
 
 if not f_canvas:
     st.info("Carregue pelo menos o arquivo **Acesso ao Canvas** para liberar o filtro de aluno.")
@@ -723,70 +736,59 @@ else:
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
-# DASHBOARD 3 — NPS E COMENTÁRIOS
+# DASHBOARD 3 — AVALIAÇÃO E COMENTÁRIOS
 # ════════════════════════════════════════════════════════════
-st.markdown('<p class="rh-section">Dashboard 3 · NPS e Comentários das Aulas Gravadas</p>', unsafe_allow_html=True)
+st.markdown('<p class="rh-section">Dashboard 3 · Avaliação de Aula/Etapa e Comentários</p>', unsafe_allow_html=True)
 
 if df_nps_raw is None and df_coment is None:
     st.info("Arquivo não carregado")
 else:
     aluno_norm = aluno_sel.strip().lower()
 
-    nps_aluno    = df_nps_raw[df_nps_raw['_aluno_norm'] == aluno_norm].copy() if df_nps_raw is not None else pd.DataFrame()
+    aval_aluno   = df_nps_raw[df_nps_raw['_aluno_norm'] == aluno_norm].copy() if df_nps_raw is not None else pd.DataFrame()
     coment_aluno = df_coment[df_coment['_aluno_norm']   == aluno_norm].copy() if df_coment  is not None else pd.DataFrame()
 
-    if nps_aluno.empty and coment_aluno.empty:
+    if aval_aluno.empty and coment_aluno.empty:
         st.info("Sem avaliações registradas")
     else:
-        # Merge outer: NPS + Comentários por professor + tópico
-        if not nps_aluno.empty and not coment_aluno.empty:
-            coment_para_merge = coment_aluno[['_prof_norm', '_topico_norm', 'Resposta', 'Tópico', 'Professor', 'Data da aula']].copy()
-            coment_para_merge = coment_para_merge.rename(columns={
-                'Resposta':   'Comentário',
-                'Tópico':     '_topico_orig_coment',
-                'Professor':  '_prof_orig_coment',
-                'Data da aula': '_data_coment',
-            })
-
-            merged = nps_aluno.merge(
-                coment_para_merge,
-                on=['_prof_norm', '_topico_norm'],
-                how='outer',
-            )
-            # Preencher campos do NPS ausentes (linhas só de comentário)
-            if 'Tópico' not in merged.columns:
-                merged['Tópico'] = ''
-            if 'Professor' not in merged.columns:
-                merged['Professor'] = ''
-            merged['Tópico']    = merged['Tópico'].fillna(merged.get('_topico_orig_coment', ''))
-            merged['Professor'] = merged['Professor'].fillna(merged.get('_prof_orig_coment', ''))
-            merged['_data']     = merged['_data'].fillna(merged.get('_data_coment', pd.NaT))
-
-        elif not nps_aluno.empty:
-            merged = nps_aluno.copy()
-            merged['Comentário'] = ''
+        # Preparar base avaliação
+        if not aval_aluno.empty:
+            base = aval_aluno[['_aluno_norm', '_prof_norm', '_topico_norm',
+                                'Turma', 'Disciplina', 'Tópico', 'Professor', 'Resposta']].copy()
+            base = base.rename(columns={'Resposta': 'Nota'})
         else:
-            merged = coment_aluno.copy()
-            merged = merged.rename(columns={'Resposta': 'Comentário', 'Data da aula': '_data'})
-            merged['NPS Reação'] = float('nan')
-            if 'Tópico' not in merged.columns:
-                merged['Tópico'] = ''
-            if 'Professor' not in merged.columns:
-                merged['Professor'] = ''
+            base = pd.DataFrame(columns=['_aluno_norm', '_prof_norm', '_topico_norm',
+                                         'Turma', 'Disciplina', 'Tópico', 'Professor', 'Nota'])
 
-        # Montar tabela final
-        tabela_nps = pd.DataFrame()
-        tabela_nps['Tópico']      = merged['Tópico'].astype(str).str.strip()
-        tabela_nps['Professor']   = merged['Professor'].astype(str).str.strip()
-        tabela_nps['Data da aula'] = merged['_data'].apply(_fmt_data)
-        tabela_nps['NPS Reação']  = merged.get('NPS Reação', merged.get('_nps', '')).apply(
-            lambda x: '' if pd.isna(x) else int(x)
-        )
-        tabela_nps['Comentário']  = merged.get('Comentário', '').fillna('').astype(str).str.strip()
-        tabela_nps = tabela_nps.sort_values('Data da aula', ascending=False).reset_index(drop=True)
+        # Preparar comentários (traz Turma/Tópico/Professor para preencher linhas sem avaliação)
+        if not coment_aluno.empty:
+            comt = coment_aluno[['_aluno_norm', '_prof_norm', '_topico_norm',
+                                  'Turma', 'Tópico', 'Professor', 'Resposta']].copy()
+            comt = comt.rename(columns={
+                'Resposta':  'Comentário',
+                'Turma':     '_turma_c',
+                'Tópico':    '_topico_c',
+                'Professor': '_prof_c',
+            })
+        else:
+            comt = pd.DataFrame(columns=['_aluno_norm', '_prof_norm', '_topico_norm',
+                                         '_turma_c', '_topico_c', '_prof_c', 'Comentário'])
 
-        st.markdown('<div class="rh-dash-bloco"><div class="rh-dash-bloco-titulo">⭐ NPS e Comentários</div>', unsafe_allow_html=True)
-        st.dataframe(tabela_nps, use_container_width=True, hide_index=True, height=200)
+        # Join triplo: Aluno + Tópico + Professor
+        merged = base.merge(comt, on=['_aluno_norm', '_prof_norm', '_topico_norm'], how='outer')
+
+        merged['Turma']      = merged['Turma'].fillna(merged.get('_turma_c', '')).fillna('').astype(str).str.strip()
+        merged['Tópico']     = merged['Tópico'].fillna(merged.get('_topico_c', '')).fillna('').astype(str).str.strip()
+        merged['Professor']  = merged['Professor'].fillna(merged.get('_prof_c', '')).fillna('').astype(str).str.strip()
+        merged['Disciplina'] = merged.get('Disciplina', pd.Series(dtype=str)).fillna('').astype(str).str.strip()
+        merged['Nota']       = merged.get('Nota', pd.Series(dtype=str)).fillna('').astype(str).str.strip()
+        merged['Comentário'] = merged.get('Comentário', pd.Series(dtype=str)).fillna('').astype(str).str.strip()
+        merged['Aluno']      = aluno_sel
+
+        tabela_nps = merged[['Turma', 'Aluno', 'Disciplina', 'Tópico', 'Professor', 'Nota', 'Comentário']].reset_index(drop=True)
+
+        st.markdown('<div class="rh-dash-bloco"><div class="rh-dash-bloco-titulo">⭐ Avaliação e Comentários</div>', unsafe_allow_html=True)
+        st.dataframe(tabela_nps, use_container_width=True, hide_index=True, height=250)
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
@@ -833,44 +835,51 @@ def gerar_excel_aluno(aluno_nome):
                 writer, sheet_name='Módulos e Atividades', index=False
             )
 
-        # Aba 3: NPS e Comentários
+        # Aba 3: Avaliação e Comentários
         try:
             a_norm = aluno_nome.strip().lower()
-            nps_e    = df_nps_raw[df_nps_raw['_aluno_norm'] == a_norm].copy() if df_nps_raw is not None else pd.DataFrame()
-            comt_e   = df_coment[df_coment['_aluno_norm']   == a_norm].copy() if df_coment  is not None else pd.DataFrame()
+            aval_e = df_nps_raw[df_nps_raw['_aluno_norm'] == a_norm].copy() if df_nps_raw is not None else pd.DataFrame()
+            comt_e = df_coment[df_coment['_aluno_norm']   == a_norm].copy() if df_coment  is not None else pd.DataFrame()
 
-            if not nps_e.empty or not comt_e.empty:
-                if not nps_e.empty and not comt_e.empty:
-                    cm = comt_e[['_prof_norm', '_topico_norm', 'Resposta', 'Tópico', 'Professor', 'Data da aula']].rename(
-                        columns={'Resposta': 'Comentário', 'Tópico': '_tc', 'Professor': '_pc', 'Data da aula': '_dc'}
-                    )
-                    nps_exp = nps_e.merge(cm, on=['_prof_norm', '_topico_norm'], how='outer')
-                    nps_exp['Tópico']    = nps_exp['Tópico'].fillna(nps_exp.get('_tc', ''))
-                    nps_exp['Professor'] = nps_exp['Professor'].fillna(nps_exp.get('_pc', ''))
-                    nps_exp['_data']     = nps_exp['_data'].fillna(nps_exp.get('_dc', pd.NaT))
-                elif not nps_e.empty:
-                    nps_exp = nps_e.copy(); nps_exp['Comentário'] = ''
+            if not aval_e.empty or not comt_e.empty:
+                if not aval_e.empty:
+                    base_e = aval_e[['_aluno_norm', '_prof_norm', '_topico_norm',
+                                     'Turma', 'Disciplina', 'Tópico', 'Professor', 'Resposta']].copy()
+                    base_e = base_e.rename(columns={'Resposta': 'Nota'})
                 else:
-                    nps_exp = comt_e.rename(columns={'Resposta': 'Comentário', 'Data da aula': '_data'})
-                    nps_exp['NPS Reação'] = float('nan')
+                    base_e = pd.DataFrame(columns=['_aluno_norm', '_prof_norm', '_topico_norm',
+                                                   'Turma', 'Disciplina', 'Tópico', 'Professor', 'Nota'])
 
-                tabela_exp = pd.DataFrame({
-                    'Tópico':      nps_exp.get('Tópico', '').astype(str).str.strip(),
-                    'Professor':   nps_exp.get('Professor', '').astype(str).str.strip(),
-                    'Data da aula': nps_exp['_data'].apply(_fmt_data),
-                    'NPS Reação':  nps_exp.get('NPS Reação', nps_exp.get('_nps', '')).apply(
-                        lambda x: '' if pd.isna(x) else int(x)
-                    ),
-                    'Comentário':  nps_exp.get('Comentário', '').fillna('').astype(str).str.strip(),
-                })
-                tabela_exp.to_excel(writer, sheet_name='NPS e Comentários', index=False)
+                if not comt_e.empty:
+                    comt_em = comt_e[['_aluno_norm', '_prof_norm', '_topico_norm',
+                                      'Turma', 'Tópico', 'Professor', 'Resposta']].copy()
+                    comt_em = comt_em.rename(columns={
+                        'Resposta': 'Comentário', 'Turma': '_turma_c',
+                        'Tópico': '_topico_c', 'Professor': '_prof_c',
+                    })
+                else:
+                    comt_em = pd.DataFrame(columns=['_aluno_norm', '_prof_norm', '_topico_norm',
+                                                    '_turma_c', '_topico_c', '_prof_c', 'Comentário'])
+
+                mg = base_e.merge(comt_em, on=['_aluno_norm', '_prof_norm', '_topico_norm'], how='outer')
+                mg['Turma']      = mg['Turma'].fillna(mg.get('_turma_c', '')).fillna('').astype(str).str.strip()
+                mg['Tópico']     = mg['Tópico'].fillna(mg.get('_topico_c', '')).fillna('').astype(str).str.strip()
+                mg['Professor']  = mg['Professor'].fillna(mg.get('_prof_c', '')).fillna('').astype(str).str.strip()
+                mg['Disciplina'] = mg.get('Disciplina', pd.Series(dtype=str)).fillna('').astype(str).str.strip()
+                mg['Nota']       = mg.get('Nota', pd.Series(dtype=str)).fillna('').astype(str).str.strip()
+                mg['Comentário'] = mg.get('Comentário', pd.Series(dtype=str)).fillna('').astype(str).str.strip()
+                mg['Aluno']      = aluno_nome
+
+                mg[['Turma', 'Aluno', 'Disciplina', 'Tópico', 'Professor', 'Nota', 'Comentário']].to_excel(
+                    writer, sheet_name='Avaliação e Comentários', index=False
+                )
             else:
                 pd.DataFrame([{'Info': 'Sem avaliações registradas para este aluno'}]).to_excel(
-                    writer, sheet_name='NPS e Comentários', index=False
+                    writer, sheet_name='Avaliação e Comentários', index=False
                 )
         except Exception:
-            pd.DataFrame([{'Info': 'Erro ao gerar dados de NPS'}]).to_excel(
-                writer, sheet_name='NPS e Comentários', index=False
+            pd.DataFrame([{'Info': 'Erro ao gerar dados de avaliação'}]).to_excel(
+                writer, sheet_name='Avaliação e Comentários', index=False
             )
 
     buf.seek(0)
