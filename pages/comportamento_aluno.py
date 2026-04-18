@@ -418,8 +418,38 @@ with col_u1:
     </div>
     """, unsafe_allow_html=True)
     f_status  = st.file_uploader("Status dos Módulos", type=["xlsx"], key="ca_status")
+    st.markdown("""
+    <div class="rh-filtros-bloco">
+        <div class="rh-filtros-titulo">Filtros antes de exportar</div>
+        <div class="rh-filtros-chips">
+            <span class="rh-filtro-chip">
+                <span class="rh-filtro-label">Status</span>
+                <span class="rh-filtro-val">Em Andamento / Finalizado</span>
+            </span>
+            <span class="rh-filtro-chip">
+                <span class="rh-filtro-label">Exclui módulo</span>
+                <span class="rh-filtro-val">Objetivos · Gravações</span>
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 with col_u2:
     f_tarefas = st.file_uploader("Envio de Tarefas",   type=["xlsx"], key="ca_tarefas")
+    st.markdown("""
+    <div class="rh-filtros-bloco">
+        <div class="rh-filtros-titulo">Filtros antes de exportar</div>
+        <div class="rh-filtros-chips">
+            <span class="rh-filtro-chip">
+                <span class="rh-filtro-label">Grupo da Tarefa</span>
+                <span class="rh-filtro-val">Atividade Prática</span>
+            </span>
+            <span class="rh-filtro-chip">
+                <span class="rh-filtro-label">Grupo da Tarefa</span>
+                <span class="rh-filtro-val">Teste seu Conhecimento</span>
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     f_nps     = st.file_uploader("NPS por Aluno",      type=["xlsx"], key="ca_nps")
 with col_u3:
     f_coment  = st.file_uploader("Comentários de Aula", type=["xlsx"], key="ca_coment")
@@ -616,17 +646,22 @@ else:
     if df_mod_aluno.empty and df_tar_aluno.empty:
         st.info("Nenhum módulo ou atividade registrado para este aluno.")
     else:
-        # Extrair notas por disciplina
+        # Extrair notas e pontualidade por disciplina
         if not df_tar_aluno.empty:
             col_grupo = next((c for c in df_tar_aluno.columns if 'GRUPO' in c.upper()), None)
             col_nota  = next((c for c in df_tar_aluno.columns if 'NOTA'  in c.upper()), None)
+            col_pont  = next((c for c in df_tar_aluno.columns if 'PONTUALIDADE' in c.upper()), None)
             col_disc_tar = 'DISCIPLINA'
 
             if col_grupo and col_nota:
+                prat_sel = [col_disc_tar, col_nota] + ([col_pont] if col_pont else [])
+                prat_rename = {col_nota: 'Nota Atividade Prática'}
+                if col_pont:
+                    prat_rename[col_pont] = 'Pontualidade'
                 prat = (
                     df_tar_aluno[df_tar_aluno[col_grupo] == 'Atividade Pratica']
-                    [[col_disc_tar, col_nota]]
-                    .rename(columns={col_nota: 'Nota Atividade Prática'})
+                    [prat_sel]
+                    .rename(columns=prat_rename)
                     .drop_duplicates(subset=[col_disc_tar])
                 )
                 teste = (
@@ -662,10 +697,17 @@ else:
                 )
             else:
                 tabela[col_n] = ''
+        if 'Pontualidade' not in tabela.columns:
+            tabela['Pontualidade'] = ''
+        else:
+            tabela['Pontualidade'] = tabela['Pontualidade'].fillna('').astype(str).str.strip()
+
+        display_cols = ['ALUNO', 'DISCIPLINA', 'STATUS', 'Nota Atividade Prática', 'Pontualidade', 'Nota Teste seu Conhecimento']
+        display_cols = [c for c in display_cols if c in tabela.columns]
 
         st.markdown('<div class="rh-dash-bloco"><div class="rh-dash-bloco-titulo">📚 Módulos e Atividades</div>', unsafe_allow_html=True)
         st.dataframe(
-            tabela[['ALUNO', 'DISCIPLINA', 'STATUS', 'Nota Atividade Prática', 'Nota Teste seu Conhecimento']],
+            tabela[display_cols],
             use_container_width=True,
             hide_index=True,
             height=200,
