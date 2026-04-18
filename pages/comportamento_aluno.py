@@ -423,12 +423,16 @@ with col_u1:
         <div class="rh-filtros-titulo">Filtros antes de exportar</div>
         <div class="rh-filtros-chips">
             <span class="rh-filtro-chip">
-                <span class="rh-filtro-label">Status</span>
-                <span class="rh-filtro-val">Em Andamento / Finalizado</span>
+                <span class="rh-filtro-label">Status do aluno</span>
+                <span class="rh-filtro-val">Ativo</span>
             </span>
             <span class="rh-filtro-chip">
-                <span class="rh-filtro-label">Exclui módulo</span>
-                <span class="rh-filtro-val">Objetivos · Gravações</span>
+                <span class="rh-filtro-label">Função na disciplina</span>
+                <span class="rh-filtro-val">Aluno</span>
+            </span>
+            <span class="rh-filtro-chip variavel">
+                <span class="rh-filtro-label">Curso</span>
+                <span class="rh-filtro-val">seu curso</span>
             </span>
         </div>
     </div>
@@ -440,12 +444,16 @@ with col_u2:
         <div class="rh-filtros-titulo">Filtros antes de exportar</div>
         <div class="rh-filtros-chips">
             <span class="rh-filtro-chip">
-                <span class="rh-filtro-label">Grupo da Tarefa</span>
-                <span class="rh-filtro-val">Atividade Prática</span>
+                <span class="rh-filtro-label">Status do aluno</span>
+                <span class="rh-filtro-val">Ativo</span>
             </span>
             <span class="rh-filtro-chip">
-                <span class="rh-filtro-label">Grupo da Tarefa</span>
-                <span class="rh-filtro-val">Teste seu Conhecimento</span>
+                <span class="rh-filtro-label">Função na disciplina</span>
+                <span class="rh-filtro-val">Aluno</span>
+            </span>
+            <span class="rh-filtro-chip variavel">
+                <span class="rh-filtro-label">Curso</span>
+                <span class="rh-filtro-val">seu curso</span>
             </span>
         </div>
     </div>
