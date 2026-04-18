@@ -239,6 +239,32 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     background: var(--ouro); display: inline-block;
 }
 
+/* orientação de navegação no BI */
+.rh-nav-hint {
+    display: flex; align-items: flex-start; gap: 8px;
+    background: rgba(15,61,32,0.05);
+    border: 1px solid rgba(15,61,32,0.12);
+    border-left: 3px solid var(--verde);
+    border-radius: 6px;
+    padding: 7px 10px;
+    margin: 0 0 6px 0;
+}
+.rh-nav-icon { font-size: 0.85rem; flex-shrink: 0; margin-top: 1px; }
+.rh-nav-body { display: flex; flex-direction: column; gap: 2px; }
+.rh-nav-bi {
+    font-size: 0.62rem; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--verde);
+}
+.rh-nav-page {
+    font-size: 0.75rem; font-weight: 500;
+    color: var(--texto); line-height: 1.3;
+}
+.rh-nav-dash {
+    font-size: 0.68rem; color: var(--sub);
+    font-style: italic; line-height: 1.3;
+}
+
 /* filtros de exportação */
 .rh-filtros-bloco {
     background: rgba(15,61,32,0.04);
@@ -399,6 +425,16 @@ st.markdown('<p class="rh-section">Carregar arquivos</p>', unsafe_allow_html=Tru
 
 col_u1, col_u2, col_u3 = st.columns(3)
 with col_u1:
+    st.markdown("""
+    <div class="rh-nav-hint">
+        <div class="rh-nav-icon">📍</div>
+        <div class="rh-nav-body">
+            <span class="rh-nav-bi">BI Rehagro Canvas</span>
+            <span class="rh-nav-page">Resumo de dados dos alunos (Almas e turmas)</span>
+            <span class="rh-nav-dash">Avaliar: Acesso ao Canvas</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     f_canvas  = st.file_uploader("Acesso ao Canvas",   type=["xlsx"], key="ca_canvas")
     st.markdown("""
     <div class="rh-filtros-bloco">
@@ -409,13 +445,23 @@ with col_u1:
                 <span class="rh-filtro-val">Ativo</span>
             </span>
             <span class="rh-filtro-chip">
-                <span class="rh-filtro-label">Função</span>
+                <span class="rh-filtro-label">Função na disciplina</span>
                 <span class="rh-filtro-val">Aluno</span>
             </span>
             <span class="rh-filtro-chip variavel">
                 <span class="rh-filtro-label">Curso</span>
                 <span class="rh-filtro-val">seu curso</span>
             </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("""
+    <div class="rh-nav-hint">
+        <div class="rh-nav-icon">📍</div>
+        <div class="rh-nav-body">
+            <span class="rh-nav-bi">BI Rehagro Canvas</span>
+            <span class="rh-nav-page">Resumo de dados dos alunos (Almas e turmas)</span>
+            <span class="rh-nav-dash">Avaliar: Qual o status do módulo para cada aluno x disciplina</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -440,6 +486,16 @@ with col_u1:
     </div>
     """, unsafe_allow_html=True)
 with col_u2:
+    st.markdown("""
+    <div class="rh-nav-hint">
+        <div class="rh-nav-icon">📍</div>
+        <div class="rh-nav-body">
+            <span class="rh-nav-bi">BI Rehagro Canvas</span>
+            <span class="rh-nav-page">Resumo de dados dos alunos (Almas e turmas)</span>
+            <span class="rh-nav-dash">Avaliar: Entrega de atividades</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     f_tarefas = st.file_uploader("Envio de Tarefas",   type=["xlsx"], key="ca_tarefas")
     st.markdown("""
     <div class="rh-filtros-bloco">
@@ -460,6 +516,16 @@ with col_u2:
         </div>
     </div>
     """, unsafe_allow_html=True)
+    st.markdown("""
+    <div class="rh-nav-hint">
+        <div class="rh-nav-icon">📍</div>
+        <div class="rh-nav-body">
+            <span class="rh-nav-bi">BI Rehagro Educação — Avaliação de Aula</span>
+            <span class="rh-nav-page">Tabela respostas objetivas</span>
+            <span class="rh-nav-dash">Avaliação de aula/etapa | Detalhamento</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     f_nps     = st.file_uploader("Avaliação de Aula/Etapa", type=["xlsx"], key="ca_nps")
     st.markdown("""
     <div class="rh-filtros-bloco">
@@ -469,11 +535,52 @@ with col_u2:
                 <span class="rh-filtro-label">Item</span>
                 <span class="rh-filtro-val">De 0 a 10 · Nota da aula</span>
             </span>
+            <span class="rh-filtro-chip">
+                <span class="rh-filtro-label">Status de matrícula</span>
+                <span class="rh-filtro-val">Matriculado</span>
+            </span>
+            <span class="rh-filtro-chip">
+                <span class="rh-filtro-label">Tipo de aula</span>
+                <span class="rh-filtro-val">Gravada</span>
+            </span>
+            <span class="rh-filtro-chip variavel">
+                <span class="rh-filtro-label">Curso</span>
+                <span class="rh-filtro-val">seu curso</span>
+            </span>
         </div>
     </div>
     """, unsafe_allow_html=True)
 with col_u3:
+    st.markdown("""
+    <div class="rh-nav-hint">
+        <div class="rh-nav-icon">📍</div>
+        <div class="rh-nav-body">
+            <span class="rh-nav-bi">BI Rehagro Educação — Avaliação de Aula</span>
+            <span class="rh-nav-page">Tabela Comentários</span>
+            <span class="rh-nav-dash">Relatório do Professor | Comentários</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     f_coment  = st.file_uploader("Comentários", type=["xlsx"], key="ca_coment")
+    st.markdown("""
+    <div class="rh-filtros-bloco">
+        <div class="rh-filtros-titulo">Filtros antes de exportar</div>
+        <div class="rh-filtros-chips">
+            <span class="rh-filtro-chip">
+                <span class="rh-filtro-label">Status de matrícula</span>
+                <span class="rh-filtro-val">Matriculado</span>
+            </span>
+            <span class="rh-filtro-chip">
+                <span class="rh-filtro-label">Tipo de aula</span>
+                <span class="rh-filtro-val">Gravada</span>
+            </span>
+            <span class="rh-filtro-chip variavel">
+                <span class="rh-filtro-label">Curso</span>
+                <span class="rh-filtro-val">seu curso</span>
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 if not f_canvas:
     st.info("Carregue pelo menos o arquivo **Acesso ao Canvas** para liberar o filtro de aluno.")
