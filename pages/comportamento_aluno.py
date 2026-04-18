@@ -238,6 +238,43 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     width: 4px; height: 4px; border-radius: 50%;
     background: var(--ouro); display: inline-block;
 }
+
+/* filtros de exportação */
+.rh-filtros-bloco {
+    background: rgba(15,61,32,0.04);
+    border: 1px solid rgba(15,61,32,0.12);
+    border-left: 3px solid var(--ouro);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 6px 0 12px 0;
+}
+.rh-filtros-titulo {
+    font-size: 0.6rem; font-weight: 700;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--sub); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+}
+.rh-filtros-titulo::before { content: '🔍'; font-size: 0.75rem; }
+.rh-filtros-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.rh-filtro-chip {
+    display: inline-flex; align-items: center; gap: 0;
+    border-radius: 6px; overflow: hidden;
+    border: 1px solid rgba(15,61,32,0.15);
+    font-size: 0.72rem; font-weight: 500;
+}
+.rh-filtro-label {
+    background: var(--verde); color: rgba(255,255,255,0.85);
+    padding: 3px 8px; font-weight: 600; font-size: 0.68rem;
+    letter-spacing: 0.5px;
+}
+.rh-filtro-val {
+    background: var(--branco); color: var(--verde);
+    padding: 3px 10px; font-weight: 600;
+}
+.rh-filtro-chip.variavel .rh-filtro-val {
+    background: rgba(200,169,81,0.12);
+    color: var(--sub); font-style: italic;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -361,6 +398,25 @@ st.markdown('<p class="rh-section">Carregar arquivos</p>', unsafe_allow_html=Tru
 col_u1, col_u2, col_u3 = st.columns(3)
 with col_u1:
     f_canvas  = st.file_uploader("Acesso ao Canvas",   type=["xlsx"], key="ca_canvas")
+    st.markdown("""
+    <div class="rh-filtros-bloco">
+        <div class="rh-filtros-titulo">Filtros antes de exportar</div>
+        <div class="rh-filtros-chips">
+            <span class="rh-filtro-chip">
+                <span class="rh-filtro-label">Status do aluno</span>
+                <span class="rh-filtro-val">Ativo</span>
+            </span>
+            <span class="rh-filtro-chip">
+                <span class="rh-filtro-label">Função</span>
+                <span class="rh-filtro-val">Aluno</span>
+            </span>
+            <span class="rh-filtro-chip variavel">
+                <span class="rh-filtro-label">Curso</span>
+                <span class="rh-filtro-val">seu curso</span>
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     f_status  = st.file_uploader("Status dos Módulos", type=["xlsx"], key="ca_status")
 with col_u2:
     f_tarefas = st.file_uploader("Envio de Tarefas",   type=["xlsx"], key="ca_tarefas")
@@ -480,10 +536,8 @@ if linha_canvas.empty:
 else:
     row = linha_canvas.iloc[0]
 
-    col_ultima = next((c for c in df_canvas.columns if 'LTIMA' in c.upper() and 'A' in c.upper()), None)
+    col_ultima = next((c for c in df_canvas.columns if 'LTIMA' in c.upper()), None)
     col_dias   = next((c for c in df_canvas.columns if 'DIAS' in c.upper()), None)
-    col_status = next((c for c in df_canvas.columns if c.upper() == 'STATUS'), None)
-    col_inter  = next((c for c in df_canvas.columns if 'INTERA' in c.upper()), None)
     col_email  = next((c for c in df_canvas.columns if 'MAIL' in c.upper()), None)
     col_curso  = next((c for c in df_canvas.columns if c.upper() == 'CURSO'), None)
     col_turma  = next((c for c in df_canvas.columns if c.upper() == 'TURMA'), None)
@@ -501,12 +555,9 @@ else:
     dias_str = f"{dias_val} dias" if dias_val is not None else "—"
     cls_dias = "alerta" if (dias_val or 0) >= 30 else ("ok" if (dias_val or 0) <= 7 else "")
 
-    status_val = str(row.get(col_status, '')).strip() if col_status else '—'
-    inter_val  = str(row.get(col_inter,  '')).strip() if col_inter  else '—'
-    email_val  = str(row.get(col_email,  '')).strip() if col_email  else '—'
-    curso_val  = str(row.get(col_curso,  '')).strip() if col_curso  else '—'
-    turma_val  = str(row.get(col_turma,  '')).strip() if col_turma  else '—'
-    inter_cls  = "ok" if "interagiu" in inter_val.lower() and "não" not in inter_val.lower() else "alerta"
+    email_val = str(row.get(col_email, '')).strip() if col_email else '—'
+    curso_val = str(row.get(col_curso, '')).strip() if col_curso else '—'
+    turma_val = str(row.get(col_turma, '')).strip() if col_turma else '—'
 
     st.markdown(f"""
     <div class="rh-dash-bloco">
@@ -531,14 +582,6 @@ else:
             <div class="rh-info-item">
                 <div class="rh-info-label">Dias sem acesso</div>
                 <div class="rh-info-valor {cls_dias}">{dias_str}</div>
-            </div>
-            <div class="rh-info-item">
-                <div class="rh-info-label">Status</div>
-                <div class="rh-info-valor">{status_val}</div>
-            </div>
-            <div class="rh-info-item">
-                <div class="rh-info-label">Interação na conta</div>
-                <div class="rh-info-valor {inter_cls}">{inter_val}</div>
             </div>
         </div>
     </div>
