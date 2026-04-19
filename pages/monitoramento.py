@@ -462,6 +462,242 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     color: var(--muted); font-size: 12px;
 }
 .rh-footer-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); display: inline-block; }
+
+/* ── Seção de resultados ── */
+.rh-results-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin: 32px 0 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--bd);
+}
+.rh-results-eyebrow {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+}
+.rh-results-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--g);
+    margin: 0;
+    line-height: 1.1;
+}
+
+/* ── Cards de métricas — novo design ── */
+.rh-metrics-new {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.rh-metric-new {
+    background: #fff;
+    border-radius: var(--r);
+    padding: 20px 18px;
+    border: 1px solid var(--bd);
+    position: relative;
+    overflow: hidden;
+}
+.rh-metric-new-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.rh-metric-new-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+.rh-metric-new-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+.rh-metric-new-num {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 48px;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.rh-metric-new-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+}
+.rh-metric-new.m-total { background: #f0fdf4; border-color: rgba(22,163,74,.15); }
+.rh-metric-new.m-total .rh-metric-new-label { color: #166534; }
+.rh-metric-new.m-total .rh-metric-new-icon  { background: rgba(22,163,74,.12); }
+.rh-metric-new.m-total .rh-metric-new-num   { color: #14532d; }
+.rh-metric-new.m-crit { background: #fff5f5; border-color: rgba(220,38,38,.15); }
+.rh-metric-new.m-crit .rh-metric-new-label { color: #991b1b; }
+.rh-metric-new.m-crit .rh-metric-new-icon  { background: rgba(220,38,38,.10); }
+.rh-metric-new.m-crit .rh-metric-new-num   { color: #dc2626; }
+.rh-metric-new.m-atenc { background: #fffbeb; border-color: rgba(217,119,6,.15); }
+.rh-metric-new.m-atenc .rh-metric-new-label { color: #92400e; }
+.rh-metric-new.m-atenc .rh-metric-new-icon  { background: rgba(217,119,6,.10); }
+.rh-metric-new.m-atenc .rh-metric-new-num   { color: #d97706; }
+.rh-metric-new.m-mon { background: #fefce8; border-color: rgba(202,138,4,.15); }
+.rh-metric-new.m-mon .rh-metric-new-label { color: #854d0e; }
+.rh-metric-new.m-mon .rh-metric-new-icon  { background: rgba(202,138,4,.10); }
+.rh-metric-new.m-mon .rh-metric-new-num   { color: #ca8a04; }
+
+/* ── Filtro de turma ── */
+.rh-turma-filter {
+    background: #fff;
+    border-radius: var(--r);
+    border: 1px solid var(--bd);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.rh-turma-filter-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--txt2);
+    white-space: nowrap;
+}
+
+/* ── Tabela de alunos ── */
+.rh-table-wrap {
+    background: #fff;
+    border-radius: var(--r);
+    border: 1px solid var(--bd);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+.rh-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--bd);
+    background: #fafaf8;
+}
+.rh-table-header-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--txt);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.rh-table-header-count {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+}
+.rh-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.rh-table thead th {
+    padding: 10px 16px;
+    text-align: left;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--bd);
+    background: #fafaf8;
+    white-space: nowrap;
+}
+.rh-table tbody tr {
+    border-bottom: 1px solid #f0ede6;
+    transition: background .1s;
+}
+.rh-table tbody tr:last-child { border-bottom: none; }
+.rh-table tbody tr:hover { background: #fafaf8; }
+.rh-table tbody td {
+    padding: 14px 16px;
+    vertical-align: middle;
+    color: var(--txt);
+}
+.rh-table-curso  { font-size: 12px; color: var(--muted); }
+.rh-table-turma  { font-size: 12px; color: var(--muted); }
+.rh-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e8e4dc;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #555;
+    margin-right: 10px;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+.rh-table-nome-cell {
+    display: flex;
+    align-items: center;
+}
+.rh-table-nome-text {
+    font-weight: 600;
+    color: var(--txt);
+}
+.rh-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 8px;
+}
+.rh-badge.critico  { background: rgba(220,38,38,.08);  color: #dc2626; border: 1px solid rgba(220,38,38,.2);  }
+.rh-badge.atencao  { background: rgba(217,119,6,.08);  color: #d97706; border: 1px solid rgba(217,119,6,.2);  }
+.rh-badge.monitorar{ background: rgba(202,138,4,.08);  color: #ca8a04; border: 1px solid rgba(202,138,4,.2);  }
+.rh-table-alertas-cell {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+.rh-alertas-num {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    min-width: 20px;
+}
+.rh-alertas-num.critico  { color: #dc2626; }
+.rh-alertas-num.atencao  { color: #d97706; }
+.rh-alertas-num.monitorar{ color: #ca8a04; }
+.rh-table-comentario { font-size: 12px; color: var(--muted); }
+
+/* ── Botões finais ── */
+.rh-action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1166,39 +1402,162 @@ with col_dir:
                     monitorar = len(df_alunos[df_alunos['Qtd. Alertas']==1])
                     total_al  = df_rel['Nome'].nunique()
 
+                    # ── Header da seção de resultados ──
                     st.markdown(f"""
-                    <div class="rh-metrics">
-                      <div class="rh-metric m-total"><div class="rh-metric-num" style="color:#0F3D20">{total_al}</div><div class="rh-metric-label">Total</div></div>
-                      <div class="rh-metric m-crit"><div class="rh-metric-num" style="color:#C62828">{criticos}</div><div class="rh-metric-label">🔴 Críticos</div></div>
-                      <div class="rh-metric m-atenc"><div class="rh-metric-num" style="color:#E65100">{atencao}</div><div class="rh-metric-label">🟠 Atenção</div></div>
-                      <div class="rh-metric m-mon"><div class="rh-metric-num" style="color:#F57F17">{monitorar}</div><div class="rh-metric-label">🟡 Monitorar</div></div>
-                    </div>
-                    """, unsafe_allow_html=True)
+<div class="rh-results-header">
+  <div>
+    <div class="rh-results-eyebrow">Relatório Gerado</div>
+    <div class="rh-results-title">Alunos Desengajados</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
+                    # ── Cards de métricas — novo design ──
+                    st.markdown(f"""
+<div class="rh-metrics-new">
+  <div class="rh-metric-new m-total">
+    <div class="rh-metric-new-top">
+      <div class="rh-metric-new-label">Total</div>
+      <div class="rh-metric-new-icon">👥</div>
+    </div>
+    <div class="rh-metric-new-num">{total_al}</div>
+    <div class="rh-metric-new-sub">alunos</div>
+  </div>
+  <div class="rh-metric-new m-crit">
+    <div class="rh-metric-new-top">
+      <div class="rh-metric-new-label">Críticos</div>
+      <div class="rh-metric-new-icon">⚠️</div>
+    </div>
+    <div class="rh-metric-new-num">{criticos}</div>
+    <div class="rh-metric-new-sub">alunos</div>
+  </div>
+  <div class="rh-metric-new m-atenc">
+    <div class="rh-metric-new-top">
+      <div class="rh-metric-new-label">Atenção</div>
+      <div class="rh-metric-new-icon">🕐</div>
+    </div>
+    <div class="rh-metric-new-num">{atencao}</div>
+    <div class="rh-metric-new-sub">alunos</div>
+  </div>
+  <div class="rh-metric-new m-mon">
+    <div class="rh-metric-new-top">
+      <div class="rh-metric-new-label">Monitorar</div>
+      <div class="rh-metric-new-icon">⭐</div>
+    </div>
+    <div class="rh-metric-new-num">{monitorar}</div>
+    <div class="rh-metric-new-sub">alunos</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+                    # ── Filtro de turma ──
                     turmas = sorted(df_rel['Turma'].dropna().unique().tolist())
                     df_view = df_rel
                     if len(turmas) > 1:
-                        sel = st.multiselect("Filtrar por turma:", turmas, default=turmas)
+                        st.markdown("""
+<div style="background:#fff;border-radius:12px;border:1px solid var(--bd);
+            padding:12px 18px;margin-bottom:8px;font-size:13px;
+            font-weight:600;color:var(--txt2);">
+  Filtrar por turma:
+</div>
+""", unsafe_allow_html=True)
+                        sel = st.multiselect("", turmas, default=turmas, label_visibility="collapsed")
                         df_view = df_rel[df_rel['Turma'].isin(sel)]
+                        total_view = df_view['Nome'].nunique()
+                    else:
+                        total_view = total_al
 
-                    st.markdown('<p class="rh-section">Alunos desengajados</p>', unsafe_allow_html=True)
-                    cols_view = ['Curso','Turma','Nome','Qtd. Alertas','Alertas Identificados','Ações Recomendadas','Tópico','Professor']
-                    st.dataframe(df_view[cols_view], use_container_width=True, hide_index=True, height=320)
+                    # ── Funções auxiliares para a tabela ──
+                    def _iniciais(nome):
+                        partes = str(nome).strip().split()
+                        if len(partes) >= 2:
+                            return (partes[0][0] + partes[1][0]).upper()
+                        elif partes:
+                            return partes[0][:2].upper()
+                        return "??"
 
+                    def _severidade(qtd):
+                        if qtd >= 4: return "critico", "Crítico"
+                        if qtd >= 2: return "atencao", "Atenção"
+                        return "monitorar", "Monitorar"
+
+                    def _ultimo_comentario(alertas_str):
+                        matches = re.findall(r'comentário em (\d{2}/\d{2}/\d{4})', str(alertas_str))
+                        if matches:
+                            return f"Escreveu comentário em {matches[-1]}"
+                        return "—"
+
+                    # ── Montar linhas da tabela ──
+                    df_tabela = df_view.drop_duplicates(subset=['Nome','Turma']).sort_values(
+                        ['Qtd. Alertas','Nome'], ascending=[False, True]
+                    )
+                    linhas_html = ""
+                    for _, row in df_tabela.iterrows():
+                        iniciais = _iniciais(row['Nome'])
+                        sev_cls, sev_lbl = _severidade(row['Qtd. Alertas'])
+                        qtd = int(row['Qtd. Alertas'])
+                        comentario = _ultimo_comentario(row.get('Alertas Identificados', ''))
+                        curso = str(row.get('Curso', '')).strip() or '—'
+                        turma = str(row.get('Turma', '')).strip() or '—'
+                        linhas_html += f"""
+    <tr>
+      <td class="rh-table-curso">{curso}</td>
+      <td class="rh-table-turma">{turma}</td>
+      <td>
+        <div class="rh-table-nome-cell">
+          <span class="rh-avatar">{iniciais}</span>
+          <span class="rh-table-nome-text">{row['Nome']}</span>
+        </div>
+      </td>
+      <td>
+        <div class="rh-table-alertas-cell">
+          <span class="rh-alertas-num {sev_cls}">{qtd}</span>
+          <span class="rh-badge {sev_cls}">{sev_lbl}</span>
+        </div>
+      </td>
+      <td class="rh-table-comentario">{comentario}</td>
+    </tr>"""
+
+                    st.markdown(f"""
+<div class="rh-table-wrap">
+  <div class="rh-table-header">
+    <div class="rh-table-header-title">⚠️ Alunos Desengajados</div>
+    <div class="rh-table-header-count">{total_view} alunos encontrados</div>
+  </div>
+  <table class="rh-table">
+    <thead>
+      <tr>
+        <th>Curso</th>
+        <th>Turma</th>
+        <th>Nome do Aluno</th>
+        <th>Alertas</th>
+        <th>Último Comentário</th>
+      </tr>
+    </thead>
+    <tbody>{linhas_html}</tbody>
+  </table>
+</div>
+""", unsafe_allow_html=True)
+
+                    # ── Gerar Excel e enviar e-mail ──
                     excel_bytes = exportar_excel_bytes(df_rel)
                     data_hoje   = datetime.now().strftime('%d/%m/%Y')
                     dests = [email_usuario.strip()] if email_usuario and "@" in email_usuario else []
                     if SENDGRID_OK:
-                        ok,msg = enviar_email(excel_bytes,dests,data_hoje,len(df_rel),criticos,atencao,monitorar)
+                        ok, msg = enviar_email(excel_bytes, dests, data_hoje, len(df_rel), criticos, atencao, monitorar)
                         if ok: st.success(f"📧 {msg}")
                         else:  st.warning(f"⚠️ E-mail não enviado: {msg}")
                     else:
                         st.warning("⚠️ Biblioteca SendGrid não instalada.")
 
-                    st.download_button("⬇  Baixar Relatório Excel", data=excel_bytes,
+                    # ── Botão de download ──
+                    st.download_button(
+                        "⚡ Baixar Relatório Excel",
+                        data=excel_bytes,
                         file_name=f"relatorio_cs_{datetime.now().strftime('%d%m%Y')}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        use_container_width=True)
+                        use_container_width=True,
+                    )
                 except Exception as e:
                     st.error(f"Erro ao processar: {e}")
                     st.info("Verifique se os arquivos corretos foram enviados com os filtros indicados.")
