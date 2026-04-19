@@ -125,8 +125,8 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 }
 .rh-hero-title-row { padding: 28px 0 24px; }
 .rh-hero-h1 {
-    font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 34px;
-    color: var(--gold); letter-spacing: -.5px; margin: 0 0 6px; text-transform: uppercase;
+    font-family: 'Montserrat', sans-serif !important; font-weight: 900; font-size: 34px;
+    color: var(--gold) !important; letter-spacing: -.5px; margin: 0 0 6px; text-transform: uppercase;
 }
 .rh-hero-sub { color: rgba(255,255,255,.65); font-size: 13px; max-width: 480px; line-height: 1.5; margin: 0; }
 .rh-hero-pills { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
@@ -395,26 +395,17 @@ def _sec_hdr(icon, label):
     </div>'''
 
 def _upload_card(num, cat, title, subtitle, source, avaliar, extra_source=''):
-    extra = f'<div class="rh-uc-src-extra">{extra_source}</div>' if extra_source else ''
-    return f"""<div class="rh-uc">
-  <div class="rh-uc-bar"></div>
-  <div class="rh-uc-body">
-    <div class="rh-uc-hdr">
-      <div class="rh-uc-num">{num}</div>
-      <div>
-        <div class="rh-uc-cat">{cat}</div>
-        <div class="rh-uc-title">{title}</div>
-        <div class="rh-uc-sub">{subtitle}</div>
-      </div>
-    </div>
-    <div class="rh-uc-src">
-      <div class="rh-uc-src-lbl">Fonte de dados</div>
-      <div class="rh-uc-src-name">{source}</div>
-      {extra}
-      <div class="rh-uc-src-aval">▸ {avaliar}</div>
-    </div>
-  </div>
-</div>"""
+    extra_html = f'<div class="rh-uc-src-extra">{extra_source}</div>' if extra_source else ''
+    return (
+        f'<div class="rh-uc"><div class="rh-uc-bar"></div><div class="rh-uc-body">'
+        f'<div class="rh-uc-hdr"><div class="rh-uc-num">{num}</div>'
+        f'<div><div class="rh-uc-cat">{cat}</div><div class="rh-uc-title">{title}</div>'
+        f'<div class="rh-uc-sub">{subtitle}</div></div></div>'
+        f'<div class="rh-uc-src"><div class="rh-uc-src-lbl">Fonte de dados</div>'
+        f'<div class="rh-uc-src-name">{source}</div>{extra_html}'
+        f'<div class="rh-uc-src-aval">&#9658; {avaliar}</div>'
+        f'</div></div></div>'
+    )
 
 def _upload_bot(tags):
     tag_html = ''.join([
@@ -525,27 +516,30 @@ def _logo_b64(path):
         return ""
 
 _logo_b64_str = _logo_b64("Logo-Rehagro-chapada-branca.png")
-_logo_img = f'<img src="data:image/png;base64,{_logo_b64_str}" style="height:48px;opacity:.9"/>' if _logo_b64_str else ''
+_logo_img = f'<img src="data:image/png;base64,{_logo_b64_str}" style="height:76px;opacity:0.92"/>' if _logo_b64_str else ''
 
 # ══════════════════════════════════════════════════════════════
 # HERO
 # ══════════════════════════════════════════════════════════════
+_logo_slot = f'<div style="flex-shrink:0;padding-left:24px;">{_logo_img}</div>' if _logo_img else ''
 st.markdown(f"""
 <div class="rh-hero">
   <div class="rh-hero-diag"></div>
   <div class="rh-hero-nav">
     <div class="rh-hero-eyebrow">Rehagro · Customer Success</div>
-    <div class="rh-hero-wordmark">{_logo_img if _logo_img else 'Rehagro 🌿'}</div>
   </div>
-  <div class="rh-hero-title-row">
-    <h1 class="rh-hero-h1">Comportamento do Aluno</h1>
-    <p class="rh-hero-sub">Panorama completo do aluno para preparar o contato proativo do CS.</p>
-    <div class="rh-hero-pills">
-      <span class="rh-hero-pill">Acesso Canvas</span>
-      <span class="rh-hero-pill">Módulos</span>
-      <span class="rh-hero-pill">NPS</span>
-      <span class="rh-hero-pill">Comentários</span>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:28px 0 24px;">
+    <div>
+      <h1 class="rh-hero-h1">Comportamento do Aluno</h1>
+      <p class="rh-hero-sub">Panorama completo do aluno para preparar o contato proativo do CS.</p>
+      <div class="rh-hero-pills">
+        <span class="rh-hero-pill">Acesso Canvas</span>
+        <span class="rh-hero-pill">Módulos</span>
+        <span class="rh-hero-pill">NPS</span>
+        <span class="rh-hero-pill">Comentários</span>
+      </div>
     </div>
+    {_logo_slot}
   </div>
 </div>
 """, unsafe_allow_html=True)
