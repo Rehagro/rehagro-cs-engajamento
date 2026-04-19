@@ -515,7 +515,7 @@ def _logo_b64(path):
     except Exception:
         return ""
 
-_logo_b64_str = _logo_b64("Logo-Rehagro-chapada-branca-1-01.png")
+_logo_b64_str = _logo_b64("Logo-Rehagro-branca-transp.png")
 _logo_img = f'<img src="data:image/png;base64,{_logo_b64_str}" style="height:76px;opacity:0.92"/>' if _logo_b64_str else ''
 _wordmark = '<div class="rh-hero-wordmark">Rehagro 🌿</div>'
 
