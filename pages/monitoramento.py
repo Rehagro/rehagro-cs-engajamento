@@ -88,33 +88,306 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 }
 .rh-section::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, #ddd, transparent); }
 
-/* ── Dashboard cards ── */
+/* ── Dashboard cards — novo design ── */
 .rh-dash-card {
-    background: #fff; border-radius: 0; padding: 20px 24px; margin-bottom: 2px;
-    border-left: 3px solid transparent; transition: border-color .2s;
+    background: #fff;
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 2px;
     box-shadow: 0 1px 4px rgba(0,0,0,.04);
+    overflow: hidden;
 }
 .rh-dash-card:first-of-type { border-radius: var(--r) var(--r) 0 0; }
 .rh-dash-card:last-of-type  { border-radius: 0 0 var(--r) var(--r); margin-bottom: 0; }
-.rh-dash-card:hover { border-left-color: var(--gold); }
-.rh-dash-num {
-    font-family: 'Montserrat', sans-serif !important; font-size: 11px !important;
-    font-weight: 700 !important; letter-spacing: 2px; color: var(--gold);
-    text-transform: uppercase; margin-bottom: 4px;
+
+.rh-dash-card-bar {
+    height: 3px;
+    width: 100%;
 }
-.rh-dash-title { font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; color: var(--g); margin-bottom: 10px; line-height: 1.3; }
-.rh-dash-desc  { font-size: 13px; color: var(--txt2); line-height: 1.7; }
-.rh-tag {
-    display: inline-block; background: rgba(27,61,42,.07); color: var(--g);
-    border: 1px solid rgba(27,61,42,.15); font-size: 11px; font-weight: 600;
-    padding: 2px 8px; border-radius: 4px; margin: 2px 2px 2px 0;
+.rh-dash-card-bar.c-blue   { background: #2563eb; }
+.rh-dash-card-bar.c-purple { background: #7c3aed; }
+.rh-dash-card-bar.c-green  { background: #16a34a; }
+
+.rh-dash-card-body {
+    padding: 18px 20px 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
 }
-.rh-note { font-size: 11px; color: var(--gold); margin-top: 8px; font-style: italic; }
+
+.rh-dash-num-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    color: #fff;
+    margin-top: 2px;
+}
+.rh-dash-num-circle.c-blue   { background: #2563eb; }
+.rh-dash-num-circle.c-purple { background: #7c3aed; }
+.rh-dash-num-circle.c-green  { background: #16a34a; }
+
+.rh-dash-content { flex: 1; }
+
+.rh-dash-eyebrow {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.rh-dash-eyebrow.c-blue   { color: #2563eb; }
+.rh-dash-eyebrow.c-purple { color: #7c3aed; }
+.rh-dash-eyebrow.c-green  { color: #16a34a; }
+
+.rh-dash-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--txt);
+    margin-bottom: 10px;
+    line-height: 1.3;
+}
+
+.rh-dash-source {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.rh-dash-source::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23888'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    flex-shrink: 0;
+}
+
+.rh-filters-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.rh-filters-label::before {
+    content: '▼';
+    font-size: 8px;
+}
+
+.rh-tag-filled {
+    display: inline-block;
+    background: #1B3D2A;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin: 2px 3px 2px 0;
+}
+.rh-tag-outline {
+    display: inline-block;
+    background: transparent;
+    color: #444;
+    border: 1.5px solid #ccc;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin: 2px 3px 2px 0;
+}
+
+.rh-export-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--txt2);
+    margin-top: 10px;
+}
+.rh-export-line a, .rh-export-line strong {
+    color: var(--g);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.rh-note-tip {
+    background: rgba(200,165,50,.08);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 6px 6px 0;
+    padding: 6px 12px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #7a6010;
+    font-style: italic;
+}
+.rh-note-tip::before { content: '⚡ '; }
+
 .rh-opt-badge {
-    display: inline-block; background: rgba(200,165,50,.12);
-    border: 1px solid rgba(200,165,50,.3); color: var(--gold);
-    font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
-    padding: 2px 8px; border-radius: 4px; margin-bottom: 6px;
+    display: inline-block;
+    background: rgba(200,165,50,.12);
+    border: 1px solid rgba(200,165,50,.4);
+    color: var(--gold);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 2px 10px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+}
+
+/* ── Upload sidebar — novo design ── */
+.rh-upload-panel {
+    background: #fff;
+    border-radius: var(--r);
+    overflow: hidden;
+    box-shadow: 0 1px 8px rgba(0,0,0,.06);
+    margin-bottom: 16px;
+}
+.rh-upload-header {
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid var(--bd);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.rh-upload-header-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.rh-upload-progress {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gold);
+}
+
+.rh-upload-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 18px;
+    border-bottom: 1px solid #f0ede6;
+    gap: 12px;
+}
+.rh-upload-row:last-child { border-bottom: none; }
+.rh-upload-row-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #f0ede6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #888;
+    flex-shrink: 0;
+}
+.rh-upload-row-num.done { background: var(--g); color: #fff; }
+.rh-upload-row-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--txt);
+}
+.rh-upload-row-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+}
+.rh-upload-row-opt {
+    font-size: 10px;
+    color: var(--gold);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: rgba(200,165,50,.1);
+    border: 1px solid rgba(200,165,50,.3);
+    padding: 1px 7px;
+    border-radius: 4px;
+}
+
+/* ── Status aguardando pills ── */
+.rh-waiting {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 0;
+    font-size: 12px;
+    color: var(--muted);
+}
+.rh-waiting-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+}
+.rh-waiting-pill {
+    background: rgba(200,165,50,.1);
+    border: 1px solid rgba(200,165,50,.3);
+    color: #7a6010;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 20px;
+}
+.rh-waiting-pill.done {
+    background: rgba(22,163,74,.08);
+    border-color: rgba(22,163,74,.25);
+    color: #16a34a;
+}
+
+/* ── E-mail section ── */
+.rh-email-section {
+    background: #fff;
+    border-radius: var(--r);
+    overflow: hidden;
+    box-shadow: 0 1px 8px rgba(0,0,0,.06);
+    margin-bottom: 16px;
+}
+.rh-email-header {
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid var(--bd);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.rh-email-body { padding: 16px 18px; }
+.rh-email-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
 }
 
 /* ── File uploader ── */
@@ -704,52 +977,155 @@ col_esq, col_dir = st.columns([1, 1], gap="large")
 with col_esq:
     st.markdown('<p class="rh-section">Como exportar do Power BI</p>', unsafe_allow_html=True)
     st.markdown("""
-    <div style="background:rgba(200,169,81,0.12);border:1.5px solid var(--ouro);border-left:4px solid var(--ouro);border-radius:8px;padding:14px 18px;margin-bottom:18px;">
-        <div style="font-size:1.05rem;font-weight:700;color:var(--verde);letter-spacing:0.3px;margin-bottom:6px;">⚠️ Atenção antes de exportar</div>
-        <div style="font-size:1rem;color:var(--verde2);line-height:1.6;">Todos os arquivos devem ser exportados no formato <strong>Dados Resumidos</strong> no Power BI. Cada dashboard abaixo indica os <strong>filtros obrigatórios</strong> para a exportação correta.</div>
-    </div>
-    <div>
-      <div class="rh-dash-card" style="border-radius:12px 12px 0 0">
-        <div class="rh-dash-num" style="font-size:1.3rem!important">Dashboard 01</div>
+<div style="background:rgba(200,165,50,.08);border:1px solid rgba(200,165,50,.3);border-left:4px solid var(--gold);border-radius:8px;padding:14px 18px;margin-bottom:20px;">
+  <div style="font-size:13px;font-weight:700;color:var(--g);margin-bottom:5px;">⚠️ Atenção antes de exportar</div>
+  <div style="font-size:13px;color:#555;line-height:1.6;">Todos os arquivos devem ser exportados no formato <strong>Dados Resumidos</strong> no Power BI. Cada dashboard abaixo indica os <strong>filtros obrigatórios</strong> para a exportação correta.</div>
+</div>
+
+<div>
+  <!-- DASHBOARD 01 -->
+  <div class="rh-dash-card" style="border-radius:12px 12px 0 0">
+    <div class="rh-dash-card-bar c-blue"></div>
+    <div class="rh-dash-card-body">
+      <div class="rh-dash-num-circle c-blue">01</div>
+      <div class="rh-dash-content">
+        <div class="rh-dash-eyebrow c-blue">Dashboard 01</div>
         <div class="rh-dash-title">Acesso ao Canvas (AVA)</div>
-        <div class="rh-dash-desc">Relatório <b>Rehagro - Canvas</b> → página <b>Acesso ao Canvas-Ok</b><br><br>
-          <span class="rh-tag">Status Usuário Curso = Ativo</span><span class="rh-tag">Função na disciplina = Aluno</span><span class="rh-tag">Curso = seus cursos</span><span class="rh-tag">Turma = suas turmas</span><br><br>
-          Exporte em formato <b>Dados Resumidos</b> → Excel<p class="rh-note">💡 Múltiplos cursos e turmas são suportados.</p></div>
-      </div>
-      <div class="rh-dash-card">
-        <div class="rh-dash-num" style="font-size:1.3rem!important">Dashboard 02</div>
-        <div class="rh-dash-title">NPS Médio por Aluno</div>
-        <div class="rh-dash-desc">Relatório <b>Rehagro Educação - Avaliação de Aula</b> → página <b>Avaliações de aula/aluno</b><br><br>
-          <span class="rh-tag">Curso = seus cursos</span><span class="rh-tag">Turma = suas turmas</span><span class="rh-tag">Ano resposta = ano atual</span><span class="rh-tag">Ano/mês resposta = período</span><span class="rh-tag">Tipo de aula = On-line ao vivo</span><br><br>
-          Exporte a tabela <b>NPS médio/aluno</b> → Excel<p class="rh-note">💡 Extraia da página "NPS médio/aluno" do dashboard.</p></div>
-      </div>
-      <div class="rh-dash-card">
-        <div class="rh-dash-num" style="font-size:1.3rem!important">Dashboard 03</div>
-        <div class="rh-dash-title">Frequência nas Aulas ao Vivo</div>
-        <div class="rh-dash-desc">Relatório <b>Rehagro Alunado</b> → página <b>Análise de Frequência e Faltas</b><br><br>
-          <span class="rh-tag">Turma = suas turmas</span><span class="rh-tag">Data/Aula = período desejado</span><br><br>
-          Exporte a <b>Tabela de frequência</b> → Excel</div>
-      </div>
-      <div class="rh-dash-card" style="border-radius:0 0 12px 12px">
-        <div class="rh-opt-badge">Opcional</div>
-        <div class="rh-dash-num" style="font-size:1.3rem!important">Dashboard 04</div>
-        <div class="rh-dash-title">Comentários das Aulas</div>
-        <div class="rh-dash-desc">Relatório <b>Rehagro Educação - Avaliação de Aula</b> → página <b>Tabela Comentários</b><br><br>
-          <span class="rh-tag">Área = sua área</span><span class="rh-tag">Formato Curso = Online</span><span class="rh-tag">Curso = seus cursos</span><span class="rh-tag">Tipo de aula = On-line ao vivo</span><span class="rh-tag">Ano_aula = ano atual</span><br><br>
-          Exporte a <b>Tabela Comentários</b> → Excel<p class="rh-note">💡 Inclui data, tópico, professor e texto do comentário no relatório.</p></div>
+        <div class="rh-dash-source">Rehagro - Canvas → página <em>Acesso ao Canvas-Ok</em></div>
+        <div class="rh-filters-label">Filtros obrigatórios</div>
+        <div>
+          <span class="rh-tag-filled">Status Usuário Curso</span>
+          <span class="rh-tag-outline">Ativo</span>
+          <span class="rh-tag-filled">Função na disciplina</span>
+          <span class="rh-tag-outline">Aluno</span>
+          <span class="rh-tag-filled">Curso</span>
+          <span class="rh-tag-outline">seus cursos</span>
+          <span class="rh-tag-filled">Turma</span>
+          <span class="rh-tag-outline">suas turmas</span>
+        </div>
+        <div class="rh-export-line">✈ Exporte em formato <strong>Dados Resumidos</strong> → Excel</div>
+        <div class="rh-note-tip">Múltiplos cursos e turmas são suportados.</div>
       </div>
     </div>
-    """, unsafe_allow_html=True)
+  </div>
+
+  <!-- DASHBOARD 02 -->
+  <div class="rh-dash-card">
+    <div class="rh-dash-card-bar c-purple"></div>
+    <div class="rh-dash-card-body">
+      <div class="rh-dash-num-circle c-purple">02</div>
+      <div class="rh-dash-content">
+        <div class="rh-dash-eyebrow c-purple">Dashboard 02</div>
+        <div class="rh-dash-title">NPS Médio por Aluno</div>
+        <div class="rh-dash-source">Rehagro Educação - Avaliação de Aula → página <em>Avaliações de aula/aluno</em></div>
+        <div class="rh-filters-label">Filtros obrigatórios</div>
+        <div>
+          <span class="rh-tag-filled">Curso</span>
+          <span class="rh-tag-outline">seus cursos</span>
+          <span class="rh-tag-filled">Turma</span>
+          <span class="rh-tag-outline">suas turmas</span>
+          <span class="rh-tag-filled">Ano resposta</span>
+          <span class="rh-tag-outline">ano atual</span>
+          <span class="rh-tag-filled">Ano/mês resposta</span>
+          <span class="rh-tag-outline">período</span>
+          <span class="rh-tag-filled">Tipo de aula</span>
+          <span class="rh-tag-outline">On-line ao vivo</span>
+        </div>
+        <div class="rh-export-line">✈ Exporte a <strong>tabela NPS médio/aluno</strong> → Excel</div>
+        <div class="rh-note-tip">Extraia da página "NPS médio/aluno" do dashboard.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD 03 -->
+  <div class="rh-dash-card">
+    <div class="rh-dash-card-bar c-green"></div>
+    <div class="rh-dash-card-body">
+      <div class="rh-dash-num-circle c-green">03</div>
+      <div class="rh-dash-content">
+        <div class="rh-dash-eyebrow c-green">Dashboard 03</div>
+        <div class="rh-dash-title">Frequência nas Aulas ao Vivo</div>
+        <div class="rh-dash-source">Rehagro Alunado → página <em>Análise de Frequência e Faltas</em></div>
+        <div class="rh-filters-label">Filtros obrigatórios</div>
+        <div>
+          <span class="rh-tag-filled">Turma</span>
+          <span class="rh-tag-outline">suas turmas</span>
+          <span class="rh-tag-filled">Data/Aula</span>
+          <span class="rh-tag-outline">período desejado</span>
+        </div>
+        <div class="rh-export-line">✈ Exporte a <strong>Tabela de frequência</strong> → Excel</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD 04 — OPCIONAL -->
+  <div class="rh-dash-card" style="border-radius:0 0 12px 12px">
+    <div class="rh-dash-card-bar c-green"></div>
+    <div class="rh-dash-card-body">
+      <div class="rh-dash-num-circle c-green">04</div>
+      <div class="rh-dash-content">
+        <div class="rh-opt-badge">Opcional</div>
+        <div class="rh-dash-eyebrow c-green">Dashboard 04</div>
+        <div class="rh-dash-title">Comentários das Aulas</div>
+        <div class="rh-dash-source">Rehagro Educação - Avaliação de Aula → página <em>Tabela Comentários</em></div>
+        <div class="rh-filters-label">Filtros obrigatórios</div>
+        <div>
+          <span class="rh-tag-filled">Área</span>
+          <span class="rh-tag-outline">sua área</span>
+          <span class="rh-tag-filled">Formato Curso</span>
+          <span class="rh-tag-outline">Online</span>
+          <span class="rh-tag-filled">Curso</span>
+          <span class="rh-tag-outline">seus cursos</span>
+          <span class="rh-tag-filled">Tipo de aula</span>
+          <span class="rh-tag-outline">On-line ao vivo</span>
+          <span class="rh-tag-filled">Ano_aula</span>
+          <span class="rh-tag-outline">ano atual</span>
+        </div>
+        <div class="rh-export-line">✈ Exporte a <strong>Tabela Comentários</strong> → Excel</div>
+        <div class="rh-note-tip">Inclui data, tópico, professor e texto do comentário no relatório.</div>
+      </div>
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
 with col_dir:
-    st.markdown('<p class="rh-section">Envie os arquivos</p>', unsafe_allow_html=True)
+    st.markdown("""
+<div class="rh-upload-panel">
+  <div class="rh-upload-header">
+    <div class="rh-upload-header-title">🔼 Envie os arquivos</div>
+    <div class="rh-upload-progress">Progresso do envio <span id="prog">0/4</span></div>
+  </div>
+  <div class="rh-upload-row">
+    <div class="rh-upload-row-num">1</div>
+    <div style="flex:1"><div class="rh-upload-row-name">Canvas · Acesso ao AVA</div></div>
+  </div>
+  <div class="rh-upload-row">
+    <div class="rh-upload-row-num">2</div>
+    <div style="flex:1"><div class="rh-upload-row-name">NPS · Avaliações de aula</div></div>
+  </div>
+  <div class="rh-upload-row">
+    <div class="rh-upload-row-num">3</div>
+    <div style="flex:1"><div class="rh-upload-row-name">Frequência · Aulas ao vivo</div></div>
+  </div>
+  <div class="rh-upload-row" style="border-bottom:none">
+    <div class="rh-upload-row-num">4</div>
+    <div style="flex:1"><div class="rh-upload-row-name">Comentários <span class="rh-upload-row-sub">· Opcional</span></div></div>
+    <span class="rh-upload-row-opt">Opcional</span>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
     f_canvas = st.file_uploader("1 — Canvas · Acesso ao AVA",           type=["xlsx"], key="canvas")
     f_nps    = st.file_uploader("2 — NPS · Avaliações de aula",          type=["xlsx"], key="nps")
     f_freq   = st.file_uploader("3 — Frequência · Aulas ao vivo",        type=["xlsx"], key="freq")
     f_coment = st.file_uploader("4 — Comentários · Opcional",            type=["xlsx"], key="coment")
 
-    st.markdown('<p class="rh-section" style="margin-top:28px">Envio por e-mail</p>', unsafe_allow_html=True)
+    st.markdown("""
+<div class="rh-email-header" style="margin-top:24px;background:#fff;border-radius:12px 12px 0 0;border:1px solid var(--bd);padding:14px 18px;">
+  ✉️ <span style="font-family:'Montserrat',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#555;">Envio por E-mail</span>
+</div>
+""", unsafe_allow_html=True)
     email_usuario = st.text_input("Seu e-mail — receberá cópia junto à lista fixa:",
                                   placeholder="seuemail@rehagro.com.br")
     with st.expander("Ver destinatários fixos"):
@@ -760,7 +1136,18 @@ with col_dir:
     obrigatorios = f_canvas and f_nps and f_freq
     if not obrigatorios:
         faltando = [n for f,n in [(f_canvas,"Canvas"),(f_nps,"NPS"),(f_freq,"Frequência")] if not f]
-        st.info(f"Aguardando: **{', '.join(faltando)}**")
+        prontos  = [n for f,n in [(f_canvas,"Canvas"),(f_nps,"NPS"),(f_freq,"Frequência")] if f]
+        pills_faltando = "".join(f'<span class="rh-waiting-pill">{n}</span>' for n in faltando)
+        pills_prontos  = "".join(f'<span class="rh-waiting-pill done">✓ {n}</span>' for n in prontos)
+        st.markdown(f"""
+    <div class="rh-waiting">
+      <div class="rh-waiting-dot"></div>
+      <span style="font-weight:600;color:#555;">Aguardando:</span>
+      {pills_faltando}
+      {pills_prontos}
+      <span style="margin-left:auto;font-size:11px;color:var(--muted);">{len(faltando)}/3 obrigatórios</span>
+    </div>
+    """, unsafe_allow_html=True)
     else:
         st.success("✅ Arquivos prontos — clique para gerar e enviar.")
         if st.button("Gerar e Enviar Relatório →", type="primary", use_container_width=True):
