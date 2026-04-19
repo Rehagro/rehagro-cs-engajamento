@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 import base64, os
+from utils import require_login, get_store
 
 # ══════════════════════════════════════════════════════════════
 # CSS GLOBAL
@@ -537,9 +538,16 @@ st.markdown(f"""
 # ══════════════════════════════════════════════════════════════
 # BACK BUTTON
 # ══════════════════════════════════════════════════════════════
-st.markdown('<div style="padding:16px 0 0">', unsafe_allow_html=True)
+usuario = require_login()
+store   = get_store()
+
+st.markdown('<div style="padding:16px 0 0;display:flex;align-items:center;gap:12px;">', unsafe_allow_html=True)
 if st.button("← Monitoramento de Alunos", key="nav_mon"):
     st.switch_page("pages/monitoramento.py")
+if store.get(usuario, {}).get('ca'):
+    if st.button("🗑 Limpar dados carregados", key="limpar_ca"):
+        store.get(usuario, {}).pop('ca', None)
+        st.rerun()
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════
@@ -636,21 +644,30 @@ with col_u6:
 st.markdown('<div style="height:20px"></div>', unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════
-# GUARD: Canvas obrigatório
+# LOAD DATA — arquivos novos ou store persistido
 # ══════════════════════════════════════════════════════════════
-if not f_canvas:
+if f_canvas:
+    with st.spinner("Lendo arquivos..."):
+        df_canvas  = carregar_canvas(f_canvas.read())
+        df_status  = carregar_status_modulo(f_status.read())  if f_status  else None
+        df_tarefas = carregar_envio_tarefas(f_tarefas.read()) if f_tarefas else None
+        df_nps_raw = carregar_nps(f_nps.read())               if f_nps     else None
+        df_coment  = carregar_comentarios(f_coment.read())    if f_coment  else None
+    store.setdefault(usuario, {})['ca'] = {
+        'df_canvas': df_canvas, 'df_status': df_status,
+        'df_tarefas': df_tarefas, 'df_nps_raw': df_nps_raw, 'df_coment': df_coment,
+    }
+elif store.get(usuario, {}).get('ca'):
+    _ca        = store[usuario]['ca']
+    df_canvas  = _ca['df_canvas']
+    df_status  = _ca.get('df_status')
+    df_tarefas = _ca.get('df_tarefas')
+    df_nps_raw = _ca.get('df_nps_raw')
+    df_coment  = _ca.get('df_coment')
+    st.info("📂 Dados da última sessão carregados. Suba novos arquivos para atualizar ou clique em **Limpar dados carregados**.")
+else:
     st.info("Carregue pelo menos o arquivo **Acesso ao Canvas** para liberar o seletor de aluno.")
     st.stop()
-
-# ══════════════════════════════════════════════════════════════
-# LOAD DATA
-# ══════════════════════════════════════════════════════════════
-with st.spinner("Lendo arquivos..."):
-    df_canvas  = carregar_canvas(f_canvas.read())
-    df_status  = carregar_status_modulo(f_status.read())  if f_status  else None
-    df_tarefas = carregar_envio_tarefas(f_tarefas.read()) if f_tarefas else None
-    df_nps_raw = carregar_nps(f_nps.read())               if f_nps     else None
-    df_coment  = carregar_comentarios(f_coment.read())    if f_coment  else None
 
 col_nome = next((c for c in df_canvas.columns if 'NOME' in c.upper()), None)
 if not col_nome:

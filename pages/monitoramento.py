@@ -5,6 +5,7 @@ import unicodedata
 import io
 import base64
 from datetime import datetime
+from utils import require_login, get_store
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -1171,6 +1172,24 @@ def enviar_email(excel_bytes,destinatarios,data_hoje,total,criticos,atencao,moni
     except Exception as e: return False,str(e)
 
 
+# ── Table helpers ─────────────────────────────────────────
+def _iniciais(nome):
+    partes = str(nome).strip().split()
+    if len(partes) >= 2:
+        return (partes[0][0] + partes[1][0]).upper()
+    elif partes:
+        return partes[0][:2].upper()
+    return "??"
+
+def _severidade(qtd):
+    if qtd >= 4: return "critico", "Crítico"
+    if qtd >= 2: return "atencao", "Atenção"
+    return "monitorar", "Monitorar"
+
+def _ultimo_comentario(alertas_str):
+    matches = re.findall(r'comentário em (\d{2}/\d{2}/\d{4})', str(alertas_str))
+    return f"Escreveu comentário em {matches[-1]}" if matches else "—"
+
 # ── UI ────────────────────────────────────────────────────
 
 def _logo_b64(path):
@@ -1204,6 +1223,9 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="rh-body">', unsafe_allow_html=True)
+
+usuario = require_login()
+store   = get_store()
 
 if st.button("🔍  Comportamento do Aluno →", key="nav_comp"):
     st.switch_page("pages/comportamento_aluno.py")
@@ -1402,165 +1424,137 @@ with col_dir:
                     monitorar = len(df_alunos[df_alunos['Qtd. Alertas']==1])
                     total_al  = df_rel['Nome'].nunique()
 
-                    # ── Header da seção de resultados ──
-                    st.markdown(f"""
+                    excel_bytes = exportar_excel_bytes(df_rel)
+                    data_hoje   = datetime.now().strftime('%d/%m/%Y')
+                    dests = [email_usuario.strip()] if email_usuario and "@" in email_usuario else []
+                    email_status = None
+                    if SENDGRID_OK:
+                        ok, msg = enviar_email(excel_bytes, dests, data_hoje, len(df_rel), criticos, atencao, monitorar)
+                        email_status = (ok, msg)
+
+                    store.setdefault(usuario, {})['mon'] = {
+                        'df_rel': df_rel, 'criticos': criticos,
+                        'atencao': atencao, 'monitorar': monitorar,
+                        'total_al': total_al, 'excel_bytes': excel_bytes,
+                        'data_hoje': data_hoje, 'email_status': email_status,
+                    }
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Erro ao processar: {e}")
+                    st.info("Verifique se os arquivos corretos foram enviados com os filtros indicados.")
+
+# ── Resultados persistidos ────────────────────────────────
+saved = store.get(usuario, {}).get('mon')
+if saved:
+    df_rel      = saved['df_rel']
+    criticos    = saved['criticos']
+    atencao     = saved['atencao']
+    monitorar   = saved['monitorar']
+    total_al    = saved['total_al']
+    excel_bytes = saved['excel_bytes']
+    data_hoje   = saved['data_hoje']
+    email_status = saved.get('email_status')
+
+    if email_status:
+        ok, msg = email_status
+        if ok: st.success(f"📧 {msg}")
+        else:  st.warning(f"⚠️ E-mail não enviado: {msg}")
+    elif not SENDGRID_OK:
+        st.warning("⚠️ Biblioteca SendGrid não instalada.")
+
+    st.markdown(f"""
 <div class="rh-results-header">
   <div>
-    <div class="rh-results-eyebrow">Relatório Gerado</div>
+    <div class="rh-results-eyebrow">Relatório Gerado em {data_hoje}</div>
     <div class="rh-results-title">Alunos Desengajados</div>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
-                    # ── Cards de métricas — novo design ──
-                    st.markdown(f"""
+    st.markdown(f"""
 <div class="rh-metrics-new">
   <div class="rh-metric-new m-total">
-    <div class="rh-metric-new-top">
-      <div class="rh-metric-new-label">Total</div>
-      <div class="rh-metric-new-icon">👥</div>
-    </div>
-    <div class="rh-metric-new-num">{total_al}</div>
-    <div class="rh-metric-new-sub">alunos</div>
+    <div class="rh-metric-new-top"><div class="rh-metric-new-label">Total</div><div class="rh-metric-new-icon">👥</div></div>
+    <div class="rh-metric-new-num">{total_al}</div><div class="rh-metric-new-sub">alunos</div>
   </div>
   <div class="rh-metric-new m-crit">
-    <div class="rh-metric-new-top">
-      <div class="rh-metric-new-label">Críticos</div>
-      <div class="rh-metric-new-icon">⚠️</div>
-    </div>
-    <div class="rh-metric-new-num">{criticos}</div>
-    <div class="rh-metric-new-sub">alunos</div>
+    <div class="rh-metric-new-top"><div class="rh-metric-new-label">Críticos</div><div class="rh-metric-new-icon">⚠️</div></div>
+    <div class="rh-metric-new-num">{criticos}</div><div class="rh-metric-new-sub">alunos</div>
   </div>
   <div class="rh-metric-new m-atenc">
-    <div class="rh-metric-new-top">
-      <div class="rh-metric-new-label">Atenção</div>
-      <div class="rh-metric-new-icon">🕐</div>
-    </div>
-    <div class="rh-metric-new-num">{atencao}</div>
-    <div class="rh-metric-new-sub">alunos</div>
+    <div class="rh-metric-new-top"><div class="rh-metric-new-label">Atenção</div><div class="rh-metric-new-icon">🕐</div></div>
+    <div class="rh-metric-new-num">{atencao}</div><div class="rh-metric-new-sub">alunos</div>
   </div>
   <div class="rh-metric-new m-mon">
-    <div class="rh-metric-new-top">
-      <div class="rh-metric-new-label">Monitorar</div>
-      <div class="rh-metric-new-icon">⭐</div>
-    </div>
-    <div class="rh-metric-new-num">{monitorar}</div>
-    <div class="rh-metric-new-sub">alunos</div>
+    <div class="rh-metric-new-top"><div class="rh-metric-new-label">Monitorar</div><div class="rh-metric-new-icon">⭐</div></div>
+    <div class="rh-metric-new-num">{monitorar}</div><div class="rh-metric-new-sub">alunos</div>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
-                    # ── Filtro de turma ──
-                    turmas = sorted(df_rel['Turma'].dropna().unique().tolist())
-                    df_view = df_rel
-                    if len(turmas) > 1:
-                        st.markdown("""
+    turmas   = sorted(df_rel['Turma'].dropna().unique().tolist())
+    df_view  = df_rel
+    if len(turmas) > 1:
+        st.markdown("""
 <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);
-            padding:12px 18px;margin-bottom:8px;font-size:13px;
-            font-weight:600;color:var(--txt2);">
+            padding:12px 18px;margin-bottom:8px;font-size:13px;font-weight:600;color:var(--txt2);">
   Filtrar por turma:
 </div>
 """, unsafe_allow_html=True)
-                        sel = st.multiselect("", turmas, default=turmas, label_visibility="collapsed")
-                        df_view = df_rel[df_rel['Turma'].isin(sel)]
-                        total_view = df_view['Nome'].nunique()
-                    else:
-                        total_view = total_al
+        sel = st.multiselect("", turmas, default=turmas, label_visibility="collapsed", key="mon_turma_sel")
+        df_view    = df_rel[df_rel['Turma'].isin(sel)]
+        total_view = df_view['Nome'].nunique()
+    else:
+        total_view = total_al
 
-                    # ── Funções auxiliares para a tabela ──
-                    def _iniciais(nome):
-                        partes = str(nome).strip().split()
-                        if len(partes) >= 2:
-                            return (partes[0][0] + partes[1][0]).upper()
-                        elif partes:
-                            return partes[0][:2].upper()
-                        return "??"
-
-                    def _severidade(qtd):
-                        if qtd >= 4: return "critico", "Crítico"
-                        if qtd >= 2: return "atencao", "Atenção"
-                        return "monitorar", "Monitorar"
-
-                    def _ultimo_comentario(alertas_str):
-                        matches = re.findall(r'comentário em (\d{2}/\d{2}/\d{4})', str(alertas_str))
-                        if matches:
-                            return f"Escreveu comentário em {matches[-1]}"
-                        return "—"
-
-                    # ── Montar linhas da tabela ──
-                    df_tabela = df_view.drop_duplicates(subset=['Nome','Turma']).sort_values(
-                        ['Qtd. Alertas','Nome'], ascending=[False, True]
-                    )
-                    linhas_html = ""
-                    for _, row in df_tabela.iterrows():
-                        iniciais = _iniciais(row['Nome'])
-                        sev_cls, sev_lbl = _severidade(row['Qtd. Alertas'])
-                        qtd = int(row['Qtd. Alertas'])
-                        comentario = _ultimo_comentario(row.get('Alertas Identificados', ''))
-                        curso = str(row.get('Curso', '')).strip() or '—'
-                        turma = str(row.get('Turma', '')).strip() or '—'
-                        linhas_html += f"""
+    df_tabela   = df_view.drop_duplicates(subset=['Nome','Turma']).sort_values(
+        ['Qtd. Alertas','Nome'], ascending=[False, True]
+    )
+    linhas_html = ""
+    for _, row in df_tabela.iterrows():
+        ini      = _iniciais(row['Nome'])
+        sev_cls, sev_lbl = _severidade(row['Qtd. Alertas'])
+        qtd      = int(row['Qtd. Alertas'])
+        coment   = _ultimo_comentario(row.get('Alertas Identificados', ''))
+        curso    = str(row.get('Curso', '')).strip() or '—'
+        turma    = str(row.get('Turma', '')).strip() or '—'
+        linhas_html += f"""
     <tr>
       <td class="rh-table-curso">{curso}</td>
       <td class="rh-table-turma">{turma}</td>
-      <td>
-        <div class="rh-table-nome-cell">
-          <span class="rh-avatar">{iniciais}</span>
-          <span class="rh-table-nome-text">{row['Nome']}</span>
-        </div>
-      </td>
-      <td>
-        <div class="rh-table-alertas-cell">
-          <span class="rh-alertas-num {sev_cls}">{qtd}</span>
-          <span class="rh-badge {sev_cls}">{sev_lbl}</span>
-        </div>
-      </td>
-      <td class="rh-table-comentario">{comentario}</td>
+      <td><div class="rh-table-nome-cell"><span class="rh-avatar">{ini}</span><span class="rh-table-nome-text">{row['Nome']}</span></div></td>
+      <td><div class="rh-table-alertas-cell"><span class="rh-alertas-num {sev_cls}">{qtd}</span><span class="rh-badge {sev_cls}">{sev_lbl}</span></div></td>
+      <td class="rh-table-comentario">{coment}</td>
     </tr>"""
 
-                    st.markdown(f"""
+    st.markdown(f"""
 <div class="rh-table-wrap">
   <div class="rh-table-header">
     <div class="rh-table-header-title">⚠️ Alunos Desengajados</div>
     <div class="rh-table-header-count">{total_view} alunos encontrados</div>
   </div>
   <table class="rh-table">
-    <thead>
-      <tr>
-        <th>Curso</th>
-        <th>Turma</th>
-        <th>Nome do Aluno</th>
-        <th>Alertas</th>
-        <th>Último Comentário</th>
-      </tr>
-    </thead>
+    <thead><tr>
+      <th>Curso</th><th>Turma</th><th>Nome do Aluno</th><th>Alertas</th><th>Último Comentário</th>
+    </tr></thead>
     <tbody>{linhas_html}</tbody>
   </table>
 </div>
 """, unsafe_allow_html=True)
 
-                    # ── Gerar Excel e enviar e-mail ──
-                    excel_bytes = exportar_excel_bytes(df_rel)
-                    data_hoje   = datetime.now().strftime('%d/%m/%Y')
-                    dests = [email_usuario.strip()] if email_usuario and "@" in email_usuario else []
-                    if SENDGRID_OK:
-                        ok, msg = enviar_email(excel_bytes, dests, data_hoje, len(df_rel), criticos, atencao, monitorar)
-                        if ok: st.success(f"📧 {msg}")
-                        else:  st.warning(f"⚠️ E-mail não enviado: {msg}")
-                    else:
-                        st.warning("⚠️ Biblioteca SendGrid não instalada.")
-
-                    # ── Botão de download ──
-                    st.download_button(
-                        "⚡ Baixar Relatório Excel",
-                        data=excel_bytes,
-                        file_name=f"relatorio_cs_{datetime.now().strftime('%d%m%Y')}.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        use_container_width=True,
-                    )
-                except Exception as e:
-                    st.error(f"Erro ao processar: {e}")
-                    st.info("Verifique se os arquivos corretos foram enviados com os filtros indicados.")
+    col_dl, col_clr = st.columns([3, 1], gap="small")
+    with col_dl:
+        st.download_button(
+            "⚡ Baixar Relatório Excel",
+            data=excel_bytes,
+            file_name=f"relatorio_cs_{data_hoje.replace('/','')}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True,
+        )
+    with col_clr:
+        if st.button("🗑 Limpar análise", use_container_width=True, key="limpar_mon"):
+            store.get(usuario, {}).pop('mon', None)
+            st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
 st.markdown("""
