@@ -430,7 +430,7 @@ with col_u1:
         <div class="rh-nav-icon">📍</div>
         <div class="rh-nav-body">
             <span class="rh-nav-bi">BI Rehagro Canvas</span>
-            <span class="rh-nav-page">Resumo de dados dos alunos (Almas e turmas)</span>
+            <span class="rh-nav-page">Resumo de dados dos alunos</span>
             <span class="rh-nav-dash">Avaliar: Acesso ao Canvas</span>
         </div>
     </div>
@@ -460,7 +460,7 @@ with col_u1:
         <div class="rh-nav-icon">📍</div>
         <div class="rh-nav-body">
             <span class="rh-nav-bi">BI Rehagro Canvas</span>
-            <span class="rh-nav-page">Resumo de dados dos alunos (Almas e turmas)</span>
+            <span class="rh-nav-page">Resumo de dados dos alunos</span>
             <span class="rh-nav-dash">Avaliar: Qual o status do módulo para cada aluno x disciplina</span>
         </div>
     </div>
@@ -491,7 +491,7 @@ with col_u2:
         <div class="rh-nav-icon">📍</div>
         <div class="rh-nav-body">
             <span class="rh-nav-bi">BI Rehagro Canvas</span>
-            <span class="rh-nav-page">Resumo de dados dos alunos (Almas e turmas)</span>
+            <span class="rh-nav-page">Resumo de dados dos alunos</span>
             <span class="rh-nav-dash">Avaliar: Entrega de atividades</span>
         </div>
     </div>
