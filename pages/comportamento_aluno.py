@@ -517,11 +517,12 @@ def _logo_b64(path):
 
 _logo_b64_str = _logo_b64("Logo-Rehagro-chapada-branca.png")
 _logo_img = f'<img src="data:image/png;base64,{_logo_b64_str}" style="height:76px;opacity:0.92"/>' if _logo_b64_str else ''
+_wordmark = '<div class="rh-hero-wordmark">Rehagro 🌿</div>'
 
 # ══════════════════════════════════════════════════════════════
 # HERO
 # ══════════════════════════════════════════════════════════════
-_logo_slot = f'<div style="flex-shrink:0;padding-left:24px;">{_logo_img}</div>' if _logo_img else ''
+_logo_slot = f'<div style="flex-shrink:0;padding-left:24px;">{_wordmark}</div>'
 _hero_html = (
     '<div class="rh-hero" style="background:#1B3D2A !important"><div class="rh-hero-diag"></div>'
     '<div class="rh-hero-nav"><div class="rh-hero-eyebrow">Rehagro · Customer Success</div></div>'
