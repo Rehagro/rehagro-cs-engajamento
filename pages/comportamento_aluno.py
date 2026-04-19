@@ -522,27 +522,23 @@ _logo_img = f'<img src="data:image/png;base64,{_logo_b64_str}" style="height:76p
 # HERO
 # ══════════════════════════════════════════════════════════════
 _logo_slot = f'<div style="flex-shrink:0;padding-left:24px;">{_logo_img}</div>' if _logo_img else ''
-st.markdown(f"""
-<div class="rh-hero">
-  <div class="rh-hero-diag"></div>
-  <div class="rh-hero-nav">
-    <div class="rh-hero-eyebrow">Rehagro · Customer Success</div>
-  </div>
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:28px 0 24px;">
-    <div>
-      <h1 class="rh-hero-h1">Comportamento do Aluno</h1>
-      <p class="rh-hero-sub">Panorama completo do aluno para preparar o contato proativo do CS.</p>
-      <div class="rh-hero-pills">
-        <span class="rh-hero-pill">Acesso Canvas</span>
-        <span class="rh-hero-pill">Módulos</span>
-        <span class="rh-hero-pill">NPS</span>
-        <span class="rh-hero-pill">Comentários</span>
-      </div>
-    </div>
-    {_logo_slot}
-  </div>
-</div>
-""", unsafe_allow_html=True)
+_hero_html = (
+    '<div class="rh-hero"><div class="rh-hero-diag"></div>'
+    '<div class="rh-hero-nav"><div class="rh-hero-eyebrow">Rehagro · Customer Success</div></div>'
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:28px 0 24px;">'
+    '<div>'
+    '<h1 class="rh-hero-h1">Comportamento do Aluno</h1>'
+    '<p class="rh-hero-sub">Panorama completo do aluno para preparar o contato proativo do CS.</p>'
+    '<div class="rh-hero-pills">'
+    '<span class="rh-hero-pill">Acesso Canvas</span>'
+    '<span class="rh-hero-pill">Módulos</span>'
+    '<span class="rh-hero-pill">NPS</span>'
+    '<span class="rh-hero-pill">Comentários</span>'
+    '</div></div>'
+    + _logo_slot +
+    '</div></div>'
+)
+st.markdown(_hero_html, unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════
 # BACK BUTTON
