@@ -99,7 +99,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 
 /* ── Hero ── */
 .rh-hero {
-    background: linear-gradient(135deg, var(--g) 0%, var(--g2) 100%);
+    background: var(--g);
     padding: 0 40px; margin: -1rem -1rem 0 -1rem;
     position: relative; overflow: hidden;
 }
