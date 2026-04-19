@@ -116,8 +116,8 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 }
 .rh-hero-eyebrow::before { content: ''; display: inline-block; width: 24px; height: 2px; background: #C8A532; }
 .rh-hero-h1 {
-    font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 34px;
-    color: #C8A532; letter-spacing: 1px; margin: 0 0 6px; text-transform: uppercase;
+    font-family: 'Montserrat', sans-serif !important; font-weight: 900 !important; font-size: 34px !important;
+    color: #C8A532 !important; letter-spacing: 1px !important; margin: 0 0 6px !important; text-transform: uppercase !important;
 }
 .rh-hero-sub { color: rgba(255,255,255,.65); font-size: 13px; max-width: 480px; line-height: 1.5; margin: 0; }
 .rh-hero-pills { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
@@ -520,7 +520,7 @@ st.markdown(f"""
   <div class="rh-hero-inner" style="display:flex;justify-content:space-between;align-items:center;">
     <div>
       <p class="rh-hero-eyebrow">Rehagro · Customer Success</p>
-      <h1 class="rh-hero-h1">COMPORTAMENTO DO ALUNO</h1>
+      <h1 class="rh-hero-h1" style="color:#C8A532 !important">COMPORTAMENTO DO ALUNO</h1>
       <p class="rh-hero-sub">Panorama completo do aluno para preparar o contato proativo do CS.</p>
       <div class="rh-hero-pills">
         <span class="rh-hero-pill">Acesso Canvas</span>
