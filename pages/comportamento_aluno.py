@@ -99,37 +99,28 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 
 /* ── Hero ── */
 .rh-hero {
-    background: #1B3D2A !important;
-    padding: 0 40px; margin: -1rem -1rem 0 -1rem;
+    background: #1B3D2A;
+    padding: 18px 40px 24px; margin: -1rem -1rem 0 -1rem;
     position: relative; overflow: hidden;
 }
 .rh-hero-diag {
-    position: absolute; top: 0; right: 0; width: 300px; height: 100%; opacity: .07;
+    position: absolute; inset: 0; opacity: .05;
     background-image: repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);
-    background-size: 12px 12px;
+    background-size: 12px 12px; pointer-events: none;
 }
-.rh-hero-nav {
-    height: 52px; display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid rgba(255,255,255,.1);
-}
+.rh-hero-inner { position: relative; z-index: 1; }
 .rh-hero-eyebrow {
-    display: flex; align-items: center; gap: 8px;
-    color: var(--gold); font-family: 'Montserrat', sans-serif;
+    color: #C8A532; font-family: 'Montserrat', sans-serif;
     font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    margin: 0 0 8px; display: flex; align-items: center; gap: 8px;
 }
-.rh-hero-eyebrow::before { content: ''; display: block; width: 24px; height: 2px; background: var(--gold); }
-.rh-hero-wordmark {
-    font-family: 'Montserrat', sans-serif; font-weight: 900;
-    font-size: 22px; color: #fff; letter-spacing: -.5px;
-    display: flex; align-items: center; gap: 6px;
-}
-.rh-hero-title-row { padding: 28px 0 24px; }
+.rh-hero-eyebrow::before { content: ''; display: inline-block; width: 24px; height: 2px; background: #C8A532; }
 .rh-hero-h1 {
-    font-family: 'Montserrat', sans-serif !important; font-weight: 900; font-size: 34px;
-    color: var(--gold) !important; letter-spacing: -.5px; margin: 0 0 6px; text-transform: uppercase;
+    font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 34px;
+    color: #C8A532; letter-spacing: 1px; margin: 0 0 6px; text-transform: uppercase;
 }
 .rh-hero-sub { color: rgba(255,255,255,.65); font-size: 13px; max-width: 480px; line-height: 1.5; margin: 0; }
-.rh-hero-pills { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.rh-hero-pills { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 .rh-hero-pill {
     padding: 4px 12px; border: 1.5px solid rgba(255,255,255,.3); border-radius: 20px;
     color: rgba(255,255,255,.8); font-size: 11px; font-weight: 600;
@@ -522,24 +513,26 @@ _wordmark = '<div class="rh-hero-wordmark">Rehagro 🌿</div>'
 # ══════════════════════════════════════════════════════════════
 # HERO
 # ══════════════════════════════════════════════════════════════
-_logo_slot = f'<div style="flex-shrink:0;padding-left:24px;">{_logo_img if _logo_img else _wordmark}</div>'
-_hero_html = (
-    '<div class="rh-hero" style="background:#1B3D2A !important"><div class="rh-hero-diag"></div>'
-    '<div class="rh-hero-nav"><div class="rh-hero-eyebrow">Rehagro · Customer Success</div></div>'
-    '<div style="display:flex;justify-content:space-between;align-items:center;padding:28px 0 24px;">'
-    '<div>'
-    '<div class="rh-hero-h1">Comportamento do Aluno</div>'
-    '<div class="rh-hero-sub">Panorama completo do aluno para preparar o contato proativo do CS.</div>'
-    '<div class="rh-hero-pills">'
-    '<span class="rh-hero-pill">Acesso Canvas</span>'
-    '<span class="rh-hero-pill">Módulos</span>'
-    '<span class="rh-hero-pill">NPS</span>'
-    '<span class="rh-hero-pill">Comentários</span>'
-    '</div></div>'
-    + _logo_slot +
-    '</div></div>'
-)
-st.markdown(_hero_html, unsafe_allow_html=True)
+_logo_slot = f'<div style="flex-shrink:0;padding-left:24px;">{_logo_img}</div>' if _logo_img else ''
+st.markdown(f"""
+<div class="rh-hero">
+  <div class="rh-hero-diag"></div>
+  <div class="rh-hero-inner" style="display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <p class="rh-hero-eyebrow">Rehagro · Customer Success</p>
+      <h1 class="rh-hero-h1">COMPORTAMENTO DO ALUNO</h1>
+      <p class="rh-hero-sub">Panorama completo do aluno para preparar o contato proativo do CS.</p>
+      <div class="rh-hero-pills">
+        <span class="rh-hero-pill">Acesso Canvas</span>
+        <span class="rh-hero-pill">Módulos</span>
+        <span class="rh-hero-pill">NPS</span>
+        <span class="rh-hero-pill">Comentários</span>
+      </div>
+    </div>
+    {_logo_slot}
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════
 # BACK BUTTON
