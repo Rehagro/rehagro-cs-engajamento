@@ -99,7 +99,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 
 /* ── Hero ── */
 .rh-hero {
-    background: var(--g);
+    background: #1B3D2A !important;
     padding: 0 40px; margin: -1rem -1rem 0 -1rem;
     position: relative; overflow: hidden;
 }
@@ -523,7 +523,7 @@ _logo_img = f'<img src="data:image/png;base64,{_logo_b64_str}" style="height:76p
 # ══════════════════════════════════════════════════════════════
 _logo_slot = f'<div style="flex-shrink:0;padding-left:24px;">{_logo_img}</div>' if _logo_img else ''
 _hero_html = (
-    '<div class="rh-hero"><div class="rh-hero-diag"></div>'
+    '<div class="rh-hero" style="background:#1B3D2A !important"><div class="rh-hero-diag"></div>'
     '<div class="rh-hero-nav"><div class="rh-hero-eyebrow">Rehagro · Customer Success</div></div>'
     '<div style="display:flex;justify-content:space-between;align-items:center;padding:28px 0 24px;">'
     '<div>'
