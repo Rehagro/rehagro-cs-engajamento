@@ -899,10 +899,9 @@ else:
         concluidos  = tabela['STATUS'].astype(str).str.contains('3 - Finalizado|Concluído|Finalizado', case=False, na=False).sum()
         andamento   = tabela['STATUS'].astype(str).str.contains('1 - Em Andamento|Em andamento', case=False, na=False).sum()
         destravado  = tabela['STATUS'].astype(str).str.contains('4 - Destravado|Destravado', case=False, na=False).sum()
-        sem_reg     = tabela['STATUS'].astype(str).str.contains('Sem módulo|Sem Registro', case=False, na=False).sum()
 
         st.markdown(f"""
-        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:16px;">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;">
           <div class="rh-sum-card" style="background:#f8f6f0;border:1px solid rgba(0,0,0,.06)">
             <div class="rh-sum-lbl">Total de Módulos</div>
             <div class="rh-sum-val" style="color:#555">{total}</div>
@@ -918,10 +917,6 @@ else:
           <div class="rh-sum-card" style="background:#fef3c7;border:1px solid rgba(202,138,4,.15)">
             <div class="rh-sum-lbl">Destravados</div>
             <div class="rh-sum-val" style="color:#ca8a04">{destravado}</div>
-          </div>
-          <div class="rh-sum-card" style="background:#fef2f2;border:1px solid rgba(220,38,38,.12)">
-            <div class="rh-sum-lbl">Sem Registro</div>
-            <div class="rh-sum-val" style="color:#dc2626">{sem_reg}</div>
           </div>
         </div>
         """, unsafe_allow_html=True)
