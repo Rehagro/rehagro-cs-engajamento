@@ -343,7 +343,7 @@ def carregar_status_modulo(arquivo_bytes):
     df = pd.read_excel(io.BytesIO(arquivo_bytes), skiprows=2)
     df.columns = df.columns.str.strip()
     df['DISCIPLINA'] = _norm_disc(df['DISCIPLINA'])
-    df = df[df['STATUS'].isin(['1 - Em Andamento', '3 - Finalizado'])].copy()
+    df = df[df['STATUS'].isin(['1 - Em Andamento', '3 - Finalizado', '4 - Destravado'])].copy()
     excluir_pattern = 'Objetivos de Aprendizagem|Gravações de aula online ao vivo'
     df = df[~df['MÓDULO'].str.contains(excluir_pattern, case=False, na=False)].copy()
     return df
@@ -440,6 +440,8 @@ def _render_mod_table(tabela):
     rows = ''
     for i, row in tabela.iterrows():
         disc   = str(row.get('DISCIPLINA', ''))
+        modulo = str(row.get('MÓDULO', ''))
+        modulo_html = f'<span style="color:#555">{modulo}</span>' if modulo and modulo not in ('', 'nan') else '<span style="color:#d1d5db">—</span>'
         status = _status_badge(row.get('STATUS', ''))
         np_v   = str(row.get('Nota Atividade Prática', ''))
         nota_p = f'<div class="rh-sc-bl">{np_v}</div>' if np_v and np_v not in ('', 'nan') else '<span style="color:#d1d5db">—</span>'
@@ -447,13 +449,13 @@ def _render_mod_table(tabela):
         nt_v   = str(row.get('Nota Teste seu Conhecimento', ''))
         nota_t = f'<div class="rh-sc-pu">{nt_v}</div>' if nt_v and nt_v not in ('', 'nan') else '<span style="color:#d1d5db">—</span>'
         bg     = '#fff' if i % 2 == 0 else '#faf9f6'
-        rows  += f'<tr style="border-bottom:1px solid #f0ede6;background:{bg}"><td style="padding:11px 14px;font-weight:500;color:#222">{disc}</td><td style="padding:11px 14px">{status}</td><td style="padding:11px 14px">{nota_p}</td><td style="padding:11px 14px">{pont}</td><td style="padding:11px 14px">{nota_t}</td></tr>'
+        rows  += f'<tr style="border-bottom:1px solid #f0ede6;background:{bg}"><td style="padding:11px 14px;font-weight:500;color:#222">{disc}</td><td style="padding:11px 14px;font-size:12px">{modulo_html}</td><td style="padding:11px 14px">{status}</td><td style="padding:11px 14px">{nota_p}</td><td style="padding:11px 14px">{pont}</td><td style="padding:11px 14px">{nota_t}</td></tr>'
     return f'''<div class="rh-mod-wrap">
   <div class="rh-mod-hdr">📚 Detalhamento por Disciplina</div>
   <div style="overflow-x:auto">
     <table class="rh-mod-tbl">
       <thead><tr>
-        <th>Disciplina</th><th>Status</th>
+        <th>Disciplina</th><th>Módulo</th><th>Status</th>
         <th>Nota Atividade Prática</th><th>Pontualidade</th>
         <th>Nota Teste do Conhecimento</th>
       </tr></thead>
@@ -865,12 +867,17 @@ else:
             prat  = pd.DataFrame(columns=['DISCIPLINA', 'Nota Atividade Prática'])
             teste = pd.DataFrame(columns=['DISCIPLINA', 'Nota Teste seu Conhecimento'])
 
+        col_modulo = next((c for c in df_mod_aluno.columns if c.upper() == 'MÓDULO' or c.upper() == 'MODULO'), None) if not df_mod_aluno.empty else None
         if not df_mod_aluno.empty:
-            tabela = df_mod_aluno[['ALUNO', 'DISCIPLINA', 'STATUS']].copy()
+            cols_sel = ['ALUNO', 'DISCIPLINA'] + ([col_modulo] if col_modulo else []) + ['STATUS']
+            tabela = df_mod_aluno[cols_sel].copy()
+            if col_modulo and col_modulo != 'MÓDULO':
+                tabela = tabela.rename(columns={col_modulo: 'MÓDULO'})
         else:
             discips = pd.concat([prat[['DISCIPLINA']], teste[['DISCIPLINA']]]).drop_duplicates()
             tabela  = discips.copy()
             tabela.insert(0, 'ALUNO', aluno_sel)
+            tabela['MÓDULO'] = ''
             tabela['STATUS'] = 'Sem módulo registrado'
 
         tabela = tabela.merge(prat,  on='DISCIPLINA', how='left')
@@ -888,13 +895,14 @@ else:
         else:
             tabela['Pontualidade'] = tabela['Pontualidade'].fillna('').astype(str).str.strip()
 
-        total      = len(tabela)
-        concluidos = tabela['STATUS'].astype(str).str.contains('3 - Finalizado|Concluído|Finalizado', case=False, na=False).sum()
-        andamento  = tabela['STATUS'].astype(str).str.contains('1 - Em Andamento|Em andamento', case=False, na=False).sum()
-        sem_reg    = tabela['STATUS'].astype(str).str.contains('Sem módulo|Sem Registro', case=False, na=False).sum()
+        total       = len(tabela)
+        concluidos  = tabela['STATUS'].astype(str).str.contains('3 - Finalizado|Concluído|Finalizado', case=False, na=False).sum()
+        andamento   = tabela['STATUS'].astype(str).str.contains('1 - Em Andamento|Em andamento', case=False, na=False).sum()
+        destravado  = tabela['STATUS'].astype(str).str.contains('4 - Destravado|Destravado', case=False, na=False).sum()
+        sem_reg     = tabela['STATUS'].astype(str).str.contains('Sem módulo|Sem Registro', case=False, na=False).sum()
 
         st.markdown(f"""
-        <div class="rh-sum-grid">
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:16px;">
           <div class="rh-sum-card" style="background:#f8f6f0;border:1px solid rgba(0,0,0,.06)">
             <div class="rh-sum-lbl">Total de Módulos</div>
             <div class="rh-sum-val" style="color:#555">{total}</div>
@@ -906,6 +914,10 @@ else:
           <div class="rh-sum-card" style="background:#eff6ff;border:1px solid rgba(37,99,235,.12)">
             <div class="rh-sum-lbl">Em Andamento</div>
             <div class="rh-sum-val" style="color:#2563eb">{andamento}</div>
+          </div>
+          <div class="rh-sum-card" style="background:#fef3c7;border:1px solid rgba(202,138,4,.15)">
+            <div class="rh-sum-lbl">Destravados</div>
+            <div class="rh-sum-val" style="color:#ca8a04">{destravado}</div>
           </div>
           <div class="rh-sum-card" style="background:#fef2f2;border:1px solid rgba(220,38,38,.12)">
             <div class="rh-sum-lbl">Sem Registro</div>
