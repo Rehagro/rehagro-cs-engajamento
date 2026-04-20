@@ -407,7 +407,7 @@ def _upload_bot(tags):
         for t in tags
     ])
     return f"""<div class="rh-uc-bot">
-  <div class="rh-uc-bot-lbl">⚙ Filtros pré-configurados</div>
+  <div class="rh-uc-bot-lbl">Utilize esses filtros para obter as informações no BI e em seguida, exporte os dados em formato Dados resumidos - Excel.</div>
   <div class="rh-tags">{tag_html}</div>
 </div>"""
 
@@ -602,7 +602,7 @@ with col_u3:
         'Feedbacks qualitativos dos alunos nas aulas gravadas.',
         'BI Rehagro Educação — Avaliação de Aula',
         'Tabela Comentários',
-        'Relatório do Professor · Comentários',
+        'página Tabela comentários',
     ), unsafe_allow_html=True)
     f_coment = st.file_uploader("", type=["xlsx"], key="ca_coment", label_visibility="collapsed")
     st.markdown(_upload_bot(TAGS_COMENT), unsafe_allow_html=True)
@@ -627,7 +627,7 @@ with col_u5:
         'Respostas objetivas e detalhamento de avaliações.',
         'BI Rehagro Educação — Avaliação de Aula',
         'Tabela respostas objetivas',
-        'Avaliação de aula/etapa · Detalhamento',
+        'página Tabela respostas objetivas',
     ), unsafe_allow_html=True)
     f_nps = st.file_uploader("", type=["xlsx"], key="ca_nps", label_visibility="collapsed")
     st.markdown(_upload_bot(TAGS_NPS), unsafe_allow_html=True)
