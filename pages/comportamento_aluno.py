@@ -47,7 +47,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 .stButton > button {
     font-family: 'Montserrat', sans-serif !important;
     font-weight: 700 !important; border-radius: 8px !important;
-    font-size: 13px !important; transition: all .15s !important;
+    font-size: 15px !important; transition: all .15s !important;
 }
 .stButton > button[kind="secondary"] {
     background: #fff !important; border: 1.5px solid var(--bd) !important;
@@ -58,20 +58,20 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     border-color: var(--g) !important; color: var(--g) !important;
 }
 [data-testid="stTextInput"] label {
-    font-size: 12px !important; font-weight: 600 !important; color: #555 !important;
+    font-size: 14px !important; font-weight: 600 !important; color: #555 !important;
 }
 [data-testid="stTextInput"] input {
     border-radius: 8px !important; border: 1.5px solid #ddd !important;
-    font-family: 'Inter', sans-serif !important; font-size: 13px !important;
+    font-family: 'Inter', sans-serif !important; font-size: 15px !important;
     padding: 9px 12px !important; background: #fff !important;
 }
 [data-testid="stTextInput"] input:focus { border-color: var(--g) !important; box-shadow: none !important; }
-[data-testid="stSelectbox"] > label { font-size: 12px !important; font-weight: 600 !important; color: #555 !important; }
+[data-testid="stSelectbox"] > label { font-size: 14px !important; font-weight: 600 !important; color: #555 !important; }
 [data-testid="stSelectbox"] > div > div {
     border-radius: 8px !important; border: 1.5px solid #ddd !important;
-    font-family: 'Inter', sans-serif !important; font-size: 13px !important; background: #fff !important;
+    font-family: 'Inter', sans-serif !important; font-size: 15px !important; background: #fff !important;
 }
-[data-testid="stCheckbox"] label { font-size: 13px !important; color: #555 !important; }
+[data-testid="stCheckbox"] label { font-size: 15px !important; color: #555 !important; }
 [data-testid="stProgress"] > div > div { background: #f0ede6 !important; border-radius: 3px !important; height: 6px !important; }
 [data-testid="stProgress"] > div > div > div {
     background: linear-gradient(90deg, var(--g), var(--gold)) !important;
@@ -90,12 +90,12 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     border-color: var(--gold) !important; background: rgba(200,165,50,.04) !important;
 }
 [data-testid="stFileUploader"] > label { display: none !important; }
-[data-testid="stAlert"] { border-radius: 8px !important; font-size: 13px !important; }
+[data-testid="stAlert"] { border-radius: 8px !important; font-size: 15px !important; }
 .stDownloadButton > button {
     font-family: 'Montserrat', sans-serif !important; font-weight: 700 !important;
     border-radius: 9px !important; background: var(--g) !important;
     color: #fff !important; border: none !important; padding: 10px 24px !important;
-    font-size: 13px !important; box-shadow: 0 4px 14px rgba(27,61,42,.3) !important;
+    font-size: 15px !important; box-shadow: 0 4px 14px rgba(27,61,42,.3) !important;
 }
 
 /* ── Hero ── */
@@ -132,7 +132,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 .rh-sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
 .rh-sec-hdr-lbl {
     font-family: 'Montserrat', sans-serif; font-weight: 800;
-    font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #555;
+    font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #555;
 }
 .rh-sec-hdr-line { flex: 1; height: 1px; background: linear-gradient(to right, #ddd, transparent); }
 
@@ -150,16 +150,16 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
     background: rgba(27,61,42,.09);
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 13px; color: var(--g);
+    font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 15px; color: var(--g);
 }
-.rh-uc-cat { font-size: 10px; font-weight: 700; color: var(--gold); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px; }
-.rh-uc-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 14px; color: #1a1a1a; margin-bottom: 2px; }
-.rh-uc-sub { font-size: 11px; color: #999; line-height: 1.4; }
+.rh-uc-cat { font-size: 12px; font-weight: 700; color: var(--gold); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px; }
+.rh-uc-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 16px; color: #1a1a1a; margin-bottom: 2px; }
+.rh-uc-sub { font-size: 13px; color: #999; line-height: 1.4; }
 .rh-uc-src { background: #f8f6f1; border-radius: 8px; padding: 8px 10px; }
-.rh-uc-src-lbl { font-size: 10px; color: #aaa; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
-.rh-uc-src-name { font-size: 11px; color: #555; font-weight: 500; }
-.rh-uc-src-extra { font-size: 11px; color: #555; font-weight: 500; margin-top: 2px; }
-.rh-uc-src-aval { font-size: 10px; color: var(--gold); font-weight: 600; font-style: italic; margin-top: 5px; }
+.rh-uc-src-lbl { font-size: 12px; color: #aaa; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.rh-uc-src-name { font-size: 13px; color: #555; font-weight: 500; }
+.rh-uc-src-extra { font-size: 13px; color: #555; font-weight: 500; margin-top: 2px; }
+.rh-uc-src-aval { font-size: 12px; color: var(--gold); font-weight: 600; font-style: italic; margin-top: 5px; }
 .rh-uc-bot {
     background: #fff; padding: 10px 20px 18px;
     border-top: 1px solid #f0ede6;
@@ -167,11 +167,11 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     box-shadow: 2px 4px 12px rgba(0,0,0,.05), -2px 4px 12px rgba(0,0,0,.04), 0 6px 12px rgba(0,0,0,.04);
     margin-top: 0 !important;
 }
-.rh-uc-bot-lbl { font-size: 10px; color: #aaa; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; margin-bottom: 7px; }
+.rh-uc-bot-lbl { font-size: 12px; color: #aaa; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; margin-bottom: 7px; }
 .rh-tags { display: flex; flex-wrap: wrap; gap: 5px; }
-.rh-tag-dk { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; background: var(--g); color: #fff; }
-.rh-tag-lt { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; background: #f0ede6; color: #555; }
-.rh-tag-var { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; background: rgba(200,165,50,.12); color: #7a5c00; font-style: italic; }
+.rh-tag-dk { padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: 600; background: var(--g); color: #fff; }
+.rh-tag-lt { padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #f0ede6; color: #555; }
+.rh-tag-var { padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: 600; background: rgba(200,165,50,.12); color: #7a5c00; font-style: italic; }
 
 /* ── Info box (slot 6) ── */
 .rh-info-box {
@@ -182,16 +182,16 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     text-align: center; height: 100%; min-height: 200px;
 }
 .rh-info-box-ico { width: 44px; height: 44px; border-radius: 50%; background: rgba(27,61,42,.1); display: flex; align-items: center; justify-content: center; font-size: 20px; }
-.rh-info-box-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 13px; color: var(--g); }
-.rh-info-box-sub { font-size: 12px; color: #888; line-height: 1.5; }
+.rh-info-box-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 15px; color: var(--g); }
+.rh-info-box-sub { font-size: 14px; color: #888; line-height: 1.5; }
 
 /* ── Progress card ── */
 .rh-prog-card { background: #fff; border-radius: var(--r); padding: 22px; box-shadow: 0 2px 12px rgba(0,0,0,.06); text-align: center; min-width: 180px; }
-.rh-prog-lbl { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: #aaa; text-transform: uppercase; margin-bottom: 12px; }
+.rh-prog-lbl { font-size: 12px; font-weight: 700; letter-spacing: 1.2px; color: #aaa; text-transform: uppercase; margin-bottom: 12px; }
 .rh-prog-nums { display: flex; align-items: baseline; justify-content: center; gap: 4px; margin-bottom: 4px; }
 .rh-prog-big { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 40px; color: var(--g); line-height: 1; }
 .rh-prog-tot { font-size: 18px; color: #aaa; font-weight: 600; }
-.rh-prog-sub { font-size: 11px; color: #aaa; margin-bottom: 14px; }
+.rh-prog-sub { font-size: 13px; color: #aaa; margin-bottom: 14px; }
 
 /* ── Student banner ── */
 .rh-banner {
@@ -204,14 +204,14 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     background-image: repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);
     background-size: 10px 10px;
 }
-.rh-banner-eye { font-size: 10px; color: rgba(255,255,255,.5); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+.rh-banner-eye { font-size: 12px; color: rgba(255,255,255,.5); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
 .rh-banner-name { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 24px; color: #fff; margin-bottom: 10px; text-transform: uppercase; letter-spacing: -.3px; }
 .rh-banner-badges { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.rh-banner-gld { padding: 4px 12px; border-radius: 20px; background: var(--gold); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .5px; }
-.rh-banner-curso { color: rgba(255,255,255,.4); font-size: 12px; }
+.rh-banner-gld { padding: 4px 12px; border-radius: 20px; background: var(--gold); color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .5px; }
+.rh-banner-curso { color: rgba(255,255,255,.4); font-size: 14px; }
 
 /* ── Badges ── */
-.rh-badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.rh-badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 13px; font-weight: 700; white-space: nowrap; }
 .b-ok   { background: #dcfce7; color: #16a34a; }
 .b-risk { background: #fef9c3; color: #ca8a04; }
 .b-bad  { background: #fee2e2; color: #dc2626; }
@@ -222,9 +222,9 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 /* ── KPI cards ── */
 .rh-kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 16px; }
 .rh-kpi { border-radius: 12px; padding: 16px 18px; }
-.rh-kpi-lbl { font-size: 10px; color: #888; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.rh-kpi-lbl { font-size: 12px; color: #888; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
 .rh-kpi-val { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 18px; line-height: 1.1; }
-.rh-kpi-sub { font-size: 11px; font-weight: 600; opacity: .8; margin-top: 4px; }
+.rh-kpi-sub { font-size: 13px; font-weight: 600; opacity: .8; margin-top: 4px; }
 
 /* ── Email row ── */
 .rh-email-row {
@@ -233,50 +233,50 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
     margin-bottom: 28px;
 }
-.rh-email-lbl { font-size: 10px; color: #aaa; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
-.rh-email-val { font-weight: 600; color: var(--g); font-size: 14px; text-decoration: none; }
-.rh-email-alert { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; font-size: 12px; color: #991b1b; font-weight: 600; }
+.rh-email-lbl { font-size: 12px; color: #aaa; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+.rh-email-val { font-weight: 600; color: var(--g); font-size: 16px; text-decoration: none; }
+.rh-email-alert { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; font-size: 14px; color: #991b1b; font-weight: 600; }
 
 /* ── Summary strip (D2) ── */
 .rh-sum-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 16px; }
 .rh-sum-card { border-radius: 12px; padding: 14px 18px; }
-.rh-sum-lbl { font-size: 10px; color: #888; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.rh-sum-lbl { font-size: 12px; color: #888; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
 .rh-sum-val { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 28px; }
 
 /* ── Module table ── */
 .rh-mod-wrap { background: #fff; border-radius: var(--r); overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.06); margin-bottom: 28px; }
-.rh-mod-hdr { padding: 12px 18px; background: var(--c3); border-bottom: 1px solid #ede9e0; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 1px; }
-.rh-mod-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
-.rh-mod-tbl th { padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 700; color: #888; letter-spacing: .8px; text-transform: uppercase; white-space: nowrap; border-bottom: 2px solid #ede9e0; background: var(--c3); }
+.rh-mod-hdr { padding: 12px 18px; background: var(--c3); border-bottom: 1px solid #ede9e0; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 13px; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+.rh-mod-tbl { width: 100%; border-collapse: collapse; font-size: 15px; }
+.rh-mod-tbl th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700; color: #888; letter-spacing: .8px; text-transform: uppercase; white-space: nowrap; border-bottom: 2px solid #ede9e0; background: var(--c3); }
 .rh-mod-tbl td { padding: 11px 14px; vertical-align: middle; }
-.rh-sc-bl { width: 28px; height: 28px; border-radius: 50%; background: #dbeafe; display: inline-flex; align-items: center; justify-content: center; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 11px; color: var(--blue); }
-.rh-sc-pu { width: 28px; height: 28px; border-radius: 50%; background: #f3e8ff; display: inline-flex; align-items: center; justify-content: center; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 11px; color: var(--purple); }
-.rh-pt-ok  { padding: 3px 9px; border-radius: 20px; background: #f0fdf4; color: #16a34a; font-size: 11px; font-weight: 600; white-space: nowrap; }
-.rh-pt-bad { padding: 3px 9px; border-radius: 20px; background: #fef2f2; color: #dc2626; font-size: 11px; font-weight: 600; white-space: nowrap; }
-.rh-pt-neu { padding: 3px 9px; border-radius: 20px; background: var(--c3); color: #888; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.rh-sc-bl { width: 28px; height: 28px; border-radius: 50%; background: #dbeafe; display: inline-flex; align-items: center; justify-content: center; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 13px; color: var(--blue); }
+.rh-sc-pu { width: 28px; height: 28px; border-radius: 50%; background: #f3e8ff; display: inline-flex; align-items: center; justify-content: center; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 13px; color: var(--purple); }
+.rh-pt-ok  { padding: 3px 9px; border-radius: 20px; background: #f0fdf4; color: #16a34a; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.rh-pt-bad { padding: 3px 9px; border-radius: 20px; background: #fef2f2; color: #dc2626; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.rh-pt-neu { padding: 3px 9px; border-radius: 20px; background: var(--c3); color: #888; font-size: 13px; font-weight: 600; white-space: nowrap; }
 
 /* ── Avaliação cards ── */
 .rh-aval-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px,1fr)); gap: 16px; margin-bottom: 28px; }
 .rh-aval-card { background: #fff; border-radius: var(--r); overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.06); border: 1px solid #f0ede6; }
 .rh-aval-hdr { padding: 12px 16px; background: linear-gradient(135deg,rgba(27,61,42,.05),rgba(200,165,50,.08)); border-bottom: 1px solid #ede9e0; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.rh-aval-turma { font-size: 10px; color: var(--gold); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1px; }
-.rh-aval-disc { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 13px; color: #222; }
+.rh-aval-turma { font-size: 12px; color: var(--gold); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1px; }
+.rh-aval-disc { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 15px; color: #222; }
 .rh-nota-circle { width: 44px; height: 44px; border-radius: 50%; background: var(--g); display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
-.rh-nota-val { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 14px; color: #fff; line-height: 1; }
+.rh-nota-val { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 16px; color: #fff; line-height: 1; }
 .rh-nota-lbl { font-size: 8px; color: rgba(255,255,255,.6); letter-spacing: .5px; }
 .rh-aval-body { padding: 14px 16px; }
 .rh-aval-g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.rh-f-lbl { font-size: 10px; color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 2px; }
-.rh-f-val { font-size: 12px; color: #444; line-height: 1.4; }
+.rh-f-lbl { font-size: 12px; color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 2px; }
+.rh-f-val { font-size: 14px; color: #444; line-height: 1.4; }
 .rh-comment { background: #faf8f4; border-radius: 8px; padding: 10px 12px; border-left: 3px solid var(--gold); margin-top: 12px; }
-.rh-comment-lbl { font-size: 10px; color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; }
-.rh-comment-txt { font-size: 12px; color: #555; font-style: italic; line-height: 1.5; }
+.rh-comment-lbl { font-size: 12px; color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; }
+.rh-comment-txt { font-size: 14px; color: #555; font-style: italic; line-height: 1.5; }
 
 /* ── Empty state ── */
 .rh-empty { background: #fff; border-radius: var(--r); padding: 40px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,.06); margin-bottom: 28px; }
 .rh-empty-ico { width: 48px; height: 48px; border-radius: 50%; background: var(--c3); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 22px; }
-.rh-empty-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 14px; color: #ccc; margin-bottom: 4px; }
-.rh-empty-sub { font-size: 12px; color: #bbb; }
+.rh-empty-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 16px; color: #ccc; margin-bottom: 4px; }
+.rh-empty-sub { font-size: 14px; color: #bbb; }
 
 /* ── CTA ── */
 .rh-cta {
@@ -285,12 +285,12 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     padding: 20px 24px; display: flex; align-items: center;
     justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 40px;
 }
-.rh-cta-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 14px; color: #333; margin-bottom: 3px; }
-.rh-cta-sub { font-size: 12px; color: #777; }
+.rh-cta-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 16px; color: #333; margin-bottom: 3px; }
+.rh-cta-sub { font-size: 14px; color: #777; }
 
 /* ── Misc ── */
 .rh-div { height: 1px; background: linear-gradient(90deg, var(--bd), transparent); margin: 20px 0; opacity: .5; }
-.rh-footer { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 32px 0 16px; border-top: 1px solid var(--bd); margin-top: 40px; color: #888; font-size: 12px; }
+.rh-footer { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 32px 0 16px; border-top: 1px solid var(--bd); margin-top: 40px; color: #888; font-size: 14px; }
 .rh-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); display: inline-block; }
 </style>
 """, unsafe_allow_html=True)

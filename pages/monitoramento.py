@@ -83,7 +83,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 
 /* ── Section header ── */
 .rh-section {
-    font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 800;
+    font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 800;
     letter-spacing: 2px; text-transform: uppercase; color: #555;
     margin: 0 0 16px; display: flex; align-items: center; gap: 10px;
 }
@@ -126,7 +126,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     justify-content: center;
     font-family: 'Montserrat', sans-serif;
     font-weight: 800;
-    font-size: 13px;
+    font-size: 15px;
     color: #fff;
     margin-top: 2px;
 }
@@ -138,7 +138,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 
 .rh-dash-eyebrow {
     font-family: 'Montserrat', sans-serif;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
@@ -150,7 +150,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 
 .rh-dash-title {
     font-family: 'Montserrat', sans-serif;
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 700;
     color: var(--txt);
     margin-bottom: 10px;
@@ -158,7 +158,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 }
 
 .rh-dash-source {
-    font-size: 12px;
+    font-size: 14px;
     color: var(--muted);
     margin-bottom: 10px;
     display: flex;
@@ -177,7 +177,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 }
 
 .rh-filters-label {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
@@ -196,7 +196,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     display: inline-block;
     background: #1B3D2A;
     color: #fff;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
     padding: 3px 10px;
     border-radius: 20px;
@@ -207,7 +207,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     background: transparent;
     color: #444;
     border: 1.5px solid #ccc;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 500;
     padding: 3px 10px;
     border-radius: 20px;
@@ -218,7 +218,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--txt2);
     margin-top: 10px;
 }
@@ -234,7 +234,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     border-radius: 0 6px 6px 0;
     padding: 6px 12px;
     margin-top: 10px;
-    font-size: 12px;
+    font-size: 14px;
     color: #7a6010;
     font-style: italic;
 }
@@ -245,7 +245,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     background: rgba(200,165,50,.12);
     border: 1px solid rgba(200,165,50,.4);
     color: var(--gold);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
@@ -271,7 +271,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 }
 .rh-upload-header-title {
     font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 800;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -282,7 +282,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 }
 .rh-upload-progress {
     font-family: 'Montserrat', sans-serif;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--gold);
 }
@@ -303,7 +303,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     color: #888;
     flex-shrink: 0;
@@ -311,17 +311,17 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 .rh-upload-row-num.done { background: var(--g); color: #fff; }
 .rh-upload-row-name {
     flex: 1;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--txt);
 }
 .rh-upload-row-sub {
-    font-size: 11px;
+    font-size: 13px;
     color: var(--muted);
     font-weight: 400;
 }
 .rh-upload-row-opt {
-    font-size: 10px;
+    font-size: 12px;
     color: var(--gold);
     font-weight: 700;
     letter-spacing: 1px;
@@ -339,7 +339,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     gap: 8px;
     flex-wrap: wrap;
     padding: 10px 0;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--muted);
 }
 .rh-waiting-dot {
@@ -352,7 +352,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     background: rgba(200,165,50,.1);
     border: 1px solid rgba(200,165,50,.3);
     color: #7a6010;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
     padding: 2px 10px;
     border-radius: 20px;
@@ -375,7 +375,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     padding: 14px 18px 12px;
     border-bottom: 1px solid var(--bd);
     font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 800;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -386,7 +386,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 }
 .rh-email-body { padding: 16px 18px; }
 .rh-email-label {
-    font-size: 12px;
+    font-size: 14px;
     color: var(--muted);
     margin-bottom: 8px;
 }
@@ -394,7 +394,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 /* ── File uploader ── */
 [data-testid="stFileUploader"] label,
 [data-testid="stFileUploader"] > div > label {
-    font-size: 13px !important; font-weight: 600 !important;
+    font-size: 15px !important; font-weight: 600 !important;
     color: var(--g) !important; margin-bottom: 4px !important;
 }
 [data-testid="stFileUploader"] {
@@ -408,16 +408,16 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 }
 
 /* ── Text input ── */
-[data-testid="stTextInput"] label { font-size: 12px !important; font-weight: 600 !important; color: #555 !important; }
+[data-testid="stTextInput"] label { font-size: 14px !important; font-weight: 600 !important; color: #555 !important; }
 [data-testid="stTextInput"] input {
     border-radius: 8px !important; border: 1.5px solid #ddd !important;
-    font-size: 13px !important; font-family: 'Inter', sans-serif !important;
+    font-size: 15px !important; font-family: 'Inter', sans-serif !important;
 }
 
 /* ── Buttons ── */
 .stButton > button {
     font-family: 'Montserrat', sans-serif !important; font-weight: 700 !important;
-    border-radius: 8px !important; font-size: 13px !important;
+    border-radius: 8px !important; font-size: 15px !important;
 }
 .stButton > button[kind="primary"] {
     background: var(--g) !important; color: #fff !important;
@@ -431,7 +431,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     font-family: 'Montserrat', sans-serif !important; font-weight: 700 !important;
     border-radius: 9px !important; background: var(--g) !important;
     color: #fff !important; border: none !important;
-    font-size: 13px !important; box-shadow: 0 4px 14px rgba(27,61,42,.3) !important;
+    font-size: 15px !important; box-shadow: 0 4px 14px rgba(27,61,42,.3) !important;
 }
 
 /* ── Metrics ── */
@@ -449,18 +449,18 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     font-family: 'Montserrat', sans-serif; font-weight: 900;
     font-size: 2.8rem; line-height: 1; margin-bottom: 4px;
 }
-.rh-metric-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); }
+.rh-metric-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); }
 
 /* ── Misc ── */
 .rh-body { padding: 24px 0 0; }
 .rh-divider { height: 1px; background: linear-gradient(90deg, var(--bd), transparent); margin: 20px 0; opacity: .5; }
 [data-testid="stExpander"] { border: 1px solid var(--bd) !important; border-radius: 8px !important; background: #fff !important; }
 [data-testid="stDataFrame"] { border-radius: var(--r) !important; overflow: hidden !important; border: 1px solid var(--bd) !important; }
-[data-testid="stAlert"] { border-radius: 8px !important; font-size: 13px !important; }
+[data-testid="stAlert"] { border-radius: 8px !important; font-size: 15px !important; }
 .rh-footer {
     display: flex; align-items: center; justify-content: center; gap: 16px;
     padding: 32px 0 16px; border-top: 1px solid var(--bd); margin-top: 40px;
-    color: var(--muted); font-size: 12px;
+    color: var(--muted); font-size: 14px;
 }
 .rh-footer-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); display: inline-block; }
 
@@ -475,7 +475,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 }
 .rh-results-eyebrow {
     font-family: 'Montserrat', sans-serif;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -514,7 +514,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 }
 .rh-metric-new-label {
     font-family: 'Montserrat', sans-serif;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 1.5px;
     text-transform: uppercase;
@@ -526,7 +526,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 18px;
 }
 .rh-metric-new-num {
     font-family: 'Montserrat', sans-serif;
@@ -536,7 +536,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     margin-bottom: 4px;
 }
 .rh-metric-new-sub {
-    font-size: 11px;
+    font-size: 13px;
     color: var(--muted);
     font-weight: 500;
 }
@@ -570,7 +570,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     flex-wrap: wrap;
 }
 .rh-turma-filter-label {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--txt2);
     white-space: nowrap;
@@ -594,7 +594,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 }
 .rh-table-header-title {
     font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 800;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -604,20 +604,20 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     gap: 8px;
 }
 .rh-table-header-count {
-    font-size: 12px;
+    font-size: 14px;
     color: var(--muted);
     font-weight: 500;
 }
 .rh-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 15px;
 }
 .rh-table thead th {
     padding: 10px 16px;
     text-align: left;
     font-family: 'Montserrat', sans-serif;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
@@ -637,8 +637,8 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     vertical-align: middle;
     color: var(--txt);
 }
-.rh-table-curso  { font-size: 12px; color: var(--muted); }
-.rh-table-turma  { font-size: 12px; color: var(--muted); }
+.rh-table-curso  { font-size: 14px; color: var(--muted); }
+.rh-table-turma  { font-size: 14px; color: var(--muted); }
 .rh-avatar {
     width: 32px;
     height: 32px;
@@ -647,7 +647,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     color: #555;
     margin-right: 10px;
@@ -668,7 +668,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     gap: 6px;
     padding: 3px 10px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     margin-left: 8px;
 }
@@ -683,13 +683,13 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 .rh-alertas-num {
     font-family: 'Montserrat', sans-serif;
     font-weight: 800;
-    font-size: 15px;
+    font-size: 17px;
     min-width: 20px;
 }
 .rh-alertas-num.critico  { color: #dc2626; }
 .rh-alertas-num.atencao  { color: #d97706; }
 .rh-alertas-num.monitorar{ color: #ca8a04; }
-.rh-table-comentario { font-size: 12px; color: var(--muted); }
+.rh-table-comentario { font-size: 14px; color: var(--muted); }
 
 /* ── Botões finais ── */
 .rh-action-buttons {
