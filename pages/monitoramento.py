@@ -73,7 +73,7 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
     font-size: 34px !important; color: #C8A532 !important;
     letter-spacing: 1px !important; margin: 0 0 6px !important; text-transform: uppercase !important;
 }
-.rh-hero-sub { color: rgba(255,255,255,.65); font-size: 13px; max-width: 520px; line-height: 1.5; margin: 0; }
+.rh-hero-sub { color: rgba(255,255,255,.65); font-size: 13px; line-height: 1.5; margin: 0; }
 .rh-hero-pills { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 .rh-hero-pill {
     padding: 4px 12px; border: 1.5px solid rgba(255,255,255,.3); border-radius: 20px;
@@ -1250,7 +1250,7 @@ with col_esq:
         <div class="rh-dash-eyebrow c-blue">Dashboard 01</div>
         <div class="rh-dash-title">Acesso ao Canvas (AVA)</div>
         <div class="rh-dash-source">Rehagro - Canvas → página <em>Acesso ao Canvas-Ok</em></div>
-        <div class="rh-filters-label">Filtros obrigatórios</div>
+        <div class="rh-filters-label">Realize os seguintes filtros durante a exportação do BI</div>
         <div>
           <span class="rh-tag-filled">Status Usuário Curso</span>
           <span class="rh-tag-outline">Ativo</span>
@@ -1276,7 +1276,7 @@ with col_esq:
         <div class="rh-dash-eyebrow c-purple">Dashboard 02</div>
         <div class="rh-dash-title">NPS Médio por Aluno</div>
         <div class="rh-dash-source">Rehagro Educação - Avaliação de Aula → página <em>Avaliações de aula/aluno</em></div>
-        <div class="rh-filters-label">Filtros obrigatórios</div>
+        <div class="rh-filters-label">Realize os seguintes filtros durante a exportação do BI</div>
         <div>
           <span class="rh-tag-filled">Curso</span>
           <span class="rh-tag-outline">seus cursos</span>
@@ -1304,7 +1304,7 @@ with col_esq:
         <div class="rh-dash-eyebrow c-green">Dashboard 03</div>
         <div class="rh-dash-title">Frequência nas Aulas ao Vivo</div>
         <div class="rh-dash-source">Rehagro Alunado → página <em>Análise de Frequência e Faltas</em></div>
-        <div class="rh-filters-label">Filtros obrigatórios</div>
+        <div class="rh-filters-label">Realize os seguintes filtros durante a exportação do BI</div>
         <div>
           <span class="rh-tag-filled">Turma</span>
           <span class="rh-tag-outline">suas turmas</span>
@@ -1326,7 +1326,7 @@ with col_esq:
         <div class="rh-dash-eyebrow c-green">Dashboard 04</div>
         <div class="rh-dash-title">Comentários das Aulas</div>
         <div class="rh-dash-source">Rehagro Educação - Avaliação de Aula → página <em>Tabela Comentários</em></div>
-        <div class="rh-filters-label">Filtros obrigatórios</div>
+        <div class="rh-filters-label">Realize os seguintes filtros durante a exportação do BI</div>
         <div>
           <span class="rh-tag-filled">Área</span>
           <span class="rh-tag-outline">sua área</span>
