@@ -1070,9 +1070,9 @@ def exportar_excel_bytes(df):
     for _,row in df.iterrows():
         linhas=expandir_linha(row); qtd=row['Qtd. Alertas']
         for li,linha in enumerate(linhas):
-            ws.append([row['Curso'] if li==0 else '', row['Turma'] if li==0 else '',
-                       row['Nome']  if li==0 else '', row['E-mail'] if li==0 else '',
-                       qtd if li==0 else '',
+            ws.append([row['Curso'], row['Turma'],
+                       row['Nome'],  row['E-mail'],
+                       qtd,
                        linha['alerta'],linha['acao'],linha['topico'],linha['prof'],linha['comentario']])
             dr=ws.max_row; fc=cor_alerta(linha['alerta'])
             for ci in range(1,n_cols+1):
