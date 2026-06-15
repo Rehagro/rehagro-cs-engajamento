@@ -931,7 +931,7 @@ def gerar_alertas_nps(df_nps, df_coment, df_freq_ativo):
 
 def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None, turma_map=None):
     todos_keys = set(df_canvas['_key']) | set(alertas_nps.keys()) | set(df_freq['_key'])
-    info_map = df_canvas.set_index('_key')[['Nome','Email','Curso','Turma']].to_dict('index')
+    info_map = df_canvas.drop_duplicates('_key').set_index('_key')[['Nome','Email','Curso','Turma']].to_dict('index')
     if turma_map:
         for k, turma in turma_map.items():
             if k in info_map:
