@@ -11,13 +11,10 @@ from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image as XLImage
 
-try:
-    from sendgrid import SendGridAPIClient
-    from sendgrid.helpers.mail import (Mail, Attachment, FileContent,
-                                        FileName, FileType, Disposition, Cc)
-    SENDGRID_OK = True
-except ImportError:
-    SENDGRID_OK = False
+import smtplib
+from email.message import EmailMessage
+# Envio por SMTP (stdlib) — sempre disponível, sem dependência externa.
+SENDGRID_OK = True
 
 st.markdown("""
 <style>
@@ -1210,8 +1207,10 @@ def exportar_excel_bytes(df):
     buf=io.BytesIO(); wb.save(buf); buf.seek(0); return buf.read()
 
 def enviar_email(excel_bytes,destinatarios,data_hoje,total,criticos,atencao,monitorar):
-    api_key=st.secrets.get("SENDGRID_API_KEY","")
-    if not api_key: return False,"Chave SendGrid não configurada."
+    senha=st.secrets.get("SMTP_SENHA","")
+    if not senha: return False,"Senha de app SMTP não configurada (secret SMTP_SENHA)."
+    smtp_host=st.secrets.get("SMTP_HOST","smtp.gmail.com")
+    smtp_port=int(st.secrets.get("SMTP_PORT",465))
     lista=list(set(destinatarios+DESTINATARIOS_FIXOS))
     assunto=f"Relatório CS Rehagro — Engajamento {data_hoje}"
     html=f"""<div style="font-family:Outfit,Arial,sans-serif;max-width:600px;margin:0 auto;background:#F4F0E6;">
@@ -1233,17 +1232,28 @@ def enviar_email(excel_bytes,destinatarios,data_hoje,total,criticos,atencao,moni
       <div style="background:#F4F0E6;padding:16px;text-align:center;border:1px solid #E0DDD4;border-top:none;">
         <p style="color:#aaa;font-size:10px;margin:0;letter-spacing:1px;">REHAGRO · CUSTOMER SUCCESS · AGENTE DE ENGAJAMENTO</p>
       </div></div>"""
-    encoded=base64.b64encode(excel_bytes).decode()
     nome_arq=f"relatorio_cs_{data_hoje.replace('/','')}.xlsx"
-    message=Mail(from_email=REMETENTE,to_emails=lista[0],subject=assunto,html_content=html)
-    if len(lista)>1:
-        for dest in lista[1:]: message.add_cc(dest)
-    message.attachment=Attachment(FileContent(encoded),FileName(nome_arq),
-        FileType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),Disposition("attachment"))
+    message=EmailMessage()
+    message["From"]=REMETENTE
+    message["To"]=lista[0]
+    if len(lista)>1: message["Cc"]=", ".join(lista[1:])
+    message["Subject"]=assunto
+    message.set_content("Segue em anexo o relatório semanal de engajamento. "
+                        "Caso não visualize o conteúdo, use um cliente de e-mail com suporte a HTML.")
+    message.add_alternative(html,subtype="html")
+    message.add_attachment(excel_bytes,maintype="application",
+        subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet",filename=nome_arq)
     try:
-        sg=SendGridAPIClient(api_key); res=sg.send(message)
-        if res.status_code in [200,201,202]: return True,f"E-mail enviado para {len(lista)} destinatário(s)."
-        return False,f"Erro SendGrid: status {res.status_code}"
+        if smtp_port==465:
+            with smtplib.SMTP_SSL(smtp_host,smtp_port,timeout=30) as srv:
+                srv.login(REMETENTE,senha); srv.send_message(message)
+        else:
+            with smtplib.SMTP(smtp_host,smtp_port,timeout=30) as srv:
+                srv.starttls(); srv.login(REMETENTE,senha); srv.send_message(message)
+        return True,f"E-mail enviado para {len(lista)} destinatário(s)."
+    except smtplib.SMTPAuthenticationError:
+        return False,("Falha de autenticação SMTP. Verifique se a Senha de App está correta "
+                      "e se a verificação em duas etapas está ativada na conta do remetente.")
     except Exception as e: return False,str(e)
 
 
@@ -1551,7 +1561,7 @@ if saved:
         if ok: st.success(f"📧 {msg}")
         else:  st.warning(f"⚠️ E-mail não enviado: {msg}")
     elif not SENDGRID_OK:
-        st.warning("⚠️ Biblioteca SendGrid não instalada.")
+        st.warning("⚠️ Envio de e-mail indisponível.")
 
     if df_rel.empty:
         st.success("🎉 Boa notícia: nenhum aluno desengajado foi encontrado com os critérios atuais. "
