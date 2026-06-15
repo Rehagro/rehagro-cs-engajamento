@@ -706,6 +706,23 @@ button[aria-label="Fechar barra lateral"] { display: none !important; }
 DESTINATARIOS_FIXOS = ["rafael.ferraz@rehagro.edu.br"]
 REMETENTE = "rafael.ferraz@rehagro.edu.br"
 
+
+# ── Erro amigável (mensagens claras para quem não é técnico) ──
+class ErroArquivo(Exception):
+    """Erro de leitura de um arquivo, com mensagem clara para o usuário final.
+
+    arquivo: nome amigável do arquivo (ex.: 'Acesso ao Canvas (arquivo 1)')
+    motivo : o que deu errado, em linguagem simples
+    dica   : orientação objetiva de como resolver
+    colunas: colunas encontradas no arquivo (ajuda a diagnosticar o arquivo errado)
+    """
+    def __init__(self, arquivo, motivo, dica="", colunas=None):
+        self.arquivo = arquivo
+        self.motivo  = motivo
+        self.dica    = dica
+        self.colunas = colunas
+        super().__init__(f"{arquivo}: {motivo}")
+
 # ── Helpers ──────────────────────────────────────────────
 def _norm(n):
     n = str(n).strip().lower()
@@ -741,7 +758,15 @@ def carregar_canvas(arquivo):
     col_turma  = next((c for c in df.columns if c.upper() == 'TURMA'), None)
     col_funcao = next((c for c in df.columns if 'FUN' in c.upper() and 'DISCIPLINA' in c.upper()), None)
     if not col_nome or not col_dias:
-        raise ValueError("Arquivo Canvas: colunas não encontradas.")
+        faltando = []
+        if not col_nome: faltando.append("Nome do usuário")
+        if not col_dias: faltando.append("Dias sem acesso")
+        raise ErroArquivo(
+            "Acesso ao Canvas (arquivo 1)",
+            f"não encontrei a(s) coluna(s) obrigatória(s): {', '.join(faltando)}.",
+            "Parece que o arquivo enviado não é a exportação do Dashboard 01 (Acesso ao Canvas-Ok). "
+            "Exporte essa página em formato 'Dados Resumidos' e envie no campo 1.",
+            list(df.columns))
     if col_funcao:
         df = df[df[col_funcao].astype(str).str.upper().str.contains('ALUNO', na=False)].copy()
     df['_key']  = df[col_nome].apply(_norm)
@@ -765,7 +790,15 @@ def carregar_frequencia(arquivo):
     col_data   = next((c for c in df.columns if 'DATA' in c.upper() or 'PARTE' in c.upper()), None)
     col_turma  = next((c for c in df.columns if c.upper() == 'TURMA'), None)
     if not col_aluno or not col_status:
-        raise ValueError("Arquivo Frequência: colunas não encontradas.")
+        faltando = []
+        if not col_aluno:  faltando.append("Aluno")
+        if not col_status: faltando.append("Status de presença (Primeiro StatusPresenca)")
+        raise ErroArquivo(
+            "Frequência (arquivo 3)",
+            f"não encontrei a(s) coluna(s) obrigatória(s): {', '.join(faltando)}.",
+            "Parece que o arquivo enviado não é a Tabela de Frequência (Dashboard 03 — Análise de "
+            "Frequência e Faltas). Exporte essa tabela em 'Dados Resumidos' e envie no campo 3.",
+            list(df.columns))
     df['_key'] = df[col_aluno].apply(_norm)
     df['_data'] = df[col_data].apply(_parse_freq_date) if col_data else pd.NaT
     desistentes_keys = set(
@@ -800,7 +833,15 @@ def carregar_comentarios(arquivo):
     col_prof   = next((c for c in df.columns if 'PROFESSOR' in c.upper()), None)
     col_resp   = next((c for c in df.columns if 'RESPOSTA' in c.upper()), None)
     if not col_aluno or not col_resp:
-        raise ValueError("Arquivo Comentários: colunas não encontradas.")
+        faltando = []
+        if not col_aluno: faltando.append("Aluno")
+        if not col_resp:  faltando.append("Resposta")
+        raise ErroArquivo(
+            "Comentários (arquivo 4 — opcional)",
+            f"não encontrei a(s) coluna(s) obrigatória(s): {', '.join(faltando)}.",
+            "Parece que o arquivo enviado não é a Tabela Comentários (Dashboard 04). Exporte essa "
+            "tabela em 'Dados Resumidos' e envie no campo 4 — ou deixe o campo vazio, pois é opcional.",
+            list(df.columns))
     df = df[df[col_resp].notna() & (df[col_resp].astype(str).str.strip() != '')].copy()
     df['_key']    = df[col_aluno].apply(_norm)
     df['_data']   = pd.to_datetime(df[col_data], errors='coerce').dt.normalize() if col_data else pd.NaT
@@ -819,7 +860,15 @@ def carregar_nps(arquivo, desistentes_keys=None):
     col_topico = next((c for c in df.columns if 'TÓPICO' in c.upper() or 'TOPICO' in c.upper()), None)
     col_prof   = next((c for c in df.columns if 'PROFESSOR' in c.upper()), None)
     if not col_aluno or not col_nps:
-        raise ValueError("Arquivo NPS: colunas não encontradas.")
+        faltando = []
+        if not col_aluno: faltando.append("Aluno")
+        if not col_nps:   faltando.append("NPS Reação")
+        raise ErroArquivo(
+            "NPS — Avaliações de aula (arquivo 2)",
+            f"não encontrei a(s) coluna(s) obrigatória(s): {', '.join(faltando)}.",
+            "Parece que o arquivo enviado não é a tabela 'NPS médio/aluno' (Dashboard 02 — Avaliações "
+            "de aula/aluno). Exporte essa tabela em 'Dados Resumidos' e envie no campo 2.",
+            list(df.columns))
     df['_data'] = df.apply(_montar_data_nps, axis=1)
     df['_key']  = df[col_aluno].apply(_norm)
     df['_topico']      = df[col_topico].astype(str).str.strip().str.lower() if col_topico else ''
@@ -929,58 +978,84 @@ def gerar_alertas_nps(df_nps, df_coment, df_freq_ativo):
     return alertas_por_aluno
 
 
+_COLS_RELATORIO = ['Curso','Turma','Nome','E-mail','Qtd. Alertas',
+                   'Alertas Identificados','Ações Recomendadas','Tópico','Professor','Comentário']
+
 def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None, turma_map=None):
+    """Monta o relatório final. Um aluno matriculado em mais de um curso no Canvas
+    aparece uma linha por curso; os alertas de NPS/Frequência/Comentário (que são
+    por nome do aluno) acompanham o aluno em cada um dos seus cursos."""
+    desistentes_keys = desistentes_keys or set()
+    turma_map = turma_map or {}
+
+    # Cada matrícula do Canvas (aluno + curso + turma) é uma linha em potencial.
+    canvas_enr = df_canvas.drop_duplicates(['_key', 'Curso', 'Turma'])
+    # Nome/e-mail de referência por aluno (1ª ocorrência no Canvas).
+    nome_email = df_canvas.drop_duplicates('_key').set_index('_key')[['Nome', 'Email']].to_dict('index')
+
     todos_keys = set(df_canvas['_key']) | set(alertas_nps.keys()) | set(df_freq['_key'])
-    info_map = df_canvas.drop_duplicates('_key').set_index('_key')[['Nome','Email','Curso','Turma']].to_dict('index')
-    if turma_map:
-        for k, turma in turma_map.items():
-            if k in info_map:
-                info_map[k]['Turma'] = turma
-            else:
-                info_map[k] = {'Nome': k.title(), 'Email': '', 'Curso': '', 'Turma': turma}
-    for key in todos_keys:
-        if key not in info_map:
-            info_map[key] = {'Nome': key.title(), 'Email': '', 'Curso': '', 'Turma': ''}
+
+    def alertas_comportamento(key):
+        """Alertas de NPS, frequência e comentários — nível aluno (sem curso)."""
+        a, ac, tp, pr, co = [], [], [], [], []
+        if key in alertas_nps:
+            for al in alertas_nps[key]:
+                a.append(al['texto']);            ac.append(al['acao'])
+                tp.append(al.get('topico',''));   pr.append(al.get('professor',''))
+                co.append(al.get('comentario',''))
+        f = df_freq[df_freq['_key'] == key]
+        if not f.empty:
+            a.append(f"Ausente nas últimas 2 videoconferências ({f.iloc[0]['Ultimas_2_aulas']})")
+            ac.append("Enviar data da próxima aula ao vivo")
+            tp.append(''); pr.append(''); co.append('')
+        return a, ac, tp, pr, co
 
     relatorio = []
     for key in sorted(todos_keys):
-        if desistentes_keys and key in desistentes_keys:
+        if key in desistentes_keys:
             continue
-        info = info_map[key]
-        alertas_txt, acoes_txt, topicos_txt, profs_txt, comentarios_txt = [], [], [], [], []
 
-        c = df_canvas[df_canvas['_key'] == key]
-        if not c.empty:
-            dias = int(c.iloc[0]['Dias sem acesso'])
-            alertas_txt.append(f"Sem acesso ao Canvas há {dias} dias")
-            acoes_txt.append("Enviar link de acesso à plataforma")
-            topicos_txt.append(''); profs_txt.append(''); comentarios_txt.append('')
+        matriculas = canvas_enr[canvas_enr['_key'] == key]
+        nome  = nome_email.get(key, {}).get('Nome', key.title())
+        email = nome_email.get(key, {}).get('Email', '')
 
-        if key in alertas_nps:
-            for al in alertas_nps[key]:
-                alertas_txt.append(al['texto']); acoes_txt.append(al['acao'])
-                topicos_txt.append(al.get('topico','')); profs_txt.append(al.get('professor',''))
-                comentarios_txt.append(al.get('comentario',''))
+        # Contextos = uma matrícula do Canvas por curso; aluno só com alertas de
+        # NPS/frequência (sem Canvas >20 dias) gera um único contexto.
+        if not matriculas.empty:
+            contextos = [
+                {'Curso': r['Curso'], 'Turma': r['Turma'], 'Dias': int(r['Dias sem acesso'])}
+                for _, r in matriculas.iterrows()
+            ]
+        else:
+            contextos = [{'Curso': '', 'Turma': turma_map.get(key, ''), 'Dias': None}]
 
-        f = df_freq[df_freq['_key'] == key]
-        if not f.empty:
-            alertas_txt.append(f"Ausente nas últimas 2 videoconferências ({f.iloc[0]['Ultimas_2_aulas']})")
-            acoes_txt.append("Enviar data da próxima aula ao vivo")
-            topicos_txt.append(''); profs_txt.append(''); comentarios_txt.append('')
+        beh_a, beh_ac, beh_tp, beh_pr, beh_co = alertas_comportamento(key)
 
-        if alertas_txt:
-            relatorio.append({
-                'Curso': info['Curso'], 'Turma': info['Turma'],
-                'Nome': info['Nome'], 'E-mail': info['Email'],
-                'Qtd. Alertas': len(alertas_txt),
-                'Alertas Identificados': ' | '.join(alertas_txt),
-                'Ações Recomendadas':    ' | '.join(acoes_txt),
-                'Tópico':    ' | '.join([t for t in topicos_txt if t]),
-                'Professor': ' | '.join([p for p in profs_txt if p]),
-                'Comentário':' | '.join([c for c in comentarios_txt if c]),
-            })
+        for ctx in contextos:
+            alertas_txt, acoes_txt, topicos_txt, profs_txt, comentarios_txt = [], [], [], [], []
+            if ctx['Dias'] is not None:
+                alertas_txt.append(f"Sem acesso ao Canvas há {ctx['Dias']} dias")
+                acoes_txt.append("Enviar link de acesso à plataforma")
+                topicos_txt.append(''); profs_txt.append(''); comentarios_txt.append('')
+            # alertas de comportamento (replicados em cada curso do aluno)
+            alertas_txt += beh_a; acoes_txt += beh_ac
+            topicos_txt += beh_tp; profs_txt += beh_pr; comentarios_txt += beh_co
 
-    df = pd.DataFrame(relatorio)
+            if alertas_txt:
+                relatorio.append({
+                    'Curso': ctx['Curso'], 'Turma': ctx['Turma'],
+                    'Nome': nome, 'E-mail': email,
+                    'Qtd. Alertas': len(alertas_txt),
+                    'Alertas Identificados': ' | '.join(alertas_txt),
+                    'Ações Recomendadas':    ' | '.join(acoes_txt),
+                    'Tópico':    ' | '.join([t for t in topicos_txt if t]),
+                    'Professor': ' | '.join([p for p in profs_txt if p]),
+                    'Comentário':' | '.join([c for c in comentarios_txt if c]),
+                })
+
+    df = pd.DataFrame(relatorio, columns=_COLS_RELATORIO)
+    if df.empty:
+        return df
     return df.sort_values(['Curso','Turma','Qtd. Alertas','Nome'],
                           ascending=[True,True,False,True]).reset_index(drop=True)
 
@@ -1410,26 +1485,31 @@ with col_dir:
         st.success("✅ Arquivos prontos — clique para gerar e enviar.")
         if st.button("Gerar e Enviar Relatório →", type="primary", use_container_width=True):
             with st.spinner("Analisando dados..."):
+                etapa = "Acesso ao Canvas (arquivo 1)"
                 try:
-                    dc                              = carregar_canvas(f_canvas)
+                    dc = carregar_canvas(f_canvas)
+                    etapa = "Frequência (arquivo 3)"
                     df_fr, desist_keys, turma_map, df_freq_ativo = carregar_frequencia(f_freq)
-                    df_nps_raw                      = carregar_nps(f_nps, desistentes_keys=desist_keys)
-                    df_co                           = carregar_comentarios(f_coment) if f_coment else None
-                    alertas_nps                     = gerar_alertas_nps(df_nps_raw, df_co, df_freq_ativo)
-                    df_rel                          = gerar_relatorio(dc, alertas_nps, df_fr, desist_keys, turma_map)
+                    etapa = "NPS — Avaliações de aula (arquivo 2)"
+                    df_nps_raw = carregar_nps(f_nps, desistentes_keys=desist_keys)
+                    etapa = "Comentários (arquivo 4)"
+                    df_co = carregar_comentarios(f_coment) if f_coment else None
+                    etapa = "cruzamento dos dados e montagem do relatório"
+                    alertas_nps = gerar_alertas_nps(df_nps_raw, df_co, df_freq_ativo)
+                    df_rel      = gerar_relatorio(dc, alertas_nps, df_fr, desist_keys, turma_map)
 
                     df_alunos = df_rel.drop_duplicates(subset=['Nome','Turma'])
                     criticos  = len(df_alunos[df_alunos['Qtd. Alertas']>=4])
                     atencao   = len(df_alunos[df_alunos['Qtd. Alertas'].between(2,3)])
                     monitorar = len(df_alunos[df_alunos['Qtd. Alertas']==1])
-                    total_al  = df_rel['Nome'].nunique()
+                    total_al  = len(df_alunos)
 
                     excel_bytes = exportar_excel_bytes(df_rel)
                     data_hoje   = datetime.now().strftime('%d/%m/%Y')
                     dests = [email_usuario.strip()] if email_usuario and "@" in email_usuario else []
                     email_status = None
                     if SENDGRID_OK:
-                        ok, msg = enviar_email(excel_bytes, dests, data_hoje, len(df_rel), criticos, atencao, monitorar)
+                        ok, msg = enviar_email(excel_bytes, dests, data_hoje, total_al, criticos, atencao, monitorar)
                         email_status = (ok, msg)
 
                     store.setdefault(usuario, {})['mon'] = {
@@ -1439,9 +1519,20 @@ with col_dir:
                         'data_hoje': data_hoje, 'email_status': email_status,
                     }
                     st.rerun()
+                except ErroArquivo as e:
+                    st.error(f"❌ Não consegui ler o arquivo de **{e.arquivo}**: {e.motivo}")
+                    if e.dica:
+                        st.info(f"💡 {e.dica}")
+                    if e.colunas:
+                        st.caption("Para conferência, estas são as colunas encontradas no arquivo enviado: "
+                                   + ", ".join(str(c) for c in e.colunas))
                 except Exception as e:
-                    st.error(f"Erro ao processar: {e}")
-                    st.info("Verifique se os arquivos corretos foram enviados com os filtros indicados.")
+                    st.error(f"❌ Tivemos um problema na etapa: **{etapa}**.")
+                    st.warning(
+                        "Causa provável: algum arquivo foi exportado de uma página diferente da indicada, "
+                        "está vazio, ou veio em um formato inesperado. Confira se cada arquivo corresponde "
+                        "ao dashboard certo e foi exportado em **Dados Resumidos**, depois tente novamente.")
+                    st.caption(f"Detalhe técnico (para o suporte): {type(e).__name__}: {e}")
 
 # ── Resultados persistidos ────────────────────────────────
 saved = store.get(usuario, {}).get('mon')
@@ -1461,6 +1552,14 @@ if saved:
         else:  st.warning(f"⚠️ E-mail não enviado: {msg}")
     elif not SENDGRID_OK:
         st.warning("⚠️ Biblioteca SendGrid não instalada.")
+
+    if df_rel.empty:
+        st.success("🎉 Boa notícia: nenhum aluno desengajado foi encontrado com os critérios atuais. "
+                   "Isso significa que nenhum aluno bateu os gatilhos de Canvas, NPS, frequência ou comentários.")
+        if st.button("🗑 Limpar análise", key="limpar_mon_vazio"):
+            store.get(usuario, {}).pop('mon', None)
+            st.rerun()
+        st.stop()
 
     st.markdown(f"""
 <div class="rh-results-header">
@@ -1503,7 +1602,7 @@ if saved:
 """, unsafe_allow_html=True)
         sel = st.multiselect("", turmas, default=turmas, label_visibility="collapsed", key="mon_turma_sel")
         df_view    = df_rel[df_rel['Turma'].isin(sel)]
-        total_view = df_view['Nome'].nunique()
+        total_view = df_view.drop_duplicates(subset=['Nome','Turma']).shape[0]
     else:
         total_view = total_al
 
