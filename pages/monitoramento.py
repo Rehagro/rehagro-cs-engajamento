@@ -803,6 +803,9 @@ def carregar_frequencia(arquivo):
     df['_st']    = df[col_status].astype(str).str.strip().str.upper()
 
     desistentes_keys = set(df[df['_st'] == 'DESISTENTE']['_key'].unique())
+    # Alunos que já encerraram o ciclo (não entram na análise de frequência/ausência):
+    # desistentes, aprovados e reprovados — para todos eles o curso já finalizou.
+    finalizados_keys = set(df[df['_st'].isin(['DESISTENTE', 'APROVADO', 'REPROVADO'])]['_key'].unique())
 
     turma_map = {}
     if col_turma:
@@ -818,13 +821,13 @@ def carregar_frequencia(arquivo):
     #                                  mais recentes (depois que o aluno concluiu/saiu)
     # Para qualquer análise de presença consideramos SÓ as linhas PRESENTE/AUSENTE.
     ATT = ('PRESENTE', 'AUSENTE')
-    df_att = df[(~df['_key'].isin(desistentes_keys)) & (df['_st'].isin(ATT))].copy()
+    df_att = df[(~df['_key'].isin(finalizados_keys)) & (df['_st'].isin(ATT))].copy()
     df_att = df_att.sort_values(['_key', '_data'])
 
     # Aluno "ativo" = última linha de frequência ainda é presença/falta (não virou
     # status final). Só faz sentido cobrar ausência de quem ainda está no ciclo.
     ativos = set()
-    for key, g in df[~df['_key'].isin(desistentes_keys)].sort_values(['_key', '_data']).groupby('_key'):
+    for key, g in df[~df['_key'].isin(finalizados_keys)].sort_values(['_key', '_data']).groupby('_key'):
         if g['_st'].iloc[-1] in ATT:
             ativos.add(key)
 
