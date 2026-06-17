@@ -1774,27 +1774,28 @@ st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
 with st.expander("📋 Critérios de alerta — por que cada aluno entra no relatório", expanded=False):
     _linhas_crit = ""
     for _emoji, _titulo, _desc, _acao in criterios_alerta(limite_canvas):
-        _linhas_crit += f"""
-    <div style="display:flex;gap:12px;padding:12px 2px;border-bottom:1px solid #f0ede6;">
-      <div style="font-size:20px;flex-shrink:0;line-height:1.2;">{_emoji}</div>
-      <div>
-        <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:14px;color:var(--g);">{_titulo}</div>
-        <div style="font-size:13px;color:#555;line-height:1.5;margin-top:2px;">{_desc}</div>
-        <div style="font-size:13px;color:#9a7d12;font-weight:600;margin-top:3px;">→ O que fazer: {_acao}</div>
-      </div>
-    </div>"""
-    st.markdown(f"""
-<div style="font-size:13px;color:#777;margin-bottom:6px;line-height:1.5;">
-  Um aluno aparece no relatório quando dispara <strong>pelo menos um</strong> dos critérios abaixo.
-  O critério de Canvas usa o limite selecionado acima (<strong>{limite_canvas} dias</strong>).
-</div>
-{_linhas_crit}
-<div style="background:rgba(27,61,42,.06);border-left:3px solid var(--g);border-radius:0 6px 6px 0;
-            padding:10px 14px;margin-top:14px;font-size:13px;color:#333;">
-  <strong>Severidade:</strong> cada alerta vale 1 ponto — soma dos alertas do aluno:
-  🔴 <strong>Crítico</strong> (4+) · 🟠 <strong>Atenção</strong> (2–3) · 🟡 <strong>Monitorar</strong> (1).
-</div>
-""", unsafe_allow_html=True)
+        _linhas_crit += (
+            '<div style="display:flex;gap:12px;padding:12px 2px;border-bottom:1px solid #f0ede6;">'
+            f'<div style="font-size:20px;flex-shrink:0;line-height:1.2;">{_emoji}</div>'
+            '<div>'
+            f'<div style="font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;color:#1B3D2A;">{_titulo}</div>'
+            f'<div style="font-size:13px;color:#555;line-height:1.5;margin-top:2px;">{_desc}</div>'
+            f'<div style="font-size:13px;color:#9a7d12;font-weight:600;margin-top:3px;">&rarr; O que fazer: {_acao}</div>'
+            '</div></div>'
+        )
+    st.markdown(
+        '<div style="font-size:13px;color:#777;margin-bottom:6px;line-height:1.5;">'
+        'Um aluno aparece no relat&oacute;rio quando dispara <strong>pelo menos um</strong> dos crit&eacute;rios abaixo. '
+        f'O crit&eacute;rio de Canvas usa o limite selecionado acima (<strong>{limite_canvas} dias</strong>).'
+        '</div>'
+        f'{_linhas_crit}'
+        '<div style="background:rgba(27,61,42,.06);border-left:3px solid #1B3D2A;border-radius:0 6px 6px 0;'
+        'padding:10px 14px;margin-top:14px;font-size:13px;color:#333;">'
+        '<strong>Severidade:</strong> cada alerta vale 1 ponto &mdash; soma dos alertas do aluno: '
+        '🔴 <strong>Cr&iacute;tico</strong> (4+) · 🟠 <strong>Aten&ccedil;&atilde;o</strong> (2&ndash;3) · '
+        '🟡 <strong>Monitorar</strong> (1).</div>',
+        unsafe_allow_html=True,
+    )
 
 # ── Resultados persistidos ────────────────────────────────
 saved = store.get(usuario, {}).get('mon')
