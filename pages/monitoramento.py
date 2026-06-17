@@ -1220,7 +1220,36 @@ def _montar_aba_frequencia(wb, df_freq):
     return ws
 
 
-def exportar_excel_bytes(df, df_freq=None):
+def criterios_alerta(limite_dias=20):
+    """Fonte única dos critérios de alerta — usada no relatório Excel e na tela.
+    Cada item: (emoji, título, o que dispara o alerta, ação recomendada)."""
+    return [
+        ("🟡", "Sem acesso ao Canvas",
+         f"Não acessa a plataforma (Canvas/AVA) há mais de {limite_dias} dias.",
+         "Enviar o link de acesso à plataforma."),
+        ("🟠", "Ausente nas aulas ao vivo",
+         "Faltou às 2 últimas videoconferências seguidas. Considera apenas alunos ativos — "
+         "aprovados, reprovados e desistentes ficam de fora, pois já encerraram o ciclo do curso.",
+         "Enviar a data da próxima aula ao vivo."),
+        ("🔴", "Última avaliação detratora",
+         "A avaliação de aula mais recente do aluno foi negativa (NPS detrator).",
+         "Retomar o feedback negativo com o aluno."),
+        ("🔵", "Presente, mas não avaliou",
+         "Esteve presente nas 2 últimas aulas ao vivo, porém não respondeu à avaliação delas.",
+         "Incentivar a participação nas avaliações de aula."),
+        ("🔴", "Detratou e depois faltou",
+         "Foi detrator na penúltima aula e faltou à última.",
+         "Retomar o feedback e verificar o motivo da ausência."),
+        ("🟢", "Comentário na avaliação",
+         "Escreveu um comentário na avaliação de aula (com ou sem nota negativa).",
+         "Ler o comentário e dar um retorno ao aluno."),
+    ]
+
+SEVERIDADE_INFO = ("Cada alerta vale 1 ponto. A severidade do aluno é a soma dos alertas:  "
+                   "🔴 Crítico = 4 ou mais  ·  🟠 Atenção = 2 a 3  ·  🟡 Monitorar = 1.")
+
+
+def exportar_excel_bytes(df, df_freq=None, limite_dias=20):
     wb = Workbook()
     ws = wb.active; ws.title = "Relatório CS"
     VE="0F3D20"; VM="1B5E35"; BR="FFFFFF"; CR="F4F0E6"
@@ -1245,16 +1274,28 @@ def exportar_excel_bytes(df, df_freq=None):
     hcell(ws['A2'],f"Gerado em: {datetime.now().strftime('%d/%m/%Y às %H:%M')}   |   Total de alunos: {df['Nome'].nunique()}",VM,sz=9)
     ws.row_dimensions[2].height=18
     ws.append([])
-    ws.merge_cells(f'A4:{lc}4')
-    hcell(ws['A4'],"LEGENDA","EDF7EE",VE,sz=9,align='left')
-    for i,txt in enumerate(["🟡 Canvas: Sem acesso há +20 dias  →  Enviar link",
-        "🟠 Frequência: Ausente nas últimas 2 videoconferências  →  Enviar data da próxima aula",
-        "🔴 NPS Detrator  →  Retomar feedback negativo",
-        "🟢 Comentário registrado  →  Analisar e dar retorno ao aluno"],5):
-        ws.merge_cells(f'A{i}:{lc}{i}')
-        ws[f'A{i}']=txt; ws[f'A{i}'].font=Font(size=11,color="5A5A4A")
-        ws[f'A{i}'].fill=PatternFill("solid",fgColor=CR)
-        ws[f'A{i}'].alignment=Alignment(horizontal='left',indent=2)
+    ln = 4
+    ws.merge_cells(f'A{ln}:{lc}{ln}')
+    hcell(ws[f'A{ln}'],"CRITÉRIOS DE ALERTA — POR QUE CADA ALUNO ENTRA NO RELATÓRIO",
+          "EDF7EE",VE,sz=10,align='left')
+    ws.row_dimensions[ln].height=20
+    for emoji,titulo,desc,acao in criterios_alerta(limite_dias):
+        ln += 1
+        ws.merge_cells(f'A{ln}:{lc}{ln}')
+        c = ws[f'A{ln}']
+        c.value = f"{emoji}  {titulo} — {desc}    →    O que fazer: {acao}"
+        c.font = Font(size=10,color="5A5A4A")
+        c.fill = PatternFill("solid",fgColor=CR)
+        c.alignment = Alignment(horizontal='left',indent=2,wrap_text=True,vertical='center')
+        ws.row_dimensions[ln].height=30
+    ln += 1
+    ws.merge_cells(f'A{ln}:{lc}{ln}')
+    c = ws[f'A{ln}']
+    c.value = SEVERIDADE_INFO
+    c.font = Font(size=10,bold=True,color=VE)
+    c.fill = PatternFill("solid",fgColor="EDF7EE")
+    c.alignment = Alignment(horizontal='left',indent=2,vertical='center')
+    ws.row_dimensions[ln].height=22
     ws.append([])
     headers=['Curso','Turma','Nome do Aluno','E-mail','Qtd. Alertas',
              'Alertas Identificados','Ações Recomendadas','Tópico','Professor','Comentário']
@@ -1697,7 +1738,7 @@ with col_dir:
                     monitorar = len(df_alunos[df_alunos['Qtd. Alertas']==1])
                     total_al  = len(df_alunos)
 
-                    excel_bytes = exportar_excel_bytes(df_rel, df_freq_resumo)
+                    excel_bytes = exportar_excel_bytes(df_rel, df_freq_resumo, limite_dias=limite_canvas)
                     data_hoje   = datetime.now().strftime('%d/%m/%Y')
                     dests = [email_usuario.strip()] if email_usuario and "@" in email_usuario else []
                     email_status = None
@@ -1727,6 +1768,33 @@ with col_dir:
                         "está vazio, ou veio em um formato inesperado. Confira se cada arquivo corresponde "
                         "ao dashboard certo e foi exportado em **Dados Resumidos**, depois tente novamente.")
                     st.caption(f"Detalhe técnico (para o suporte): {type(e).__name__}: {e}")
+
+# ── Critérios de alerta (texto explicativo, sempre visível) ──
+st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
+with st.expander("📋 Critérios de alerta — por que cada aluno entra no relatório", expanded=False):
+    _linhas_crit = ""
+    for _emoji, _titulo, _desc, _acao in criterios_alerta(limite_canvas):
+        _linhas_crit += f"""
+    <div style="display:flex;gap:12px;padding:12px 2px;border-bottom:1px solid #f0ede6;">
+      <div style="font-size:20px;flex-shrink:0;line-height:1.2;">{_emoji}</div>
+      <div>
+        <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:14px;color:var(--g);">{_titulo}</div>
+        <div style="font-size:13px;color:#555;line-height:1.5;margin-top:2px;">{_desc}</div>
+        <div style="font-size:13px;color:#9a7d12;font-weight:600;margin-top:3px;">→ O que fazer: {_acao}</div>
+      </div>
+    </div>"""
+    st.markdown(f"""
+<div style="font-size:13px;color:#777;margin-bottom:6px;line-height:1.5;">
+  Um aluno aparece no relatório quando dispara <strong>pelo menos um</strong> dos critérios abaixo.
+  O critério de Canvas usa o limite selecionado acima (<strong>{limite_canvas} dias</strong>).
+</div>
+{_linhas_crit}
+<div style="background:rgba(27,61,42,.06);border-left:3px solid var(--g);border-radius:0 6px 6px 0;
+            padding:10px 14px;margin-top:14px;font-size:13px;color:#333;">
+  <strong>Severidade:</strong> cada alerta vale 1 ponto — soma dos alertas do aluno:
+  🔴 <strong>Crítico</strong> (4+) · 🟠 <strong>Atenção</strong> (2–3) · 🟡 <strong>Monitorar</strong> (1).
+</div>
+""", unsafe_allow_html=True)
 
 # ── Resultados persistidos ────────────────────────────────
 saved = store.get(usuario, {}).get('mon')
