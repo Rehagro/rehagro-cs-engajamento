@@ -10,6 +10,7 @@ from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image as XLImage
+from openpyxl.chart import BarChart, Reference
 
 import smtplib
 from email.message import EmailMessage
@@ -745,7 +746,7 @@ def _montar_data_nps(row):
     return pd.NaT
 
 
-def carregar_canvas(arquivo):
+def carregar_canvas(arquivo, limite_dias=20):
     df = pd.read_excel(arquivo, skiprows=2)
     df.columns = df.columns.str.strip()
     col_nome   = next((c for c in df.columns if 'NOME' in c.upper()), None)
@@ -772,7 +773,7 @@ def carregar_canvas(arquivo):
     if col_email: cols[col_email] = 'Email'
     if col_curso: cols[col_curso] = 'Curso'
     if col_turma: cols[col_turma] = 'Turma'
-    res = df[df['_dias'] > 20][list(cols.keys())].copy().rename(columns=cols)
+    res = df[df['_dias'] > limite_dias][list(cols.keys())].copy().rename(columns=cols)
     if 'Email' not in res.columns: res['Email'] = ''
     if 'Curso' not in res.columns: res['Curso'] = ''
     if 'Turma' not in res.columns: res['Turma'] = ''
@@ -796,29 +797,51 @@ def carregar_frequencia(arquivo):
             "Parece que o arquivo enviado não é a Tabela de Frequência (Dashboard 03 — Análise de "
             "Frequência e Faltas). Exporte essa tabela em 'Dados Resumidos' e envie no campo 3.",
             list(df.columns))
-    df['_key'] = df[col_aluno].apply(_norm)
-    df['_data'] = df[col_data].apply(_parse_freq_date) if col_data else pd.NaT
-    desistentes_keys = set(
-        df[df[col_status].astype(str).str.upper() == 'DESISTENTE']['_key'].unique()
-    )
+    df['_key']   = df[col_aluno].apply(_norm)
+    df['_aluno'] = df[col_aluno].astype(str).str.strip()
+    df['_data']  = df[col_data].apply(_parse_freq_date) if col_data else pd.NaT
+    df['_st']    = df[col_status].astype(str).str.strip().str.upper()
+
+    desistentes_keys = set(df[df['_st'] == 'DESISTENTE']['_key'].unique())
+
     turma_map = {}
     if col_turma:
         for _, row in df.iterrows():
             k = row['_key']
             if k not in turma_map and pd.notna(row[col_turma]):
                 turma_map[k] = str(row[col_turma]).strip()
-    df_a = df[~df['_key'].isin(desistentes_keys) & (df[col_status].astype(str).str.strip() != '-')].copy()
-    df_a = df_a.sort_values(['_key', '_data'])
+
+    # A coluna 'Primeiro StatusPresenca' tem 3 fases na linha do tempo do aluno:
+    #   '-'                          → antes da matrícula (não estava no curso ainda)
+    #   PRESENTE / AUSENTE           → presença real nas videoconferências (período ativo)
+    #   APROVADO/REPROVADO/MATRICULADO/DESISTENTE → status final, repetido nas datas
+    #                                  mais recentes (depois que o aluno concluiu/saiu)
+    # Para qualquer análise de presença consideramos SÓ as linhas PRESENTE/AUSENTE.
+    ATT = ('PRESENTE', 'AUSENTE')
+    df_att = df[(~df['_key'].isin(desistentes_keys)) & (df['_st'].isin(ATT))].copy()
+    df_att = df_att.sort_values(['_key', '_data'])
+
+    # Aluno "ativo" = última linha de frequência ainda é presença/falta (não virou
+    # status final). Só faz sentido cobrar ausência de quem ainda está no ciclo.
+    ativos = set()
+    for key, g in df[~df['_key'].isin(desistentes_keys)].sort_values(['_key', '_data']).groupby('_key'):
+        if g['_st'].iloc[-1] in ATT:
+            ativos.add(key)
+
+    def _fmt_d(d):
+        try: return pd.Timestamp(d).strftime('%d/%m/%Y')
+        except: return str(d)
+
     ausentes = []
-    for nome, g in df_a.groupby('_key'):
-        if len(g) < 2: continue
+    for key, g in df_att.groupby('_key'):
+        if key not in ativos or len(g) < 2:
+            continue
         last2 = g.tail(2)
-        status_last2 = last2[col_status].astype(str).str.upper().tolist()
-        if status_last2 == ['AUSENTE', 'AUSENTE']:
-            datas = last2[col_data].tolist() if col_data else ['N/D','N/D']
-            ausentes.append({'_key': nome, 'Ultimas_2_aulas': f"{datas[0]} e {datas[1]}"})
-    df_ausentes = pd.DataFrame(ausentes) if ausentes else pd.DataFrame(columns=['_key','Ultimas_2_aulas'])
-    return df_ausentes, desistentes_keys, turma_map, df_a
+        if last2['_st'].tolist() == ['AUSENTE', 'AUSENTE']:
+            datas = last2['_data'].tolist() if col_data else ['N/D', 'N/D']
+            ausentes.append({'_key': key, 'Ultimas_2_aulas': f"{_fmt_d(datas[0])} e {_fmt_d(datas[1])}"})
+    df_ausentes = pd.DataFrame(ausentes) if ausentes else pd.DataFrame(columns=['_key', 'Ultimas_2_aulas'])
+    return df_ausentes, desistentes_keys, turma_map, df_att
 
 
 def carregar_comentarios(arquivo):
@@ -911,16 +934,13 @@ def gerar_alertas_nps(df_nps, df_coment, df_freq_ativo):
         alertas_gerados = set()
 
         respondidas = nps_aluno[nps_aluno['_nps'].notna()]
-        ult2_resp   = respondidas.tail(2)
-        if len(ult2_resp) == 2 and all(ult2_resp['_nps'] < 0):
-            detalhes = []
-            for _, r in ult2_resp.iterrows():
-                detalhes.append(f"{fmt_data(r['_data'])} · {r['_topico_orig']} · Prof. {r['_prof']}")
-                alertas_gerados.add((r['_data'], r['_topico']))
-            topicos  = ' · '.join([r['_topico_orig'] for _,r in ult2_resp.iterrows()])
-            profs    = ' · '.join([r['_prof'] for _,r in ult2_resp.iterrows()])
-            add(key, f"Detrator nos últimos 2 encontros: {' || '.join(detalhes)}",
-                "Retomar feedback negativo da avaliação", topicos, profs)
+        ult_resp    = respondidas.tail(1)
+        if len(ult_resp) == 1 and (ult_resp['_nps'] < 0).all():
+            r = ult_resp.iloc[0]
+            alertas_gerados.add((r['_data'], r['_topico']))
+            add(key,
+                f"Detrator no último encontro: {fmt_data(r['_data'])} · {r['_topico_orig']} · Prof. {r['_prof']}",
+                "Retomar feedback negativo da avaliação", r['_topico_orig'], r['_prof'])
 
         if not freq_aluno.empty and len(freq_aluno) >= 2:
             ult2_freq = freq_aluno.tail(2)
@@ -1056,7 +1076,148 @@ def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None, turm
     return df.sort_values(['Curso','Turma','Qtd. Alertas','Nome'],
                           ascending=[True,True,False,True]).reset_index(drop=True)
 
-def exportar_excel_bytes(df):
+def gerar_resumo_frequencia(df_att, turma_map=None):
+    """Demonstrativo de presença nas aulas ao vivo, por aluno.
+
+    % Presença = Presenças / (Presenças + Faltas), calculado SÓ sobre as aulas a que
+    o aluno foi exposto — ou seja, as videoconferências que ocorreram depois que ele
+    entrou no curso. As linhas '-' (antes da matrícula) e os status finais
+    (APROVADO/REPROVADO/MATRICULADO/DESISTENTE) já foram removidos em carregar_frequencia,
+    que entrega aqui apenas linhas PRESENTE/AUSENTE de alunos não-desistentes."""
+    turma_map = turma_map or {}
+    rows = []
+    for key, g in df_att.groupby('_key'):
+        pres = int((g['_st'] == 'PRESENTE').sum())
+        falt = int((g['_st'] == 'AUSENTE').sum())
+        exp  = pres + falt
+        if exp == 0:
+            continue
+        nome  = g['_aluno'].iloc[0] if '_aluno' in g.columns else key.title()
+        turma = turma_map.get(key, '')
+        rows.append({
+            'Turma': turma, 'Aluno': nome,
+            'Aulas Expostas': exp, 'Presenças': pres, 'Faltas': falt,
+            '% Presença': round(100 * pres / exp, 1),
+        })
+    df = pd.DataFrame(rows, columns=['Turma', 'Aluno', 'Aulas Expostas',
+                                     'Presenças', 'Faltas', '% Presença'])
+    if df.empty:
+        return df
+    return df.sort_values(['% Presença', 'Aluno'], ascending=[True, True]).reset_index(drop=True)
+
+
+def _montar_aba_frequencia(wb, df_freq):
+    """Adiciona a aba 'Frequência ao Vivo' com KPIs, 2 gráficos e tabela colorida."""
+    VE = "0F3D20"; VM = "1B5E35"; BR = "FFFFFF"
+    thin = Side(style='thin', color='E0DDD4')
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    ws = wb.create_sheet("Frequência ao Vivo")
+    for ci, w in enumerate([22, 38, 15, 12, 10, 13], 1):
+        ws.column_dimensions[get_column_letter(ci)].width = w
+
+    total = len(df_freq)
+    media = df_freq['% Presença'].mean()
+    ab30  = int((df_freq['% Presença'] < 30).sum())
+
+    ws.merge_cells('A1:F1')
+    c = ws['A1']; c.value = "DEMONSTRATIVO DE PRESENÇA — AULAS AO VIVO"
+    c.font = Font(bold=True, size=13, color=BR); c.fill = PatternFill("solid", fgColor=VE)
+    c.alignment = Alignment(horizontal='center', vertical='center'); ws.row_dimensions[1].height = 40
+    ws.merge_cells('A2:F2')
+    c = ws['A2']
+    c.value = (f"Presença sobre as aulas a que cada aluno foi exposto (após entrar no curso) · "
+               f"{total} alunos · desistentes excluídos")
+    c.font = Font(size=9, italic=True, color="5A5A4A"); c.fill = PatternFill("solid", fgColor="F4F0E6")
+    c.alignment = Alignment(horizontal='center'); ws.row_dimensions[2].height = 16
+
+    # ── KPIs (linha 4 rótulos, linha 5 valores) ──
+    kpis = [("ALUNOS ANALISADOS", str(total), "1B5E35"),
+            ("% MÉDIO DE PRESENÇA", f"{media:.1f}%", "2563EB"),
+            ("ALUNOS ABAIXO DE 30%", str(ab30), "DC2626")]
+    for (c1, c2), (lbl, val, cor) in zip([('A', 'B'), ('C', 'D'), ('E', 'F')], kpis):
+        ws.merge_cells(f'{c1}4:{c2}4'); ws.merge_cells(f'{c1}5:{c2}5')
+        hc = ws[f'{c1}4']; hc.value = lbl; hc.font = Font(bold=True, size=9, color=BR)
+        hc.fill = PatternFill("solid", fgColor=VM); hc.alignment = Alignment(horizontal='center')
+        vc = ws[f'{c1}5']; vc.value = val; vc.font = Font(bold=True, size=20, color=cor)
+        vc.alignment = Alignment(horizontal='center')
+    ws.row_dimensions[4].height = 16; ws.row_dimensions[5].height = 30
+
+    # ── Resumo por turma ──
+    ws.cell(row=7, column=1, value="RESUMO POR TURMA").font = Font(bold=True, size=10, color=VE)
+    hr = 8
+    for ci, h in enumerate(["Turma", "Alunos", "% Médio", "< 30%"], 1):
+        cc = ws.cell(row=hr, column=ci, value=h); cc.font = Font(bold=True, size=9, color=BR)
+        cc.fill = PatternFill("solid", fgColor=VM); cc.alignment = Alignment(horizontal='center'); cc.border = border
+    t_start = hr + 1; r = hr
+    for turma, sub in df_freq.groupby('Turma'):
+        r += 1
+        vals = [turma or '—', len(sub), round(sub['% Presença'].mean(), 1), int((sub['% Presença'] < 30).sum())]
+        for ci, v in enumerate(vals, 1):
+            cc = ws.cell(row=r, column=ci, value=v); cc.font = Font(size=9); cc.border = border
+            cc.alignment = Alignment(horizontal='center' if ci > 1 else 'left')
+    t_end = r
+
+    ch = BarChart(); ch.type = 'col'; ch.title = "% Médio de Presença por Turma"
+    ch.height = 6.5; ch.width = 13; ch.legend = None
+    ch.add_data(Reference(ws, min_col=3, min_row=hr, max_row=t_end), titles_from_data=True)
+    ch.set_categories(Reference(ws, min_col=1, min_row=t_start, max_row=t_end))
+    ch.y_axis.scaling.min = 0; ch.y_axis.scaling.max = 100
+    ws.add_chart(ch, "H4")
+
+    # ── Distribuição por faixa ──
+    rf = t_end + 2
+    ws.cell(row=rf, column=1, value="DISTRIBUIÇÃO POR FAIXA DE PRESENÇA").font = Font(bold=True, size=10, color=VE)
+    rf += 1
+    for ci, h in enumerate(["Faixa", "Alunos"], 1):
+        cc = ws.cell(row=rf, column=ci, value=h); cc.font = Font(bold=True, size=9, color=BR)
+        cc.fill = PatternFill("solid", fgColor=VM); cc.alignment = Alignment(horizontal='center'); cc.border = border
+    p = df_freq['% Presença']
+    faixas = [("0–30%", int((p < 30).sum())),
+              ("30–50%", int(((p >= 30) & (p < 50)).sum())),
+              ("50–75%", int(((p >= 50) & (p < 75)).sum())),
+              ("75–100%", int((p >= 75).sum()))]
+    f_hdr = rf; f_start = rf + 1
+    for lbl, cnt in faixas:
+        rf += 1
+        ws.cell(row=rf, column=1, value=lbl).border = border
+        cc = ws.cell(row=rf, column=2, value=cnt); cc.alignment = Alignment(horizontal='center'); cc.border = border
+    f_end = rf
+
+    ch2 = BarChart(); ch2.type = 'col'; ch2.title = "Alunos por Faixa de Presença"
+    ch2.height = 6.5; ch2.width = 13; ch2.legend = None
+    ch2.add_data(Reference(ws, min_col=2, min_row=f_hdr, max_row=f_end), titles_from_data=True)
+    ch2.set_categories(Reference(ws, min_col=1, min_row=f_start, max_row=f_end))
+    ws.add_chart(ch2, "H19")
+
+    # ── Detalhamento por aluno (ordenado do pior para o melhor) ──
+    rt = f_end + 2
+    cc = ws.cell(row=rt, column=1,
+                 value="DETALHAMENTO POR ALUNO (do menor para o maior % de presença)")
+    cc.font = Font(bold=True, size=10, color=VE)
+    ws.merge_cells(start_row=rt, start_column=1, end_row=rt, end_column=6)
+    rt += 1
+    for ci, h in enumerate(["Turma", "Aluno", "Aulas Expostas", "Presenças", "Faltas", "% Presença"], 1):
+        cc = ws.cell(row=rt, column=ci, value=h); cc.font = Font(bold=True, size=9, color=BR)
+        cc.fill = PatternFill("solid", fgColor=VE)
+        cc.alignment = Alignment(horizontal='center', wrap_text=True); cc.border = border
+    ws.row_dimensions[rt].height = 24
+    for _, row in df_freq.iterrows():
+        rt += 1
+        pct = float(row['% Presença'])
+        vals = [row['Turma'] or '—', row['Aluno'], int(row['Aulas Expostas']),
+                int(row['Presenças']), int(row['Faltas']), f"{pct:.1f}%"]
+        for ci, v in enumerate(vals, 1):
+            cc = ws.cell(row=rt, column=ci, value=v); cc.border = border; cc.font = Font(size=9)
+            cc.alignment = Alignment(horizontal='left' if ci == 2 else 'center')
+            if ci == 6:
+                if pct < 30:   cc.fill = PatternFill("solid", fgColor="FFCDD2"); cc.font = Font(size=9, bold=True, color="B71C1C")
+                elif pct < 50: cc.fill = PatternFill("solid", fgColor="FFE0B2")
+                elif pct < 75: cc.fill = PatternFill("solid", fgColor="FFF9C4")
+                else:          cc.fill = PatternFill("solid", fgColor="E8F5E9")
+    return ws
+
+
+def exportar_excel_bytes(df, df_freq=None):
     wb = Workbook()
     ws = wb.active; ws.title = "Relatório CS"
     VE="0F3D20"; VM="1B5E35"; BR="FFFFFF"; CR="F4F0E6"
@@ -1204,6 +1365,10 @@ def exportar_excel_bytes(df):
         c=ws2.cell(row=r,column=ci); c.font=Font(bold=True,size=9,color=BR)
         c.fill=PatternFill("solid",fgColor=VE); c.alignment=Alignment(horizontal='center' if ci>2 else 'left')
     ws2.row_dimensions[r].height=18
+
+    if df_freq is not None and not df_freq.empty:
+        _montar_aba_frequencia(wb, df_freq)
+
     buf=io.BytesIO(); wb.save(buf); buf.seek(0); return buf.read()
 
 def enviar_email(excel_bytes,destinatarios,data_hoje,total,criticos,atencao,monitorar):
@@ -1466,6 +1631,20 @@ with col_dir:
 
     st.markdown("""
 <div class="rh-email-header" style="margin-top:24px;background:#fff;border-radius:12px 12px 0 0;border:1px solid var(--bd);padding:14px 18px;">
+  ⏱️ <span style="font-family:'Montserrat',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#555;">Critério — Sem acesso ao Canvas</span>
+</div>
+""", unsafe_allow_html=True)
+    st.markdown('<div style="background:#fff;border:1px solid var(--bd);border-top:none;border-radius:0 0 12px 12px;padding:12px 18px;margin-bottom:16px;">', unsafe_allow_html=True)
+    st.caption("Gerar alerta para alunos sem acesso à plataforma há mais de:")
+    limite_canvas = st.radio(
+        "Dias sem acesso ao Canvas", [20, 40, 60],
+        index=0, horizontal=True, label_visibility="collapsed",
+        format_func=lambda d: f"{d} dias", key="limite_canvas",
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("""
+<div class="rh-email-header" style="margin-top:8px;background:#fff;border-radius:12px 12px 0 0;border:1px solid var(--bd);padding:14px 18px;">
   ✉️ <span style="font-family:'Montserrat',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#555;">Envio por E-mail</span>
 </div>
 """, unsafe_allow_html=True)
@@ -1497,9 +1676,10 @@ with col_dir:
             with st.spinner("Analisando dados..."):
                 etapa = "Acesso ao Canvas (arquivo 1)"
                 try:
-                    dc = carregar_canvas(f_canvas)
+                    dc = carregar_canvas(f_canvas, limite_dias=limite_canvas)
                     etapa = "Frequência (arquivo 3)"
                     df_fr, desist_keys, turma_map, df_freq_ativo = carregar_frequencia(f_freq)
+                    df_freq_resumo = gerar_resumo_frequencia(df_freq_ativo, turma_map)
                     etapa = "NPS — Avaliações de aula (arquivo 2)"
                     df_nps_raw = carregar_nps(f_nps, desistentes_keys=desist_keys)
                     etapa = "Comentários (arquivo 4)"
@@ -1514,7 +1694,7 @@ with col_dir:
                     monitorar = len(df_alunos[df_alunos['Qtd. Alertas']==1])
                     total_al  = len(df_alunos)
 
-                    excel_bytes = exportar_excel_bytes(df_rel)
+                    excel_bytes = exportar_excel_bytes(df_rel, df_freq_resumo)
                     data_hoje   = datetime.now().strftime('%d/%m/%Y')
                     dests = [email_usuario.strip()] if email_usuario and "@" in email_usuario else []
                     email_status = None
@@ -1527,6 +1707,7 @@ with col_dir:
                         'atencao': atencao, 'monitorar': monitorar,
                         'total_al': total_al, 'excel_bytes': excel_bytes,
                         'data_hoje': data_hoje, 'email_status': email_status,
+                        'df_freq_resumo': df_freq_resumo,
                     }
                     st.rerun()
                 except ErroArquivo as e:
@@ -1555,6 +1736,7 @@ if saved:
     excel_bytes = saved['excel_bytes']
     data_hoje   = saved['data_hoje']
     email_status = saved.get('email_status')
+    df_freq_resumo = saved.get('df_freq_resumo')
 
     if email_status:
         ok, msg = email_status
@@ -1650,6 +1832,60 @@ if saved:
   </table>
 </div>
 """, unsafe_allow_html=True)
+
+    # ── Dashboard de Frequência nas Aulas ao Vivo ──
+    if df_freq_resumo is not None and not df_freq_resumo.empty:
+        dfq = df_freq_resumo
+        media_q = dfq['% Presença'].mean()
+        ab30_q  = int((dfq['% Presença'] < 30).sum())
+        st.markdown(f"""
+<div class="rh-results-header" style="margin-top:36px;">
+  <div>
+    <div class="rh-results-eyebrow">Aulas ao Vivo · Aba "Frequência" do Excel</div>
+    <div class="rh-results-title">Presença nas Videoconferências</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+        st.markdown(f"""
+<div class="rh-metrics-new" style="grid-template-columns:repeat(3,1fr);">
+  <div class="rh-metric-new m-total">
+    <div class="rh-metric-new-top"><div class="rh-metric-new-label">Alunos</div><div class="rh-metric-new-icon">👥</div></div>
+    <div class="rh-metric-new-num">{len(dfq)}</div><div class="rh-metric-new-sub">com presença registrada</div>
+  </div>
+  <div class="rh-metric-new m-total">
+    <div class="rh-metric-new-top"><div class="rh-metric-new-label">Presença Média</div><div class="rh-metric-new-icon">📊</div></div>
+    <div class="rh-metric-new-num">{media_q:.0f}%</div><div class="rh-metric-new-sub">sobre aulas expostas</div>
+  </div>
+  <div class="rh-metric-new m-crit">
+    <div class="rh-metric-new-top"><div class="rh-metric-new-label">Abaixo de 30%</div><div class="rh-metric-new-icon">⚠️</div></div>
+    <div class="rh-metric-new-num">{ab30_q}</div><div class="rh-metric-new-sub">alunos em risco</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+        p = dfq['% Presença']
+        faixas = pd.DataFrame({
+            'Faixa': ['0–30%', '30–50%', '50–75%', '75–100%'],
+            'Alunos': [int((p < 30).sum()), int(((p >= 30) & (p < 50)).sum()),
+                       int(((p >= 50) & (p < 75)).sum()), int((p >= 75).sum())],
+        }).set_index('Faixa')
+        col_g1, col_g2 = st.columns(2, gap="large")
+        with col_g1:
+            st.markdown('<p class="rh-section">Distribuição por faixa</p>', unsafe_allow_html=True)
+            st.bar_chart(faixas, color="#1B3D2A", height=240)
+        with col_g2:
+            st.markdown('<p class="rh-section">% médio por turma</p>', unsafe_allow_html=True)
+            por_turma = (dfq.assign(Turma=dfq['Turma'].replace('', '—'))
+                            .groupby('Turma')['% Presença'].mean().round(1))
+            st.bar_chart(por_turma, color="#C8A532", height=240)
+
+        with st.expander(f"⚠️ Ver {ab30_q} aluno(s) abaixo de 30% de presença"):
+            criticos_q = dfq[dfq['% Presença'] < 30][['Turma', 'Aluno', 'Aulas Expostas',
+                                                       'Presenças', 'Faltas', '% Presença']]
+            if criticos_q.empty:
+                st.success("Nenhum aluno abaixo de 30% de presença. 🎉")
+            else:
+                st.dataframe(criticos_q, use_container_width=True, hide_index=True)
 
     col_dl, col_clr = st.columns([3, 1], gap="small")
     with col_dl:
