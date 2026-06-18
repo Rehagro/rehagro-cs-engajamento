@@ -11,6 +11,9 @@ from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image as XLImage
 from openpyxl.chart import BarChart, Reference
+from openpyxl.chart.label import DataLabelList
+from openpyxl.chart.axis import ChartLines
+from openpyxl.chart.marker import DataPoint
 
 import smtplib
 from email.message import EmailMessage
@@ -1112,6 +1115,66 @@ def gerar_resumo_frequencia(df_att, turma_map=None):
     return df.sort_values(['% Presença', 'Aluno'], ascending=[True, True]).reset_index(drop=True)
 
 
+def _grafico_barras(ws, *, titulo, dados_ref, cats_ref, x_title, y_title, anchor,
+                    cor="1B3D2A", cores_pontos=None, ymax=None, major_unit=None,
+                    lbl_fmt='General', axis_fmt='General'):
+    """Gráfico de colunas com eixos visíveis e rotulados, escala, grade e rótulos de dados.
+
+    openpyxl 'deleta' os eixos por padrão (não mostra categorias nem escala) — por isso
+    forçamos delete=False e configuramos títulos de eixo, posição dos ticks e data labels."""
+    ch = BarChart()
+    ch.type = 'col'
+    ch.grouping = 'clustered'
+    ch.title = titulo
+    ch.legend = None
+    ch.height = 7.8
+    ch.width = 16.5
+    ch.gapWidth = 55
+    ch.add_data(dados_ref, titles_from_data=True)
+    ch.set_categories(cats_ref)
+
+    # ── Eixos visíveis e descritos ──
+    ch.x_axis.delete = False
+    ch.y_axis.delete = False
+    ch.x_axis.title = x_title
+    ch.y_axis.title = y_title
+    ch.x_axis.majorTickMark = 'out'
+    ch.y_axis.majorTickMark = 'out'
+    ch.x_axis.tickLblPos = 'low'
+    ch.y_axis.tickLblPos = 'nextTo'
+    ch.x_axis.delete = False
+    ch.y_axis.scaling.min = 0
+    if ymax is not None:
+        ch.y_axis.scaling.max = ymax
+    if major_unit:
+        ch.y_axis.majorUnit = major_unit
+    ch.y_axis.numFmt = axis_fmt
+    ch.y_axis.majorGridlines = ChartLines()
+    ch.x_axis.majorGridlines = None
+
+    # ── Rótulos de dados (valor em cima de cada barra) ──
+    dl = DataLabelList()
+    dl.showVal = True
+    dl.showLegendKey = dl.showCatName = dl.showSerName = dl.showPercent = dl.showBubbleSize = False
+    dl.numFmt = lbl_fmt
+    dl.dLblPos = 'outEnd'
+    ch.dataLabels = dl
+
+    # ── Cores ──
+    serie = ch.series[0]
+    serie.graphicalProperties.solidFill = cor
+    serie.graphicalProperties.line.solidFill = cor
+    if cores_pontos:
+        for i, c in enumerate(cores_pontos):
+            pt = DataPoint(idx=i)
+            pt.graphicalProperties.solidFill = c
+            pt.graphicalProperties.line.solidFill = c
+            serie.data_points.append(pt)
+
+    ws.add_chart(ch, anchor)
+    return ch
+
+
 def _montar_aba_frequencia(wb, df_freq):
     """Adiciona a aba 'Frequência ao Vivo' com KPIs, 2 gráficos e tabela colorida."""
     VE = "0F3D20"; VM = "1B5E35"; BR = "FFFFFF"
@@ -1163,12 +1226,14 @@ def _montar_aba_frequencia(wb, df_freq):
             cc.alignment = Alignment(horizontal='center' if ci > 1 else 'left')
     t_end = r
 
-    ch = BarChart(); ch.type = 'col'; ch.title = "% Médio de Presença por Turma"
-    ch.height = 6.5; ch.width = 13; ch.legend = None
-    ch.add_data(Reference(ws, min_col=3, min_row=hr, max_row=t_end), titles_from_data=True)
-    ch.set_categories(Reference(ws, min_col=1, min_row=t_start, max_row=t_end))
-    ch.y_axis.scaling.min = 0; ch.y_axis.scaling.max = 100
-    ws.add_chart(ch, "H4")
+    _grafico_barras(
+        ws,
+        titulo="Presença média por turma",
+        dados_ref=Reference(ws, min_col=3, min_row=hr, max_row=t_end),
+        cats_ref=Reference(ws, min_col=1, min_row=t_start, max_row=t_end),
+        x_title="Turma", y_title="% médio de presença", anchor="H3",
+        cor="1B3D2A", ymax=100, major_unit=20, lbl_fmt='0.0"%"', axis_fmt='0"%"',
+    )
 
     # ── Distribuição por faixa ──
     rf = t_end + 2
@@ -1189,11 +1254,14 @@ def _montar_aba_frequencia(wb, df_freq):
         cc = ws.cell(row=rf, column=2, value=cnt); cc.alignment = Alignment(horizontal='center'); cc.border = border
     f_end = rf
 
-    ch2 = BarChart(); ch2.type = 'col'; ch2.title = "Alunos por Faixa de Presença"
-    ch2.height = 6.5; ch2.width = 13; ch2.legend = None
-    ch2.add_data(Reference(ws, min_col=2, min_row=f_hdr, max_row=f_end), titles_from_data=True)
-    ch2.set_categories(Reference(ws, min_col=1, min_row=f_start, max_row=f_end))
-    ws.add_chart(ch2, "H19")
+    _grafico_barras(
+        ws,
+        titulo="Distribuição de alunos por faixa de presença",
+        dados_ref=Reference(ws, min_col=2, min_row=f_hdr, max_row=f_end),
+        cats_ref=Reference(ws, min_col=1, min_row=f_start, max_row=f_end),
+        x_title="Faixa de presença", y_title="Nº de alunos", anchor="H20",
+        cores_pontos=["DC2626", "D97706", "CA8A04", "16A34A"], lbl_fmt='0', axis_fmt='0',
+    )
 
     # ── Detalhamento por aluno (ordenado do pior para o melhor) ──
     rt = f_end + 2
