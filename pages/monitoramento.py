@@ -1074,9 +1074,12 @@ def gerar_relatorio(df_canvas, alertas_nps, df_freq, excluir_keys=None, turma_ma
                     'Qtd. Alertas': len(alertas_txt),
                     'Alertas Identificados': ' | '.join(alertas_txt),
                     'Ações Recomendadas':    ' | '.join(acoes_txt),
-                    'Tópico':    ' | '.join([t for t in topicos_txt if t]),
-                    'Professor': ' | '.join([p for p in profs_txt if p]),
-                    'Comentário':' | '.join([c for c in comentarios_txt if c]),
+                    # NÃO filtrar vazios: a posição de cada item precisa continuar
+                    # alinhada à do alerta correspondente em 'Alertas Identificados',
+                    # senão o comentário/tópico/professor cai na linha errada ao expandir.
+                    'Tópico':    ' | '.join(topicos_txt),
+                    'Professor': ' | '.join(profs_txt),
+                    'Comentário':' | '.join(comentarios_txt),
                 })
 
     df = pd.DataFrame(relatorio, columns=_COLS_RELATORIO)
@@ -1406,13 +1409,13 @@ def exportar_excel_bytes(df, df_freq=None, limite_dias=20):
             linhas.append({'alerta': ' | '.join(a for a,_ in plataforma),
                            'acao':   ' | '.join(ac for _,ac in plataforma),
                            'prof': '', 'topico': '', 'comentario': ''})
-        tp_idx = 0
         for orig_i, alerta, acao in nps_coment:
+            # Indexa por orig_i (posição do alerta na lista completa), pois Tópico/
+            # Professor/Comentário vêm alinhados posição-a-posição com os alertas.
             linhas.append({'alerta': alerta, 'acao': acao,
-                           'prof':      profs[tp_idx]       if tp_idx < len(profs)        else '',
-                           'topico':    topicos[tp_idx]     if tp_idx < len(topicos)      else '',
-                           'comentario':comentarios[tp_idx] if tp_idx < len(comentarios)  else ''})
-            tp_idx += 1
+                           'prof':      profs[orig_i]       if orig_i < len(profs)        else '',
+                           'topico':    topicos[orig_i]     if orig_i < len(topicos)      else '',
+                           'comentario':comentarios[orig_i] if orig_i < len(comentarios)  else ''})
         return linhas if linhas else [{'alerta':'','acao':'','prof':'','topico':'','comentario':''}]
 
     for _,row in df.iterrows():
