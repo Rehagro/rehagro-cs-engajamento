@@ -844,7 +844,7 @@ def carregar_frequencia(arquivo):
             datas = last2['_data'].tolist() if col_data else ['N/D', 'N/D']
             ausentes.append({'_key': key, 'Ultimas_2_aulas': f"{_fmt_d(datas[0])} e {_fmt_d(datas[1])}"})
     df_ausentes = pd.DataFrame(ausentes) if ausentes else pd.DataFrame(columns=['_key', 'Ultimas_2_aulas'])
-    return df_ausentes, desistentes_keys, turma_map, df_att
+    return df_ausentes, desistentes_keys, finalizados_keys, turma_map, df_att
 
 
 def carregar_comentarios(arquivo):
@@ -1001,11 +1001,14 @@ def gerar_alertas_nps(df_nps, df_coment, df_freq_ativo):
 _COLS_RELATORIO = ['Curso','Turma','Nome','E-mail','Qtd. Alertas',
                    'Alertas Identificados','Ações Recomendadas','Tópico','Professor','Comentário']
 
-def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None, turma_map=None):
+def gerar_relatorio(df_canvas, alertas_nps, df_freq, excluir_keys=None, turma_map=None):
     """Monta o relatório final. Um aluno matriculado em mais de um curso no Canvas
     aparece uma linha por curso; os alertas de NPS/Frequência/Comentário (que são
-    por nome do aluno) acompanham o aluno em cada um dos seus cursos."""
-    desistentes_keys = desistentes_keys or set()
+    por nome do aluno) acompanham o aluno em cada um dos seus cursos.
+
+    excluir_keys: alunos que NÃO devem aparecer no relatório por já terem encerrado o
+    ciclo — desistentes, aprovados e reprovados (finalizados_keys de carregar_frequencia)."""
+    excluir_keys = excluir_keys or set()
     turma_map = turma_map or {}
 
     # Cada matrícula do Canvas (aluno + curso + turma) é uma linha em potencial.
@@ -1032,7 +1035,7 @@ def gerar_relatorio(df_canvas, alertas_nps, df_freq, desistentes_keys=None, turm
 
     relatorio = []
     for key in sorted(todos_keys):
-        if key in desistentes_keys:
+        if key in excluir_keys:
             continue
 
         matriculas = canvas_enr[canvas_enr['_key'] == key]
@@ -1722,15 +1725,16 @@ with col_dir:
                 try:
                     dc = carregar_canvas(f_canvas, limite_dias=limite_canvas)
                     etapa = "Frequência (arquivo 3)"
-                    df_fr, desist_keys, turma_map, df_freq_ativo = carregar_frequencia(f_freq)
+                    df_fr, desist_keys, final_keys, turma_map, df_freq_ativo = carregar_frequencia(f_freq)
                     df_freq_resumo = gerar_resumo_frequencia(df_freq_ativo, turma_map)
                     etapa = "NPS — Avaliações de aula (arquivo 2)"
-                    df_nps_raw = carregar_nps(f_nps, desistentes_keys=desist_keys)
+                    # Exclui da análise quem já encerrou o ciclo (desistentes, aprovados, reprovados).
+                    df_nps_raw = carregar_nps(f_nps, desistentes_keys=final_keys)
                     etapa = "Comentários (arquivo 4)"
                     df_co = carregar_comentarios(f_coment) if f_coment else None
                     etapa = "cruzamento dos dados e montagem do relatório"
                     alertas_nps = gerar_alertas_nps(df_nps_raw, df_co, df_freq_ativo)
-                    df_rel      = gerar_relatorio(dc, alertas_nps, df_fr, desist_keys, turma_map)
+                    df_rel      = gerar_relatorio(dc, alertas_nps, df_fr, final_keys, turma_map)
 
                     df_alunos = df_rel.drop_duplicates(subset=['Nome','Turma'])
                     criticos  = len(df_alunos[df_alunos['Qtd. Alertas']>=4])
